@@ -1,0 +1,179 @@
+import { getSupabaseServer } from '../config/supabaseServer';
+import { buildIlikeOrFilter } from '../utils/postgrestFilters';
+
+export interface CotisationFilters {
+  search?: string;
+  periode?: string;
+  statut?: string;
+  source?: string;
+  dateDebut?: string;
+  dateFin?: string;
+  idAdherent?: string;
+}
+
+export interface CotisationSpontaneePayload {
+  id_adherent: number;
+  mode: string;
+  date: string;
+  montant: number;
+}
+
+export interface ActiveAdherentForCotisation {
+  id_adherent: number;
+  matricule: string;
+  nom?: string | null;
+  prenoms?: string | null;
+  statut?: boolean | string | null;
+  decede?: boolean | null;
+  retraite?: boolean | null;
+}
+
+export interface ParsedTrimestre {
+  annee: number;
+  trimestre: number;
+  periodeDeb: string;
+  periodeFin: string;
+}
+
+export const cotisationsRepository = {
+  async findCotisations(filters?: CotisationFilters): Promise<unknown[]> {
+    const supabase = getSupabaseServer();
+
+    // Supabase query builder loses fluent type precision after dynamic filters.
+    let query: any = supabase.from('v_cotisations_details').select('*');
+
+    if (filters?.idAdherent) {
+      query = query.eq('id_adherent', filters.idAdherent);
+    }
+    if (filters?.periode) {
+      query = query.eq('periode', filters.periode);
+    }
+    if (filters?.statut && filters.statut !== 'TOUS') {
+      query = query.eq('statut', filters.statut);
+    }
+    if (filters?.source && filters.source !== 'TOUS') {
+      query = query.eq('source', filters.source);
+    }
+    if (filters?.search) {
+      const orFilter = buildIlikeOrFilter(filters.search, ['matricule', 'nom', 'prenoms']);
+      if (orFilter) query = query.or(orFilter);
+    }
+    if (filters?.dateDebut) {
+      query = query.gte('date_valeur', filters.dateDebut);
+    }
+    if (filters?.dateFin) {
+      query = query.lte('date_valeur', filters.dateFin);
+    }
+
+    const { data, error } = await query.order('periode', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findCotisationsByMatricule(matricule: string): Promise<unknown[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_cotisations_details')
+      .select('*')
+      .eq('matricule', matricule)
+      .order('date_valeur', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findCotisationsByAdherentId(idAdherent: string): Promise<unknown[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_cotisations_details')
+      .select('*')
+      .eq('id_adherent', idAdherent)
+      .order('date_valeur', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findActiveAdherentsForCotisation(): Promise<ActiveAdherentForCotisation[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_adherents_complets')
+      .select('*')
+      .eq('statut', true)
+      .eq('decede', false)
+      .eq('retraite', false)
+      .order('nom', { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return (data ?? []) as ActiveAdherentForCotisation[];
+  },
+
+  async findActiveAdherentById(idAdherent: number): Promise<ActiveAdherentForCotisation | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_adherents_complets')
+      .select('id_adherent, matricule, nom, prenoms, statut, decede, retraite')
+      .eq('id_adherent', idAdherent)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return (data as ActiveAdherentForCotisation | null) ?? null;
+  },
+
+  async findActiveInfoCotisation(idAdherent: string): Promise<unknown | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('info_cotisations')
+      .select('*')
+      .eq('id_adherent', idAdherent)
+      .eq('info_actif', true)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data ?? null;
+  },
+
+  async createCotisationEntete(input: {
+    id_adherent: number;
+    mode: string;
+    periode_deb: string;
+    periode_fin: string;
+    reference: string;
+    statut: string;
+  }): Promise<{ id_cotisation_entete: number; reference: string }> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('cotisation_entetes')
+      .insert(input)
+      .select('id_cotisation_entete, reference')
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as { id_cotisation_entete: number; reference: string };
+  },
+
+  async createCotisationDetail(input: {
+    id_cotisation_entete: number;
+    periode: string;
+    date_valeur: string | null;
+    montant: number;
+    source: string;
+    statut: string;
+  }): Promise<unknown> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('cotisation_details')
+      .insert(input)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async deleteCotisationEntete(id: number): Promise<void> {
+    const supabase = getSupabaseServer();
+    const { error } = await supabase.from('cotisation_entetes').delete().eq('id_cotisation_entete', id);
+    if (error) throw new Error(error.message);
+  },
+};
