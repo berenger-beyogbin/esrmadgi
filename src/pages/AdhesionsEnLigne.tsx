@@ -236,7 +236,7 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
     const firstLogin = data.first_login;
     setActionMsg(
       firstLogin
-        ? `Adhesion validee. Acces adherent cree : identifiant ${firstLogin.login}, mot de passe temporaire ${firstLogin.temporary_password}. Le mot de passe devra etre change a la premiere connexion.`
+        ? `Adhesion validee. Acces adherent cree : identifiant ${firstLogin.login}. L adherent definira son mot de passe a la premiere connexion.`
         : 'Adhesion validee. L adherent est maintenant actif dans la liste globale.',
     );
     await fetchItems();

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, ClipboardList, Loader2, Search, ShieldCheck } from 'lucide-react';
 import HeaderBanner from '../components/HeaderBanner';
-import { TurnstileWidget } from '../components/TurnstileWidget';
 import { adherentCalculationService, MortalitePoint } from '../services/adherentCalculationService';
 import { onlineAdhesionService } from '../services/onlineAdhesionService';
 import { ExternalAgentInfo, Grade, OnlineAdhesionPayload, OnlineAdhesionReferentiels } from '../types';
@@ -16,8 +15,6 @@ type Step = 'LOOKUP' | 'FORM' | 'SUCCESS';
 const todayISO = () => new Date().toISOString().split('T')[0];
 const fieldClass =
   'w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f]';
-const turnstileSiteKey = String((import.meta as any).env.VITE_TURNSTILE_SITE_KEY ?? '').trim();
-const isProductionBuild = Boolean((import.meta as any).env.PROD);
 
 function normalizeOption(value: string): string {
   return value
@@ -79,6 +76,7 @@ function initialPayload(): OnlineAdhesionPayload {
 export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
   const [step, setStep] = useState<Step>('LOOKUP');
   const [matricule, setMatricule] = useState('');
+  const [lookupDateNaissance, setLookupDateNaissance] = useState('');
   const [refs, setRefs] = useState<OnlineAdhesionReferentiels | null>(null);
   const [formData, setFormData] = useState<OnlineAdhesionPayload>(() => initialPayload());
   const [isLoadingRefs, setIsLoadingRefs] = useState(true);
@@ -86,8 +84,6 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMatricule, setSuccessMatricule] = useState('');
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaResetKey, setCaptchaResetKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -115,9 +111,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
 
   const gradeOptions = refs?.grades ?? [];
   const civiliteOptions = useMemo(() => refs?.civilites.map((c) => c.libelle_civilite) ?? [], [refs]);
-  const captchaRequired = Boolean(turnstileSiteKey);
-  const captchaUnavailable = isProductionBuild && !turnstileSiteKey;
-  const lookupDisabled = isSearching || isLoadingRefs || captchaUnavailable || (captchaRequired && !captchaToken);
+  const lookupDisabled = isSearching || isLoadingRefs || !matricule.trim() || !lookupDateNaissance;
 
   const recalculateFrom = (data: OnlineAdhesionPayload, grade?: Grade | null): OnlineAdhesionPayload => {
     const selectedGrade = grade ?? gradeOptions.find((g) => String(g.id_grade) === data.grade_id) ?? null;
@@ -198,23 +192,15 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
       setErrorMsg('Veuillez renseigner le matricule.');
       return;
     }
-    if (captchaUnavailable) {
-      setErrorMsg('Protection CAPTCHA non configuree.');
-      return;
-    }
-    if (captchaRequired && !captchaToken) {
-      setErrorMsg('Veuillez valider la verification CAPTCHA.');
+    if (!lookupDateNaissance) {
+      setErrorMsg('Veuillez renseigner votre date de naissance.');
       return;
     }
 
     setIsSearching(true);
     setErrorMsg(null);
-    const { data, error } = await onlineAdhesionService.searchAgent(mat, captchaToken);
+    const { data, error } = await onlineAdhesionService.searchAgent(mat, lookupDateNaissance);
     setIsSearching(false);
-    if (captchaRequired) {
-      setCaptchaToken(null);
-      setCaptchaResetKey((value) => value + 1);
-    }
 
     if (error) {
       setErrorMsg(error);
@@ -350,7 +336,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                 <div className="text-center space-y-2">
                   <Search className="w-12 h-12 mx-auto text-[#2b529f]" />
                   <h2 className="text-2xl font-bold text-slate-900">Démarrer l'adhésion</h2>
-                  <p className="text-sm text-slate-500">Entrez votre matricule DGI / MADGI.</p>
+                  <p className="text-sm text-slate-500">Entrez votre matricule et votre date de naissance.</p>
                 </div>
 
                 <div className="space-y-2">
@@ -359,23 +345,22 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                     value={matricule}
                     onChange={(e) => setMatricule(e.target.value.toUpperCase())}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
-                    placeholder="Ex : 332219H"
+                    placeholder="Ex : 000000Y ou 11111R"
                     disabled={isSearching || isLoadingRefs}
                   />
                 </div>
 
-                {captchaRequired && (
-                  <TurnstileWidget
-                    siteKey={turnstileSiteKey}
-                    onToken={setCaptchaToken}
-                    resetKey={captchaResetKey}
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-slate-700">Date de naissance</label>
+                  <input
+                    type="date"
+                    value={lookupDateNaissance}
+                    onChange={(e) => setLookupDateNaissance(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
+                    disabled={isSearching || isLoadingRefs}
+                    required
                   />
-                )}
-                {captchaUnavailable && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl">
-                    Protection CAPTCHA non configuree. La recherche matricule est indisponible.
-                  </div>
-                )}
+                </div>
 
                 <button
                   type="submit"

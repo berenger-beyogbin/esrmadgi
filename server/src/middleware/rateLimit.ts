@@ -38,3 +38,27 @@ export const publicSubmissionRateLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler('Trop de soumissions. Veuillez patienter avant de reessayer.'),
 });
+
+export const publicFirstLoginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  handler: rateLimitHandler('Trop de tentatives. Veuillez patienter avant de reessayer.'),
+});
+
+export const publicFirstLoginOtpRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  handler: rateLimitHandler('Trop de demandes de code SMS. Veuillez patienter avant de reessayer.'),
+});
+
+export const publicPasswordResetRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  handler: rateLimitHandler('Trop de demandes de reinitialisation. Veuillez patienter avant de reessayer.'),
+});

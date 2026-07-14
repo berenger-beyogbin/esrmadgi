@@ -155,6 +155,7 @@ export const utilisateursService = {
               password: payload.password,
               matricule,
               profil,
+              must_change_password: true,
             })
             .catch(() => null)
         : null) || (await findAuthUserByEmail(email));
@@ -165,6 +166,7 @@ export const utilisateursService = {
         password: payload.password,
         matricule,
         profil,
+        must_change_password: true,
       });
     } else {
       authUser = await utilisateursRepository.createAuthUser({
@@ -172,6 +174,7 @@ export const utilisateursService = {
         password: payload.password,
         matricule,
         profil,
+        must_change_password: true,
       });
     }
 
@@ -240,6 +243,7 @@ export const utilisateursService = {
         password: payload.password || undefined,
         matricule,
         profil,
+        must_change_password: payload.password ? true : undefined,
       });
     } else if (payload.password) {
       authUser =
@@ -249,6 +253,7 @@ export const utilisateursService = {
           password: payload.password,
           matricule,
           profil,
+          must_change_password: true,
         }));
       if (authUser.email?.toLowerCase() === email) {
         authUser = await utilisateursRepository.updateAuthUser(authUser.id, {
@@ -256,6 +261,7 @@ export const utilisateursService = {
           password: payload.password,
           matricule,
           profil,
+          must_change_password: true,
         });
       }
     }

@@ -7,6 +7,21 @@ import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPoli
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide. Format attendu : YYYY-MM-DD');
 const idSchema = z.string().trim().min(1, 'ID adherent requis');
 const passwordSchema = z.string().refine(isStrongPassword, PASSWORD_POLICY_MESSAGE);
+const statutEsrSchema = z.preprocess(
+  (value) => {
+    if (value === true) return 'ACTIF';
+    if (value === false) return 'INACTIF';
+    if (typeof value === 'string') return value.trim().toUpperCase();
+    return value;
+  },
+  z
+    .enum(['ACTIF', 'INACTIF', 'RETRAITE', 'DECEDE'], {
+      errorMap: () => ({
+        message: 'Statut ESR invalide. Valeurs attendues : ACTIF, INACTIF, RETRAITE ou DECEDE',
+      }),
+    })
+    .default('ACTIF'),
+);
 
 const adherentPayloadSchema = z.object({
   date_souscription: dateSchema,
@@ -19,7 +34,7 @@ const adherentPayloadSchema = z.object({
   telephone: z.string().trim().min(1, 'Telephone requis').max(80),
   email: z.string().trim().email('Email invalide').max(160),
   emploi: z.string().trim().min(1, 'Emploi requis').max(160),
-  statut: z.enum(['ACTIF', 'INACTIF', 'RETRAITE', 'DECEDE']).default('ACTIF'),
+  statut: statutEsrSchema,
   grade_id: z.string().trim().min(1, 'Grade requis'),
   grade: z.string().trim().optional(),
   date_effet: dateSchema,

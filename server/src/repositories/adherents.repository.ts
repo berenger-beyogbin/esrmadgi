@@ -66,7 +66,10 @@ export const adherentsRepository = {
       const supabase = getSupabaseServer();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query: any = supabase.from('v_adherents_complets').select('*');
+      let query: any = supabase
+        .from('v_adherents_complets')
+        .select('*')
+        .not('etat', 'in', '("EN_ATTENTE","REJETE")');
 
       if (filters?.idAdherent) {
         query = query.eq('id_adherent', filters.idAdherent);

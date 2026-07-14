@@ -62,7 +62,7 @@ app.use(requestLogger);
 
 app.use('/api/health', healthRouter);
 app.use('/api/adhesions-en-ligne', adhesionsEnLigneRouter);
-app.use('/api/auth', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), authRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/agents', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), agentsRouter);
 app.use('/api/adherents', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), adherentsRouter);
 app.use('/api/beneficiaires', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), beneficiairesRouter);

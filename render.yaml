@@ -24,6 +24,18 @@ services:
         sync: false
       - key: TURNSTILE_SECRET_KEY
         sync: false
+      - key: SMS_API_URL
+        sync: false
+      - key: SMS_API_USERNAME
+        sync: false
+      - key: SMS_API_PASSWORD
+        sync: false
+      - key: SMS_API_SERVICE_ID
+        sync: false
+      - key: FIRST_LOGIN_FIXED_OTP
+        sync: false
+      - key: FIRST_LOGIN_SMS_STANDBY
+        sync: false
       - key: MYSQL_HOST
         sync: false
       - key: MYSQL_PORT

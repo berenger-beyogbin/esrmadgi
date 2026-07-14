@@ -1,5 +1,21 @@
 import { supabase } from '../services/supabaseClient';
 import { DBUser } from '../types';
+import { toFrenchErrorMessage } from '../utils/errorMessages';
+
+let sessionExpiredHandler: (() => void) | null = null;
+
+export function onSessionExpired(handler: () => void): void {
+  sessionExpiredHandler = handler;
+}
+
+function notifyIfSessionExpired(status: number): void {
+  if (status === 401) sessionExpiredHandler?.();
+}
+
+function readApiError(json: unknown): string {
+  const err = (json as Record<string, unknown>)?.error;
+  return toFrenchErrorMessage(typeof err === 'string' ? err : 'Erreur de traitement du service.');
+}
 
 const BASE_URL =
   ((import.meta as unknown as { env: Record<string, string> }).env.VITE_API_BASE_URL as string | undefined) ??
@@ -44,22 +60,15 @@ export async function apiGet<T = unknown>(
     try {
       json = await res.json();
     } catch {
-      return { data: null, error: 'Réponse du service invalide.' };
+      return { data: null, error: 'Reponse du service invalide.' };
     }
     if (!res.ok) {
-      const err = (json as Record<string, unknown>)?.error;
-      return { data: null, error: typeof err === 'string' ? err : 'Erreur de traitement du service.' };
+      notifyIfSessionExpired(res.status);
+      return { data: null, error: readApiError(json) };
     }
     return { data: json as T, error: null };
   } catch (e: unknown) {
-    const raw = e instanceof Error ? e.message : String(e);
-    const isNetworkDown = raw === 'Failed to fetch' || raw.toLowerCase().includes('networkerror') || raw.toLowerCase().includes('fetch');
-    return {
-      data: null,
-      error: isNetworkDown
-        ? 'Service MADGI ESR indisponible. Veuillez réessayer dans un instant.'
-        : raw,
-    };
+    return { data: null, error: toFrenchErrorMessage(e) };
   }
 }
 
@@ -77,15 +86,15 @@ export async function apiPost<T = unknown>(
     try {
       json = await res.json();
     } catch {
-      return { data: null, error: 'Réponse du service invalide.' };
+      return { data: null, error: 'Reponse du service invalide.' };
     }
     if (!res.ok) {
-      const err = (json as Record<string, unknown>)?.error;
-      return { data: null, error: typeof err === 'string' ? err : 'Erreur de traitement du service.' };
+      notifyIfSessionExpired(res.status);
+      return { data: null, error: readApiError(json) };
     }
     return { data: json as T, error: null };
   } catch (e: unknown) {
-    return { data: null, error: e instanceof Error ? e.message : 'Erreur réseau' };
+    return { data: null, error: toFrenchErrorMessage(e) };
   }
 }
 
@@ -103,15 +112,15 @@ export async function apiPut<T = unknown>(
     try {
       json = await res.json();
     } catch {
-      return { data: null, error: 'Réponse du service invalide.' };
+      return { data: null, error: 'Reponse du service invalide.' };
     }
     if (!res.ok) {
-      const err = (json as Record<string, unknown>)?.error;
-      return { data: null, error: typeof err === 'string' ? err : 'Erreur de traitement du service.' };
+      notifyIfSessionExpired(res.status);
+      return { data: null, error: readApiError(json) };
     }
     return { data: json as T, error: null };
   } catch (e: unknown) {
-    return { data: null, error: e instanceof Error ? e.message : 'Erreur rÃ©seau' };
+    return { data: null, error: toFrenchErrorMessage(e) };
   }
 }
 
@@ -127,16 +136,17 @@ export async function apiDelete<T = unknown>(
     try {
       json = await res.json();
     } catch {
-      return { data: null, error: 'Réponse du service invalide.' };
+      return { data: null, error: 'Reponse du service invalide.' };
     }
     if (!res.ok) {
-      const err = (json as Record<string, unknown>)?.error;
-      return { data: null, error: typeof err === 'string' ? err : 'Erreur de traitement du service.' };
+      notifyIfSessionExpired(res.status);
+      return { data: null, error: readApiError(json) };
     }
     return { data: json as T, error: null };
   } catch (e: unknown) {
-    return { data: null, error: e instanceof Error ? e.message : 'Erreur rÃ©seau' };
+    return { data: null, error: toFrenchErrorMessage(e) };
   }
 }
 
 export const apiClient = { get: apiGet, post: apiPost, put: apiPut, delete: apiDelete };
+

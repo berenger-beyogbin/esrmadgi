@@ -31,6 +31,9 @@ export interface LinkedAdherent {
   matricule: string;
   nom: string | null;
   prenoms: string | null;
+  email: string | null;
+  telephone: string | null;
+  date_naissance: string | null;
 }
 
 export interface UtilisateurUpsertInput {
@@ -121,12 +124,31 @@ export const utilisateursRepository = {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from('adherents')
-      .select('id_adherent, matricule, nom, prenoms')
+      .select('id_adherent, matricule, nom, prenoms, email, telephone, date_naissance')
       .eq('matricule', matricule)
       .maybeSingle();
 
     if (error) throw new Error(error.message);
     return (data as LinkedAdherent | null) ?? null;
+  },
+
+  async getAuthUserById(authUserId: string): Promise<User | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase.auth.admin.getUserById(authUserId);
+    if (error) return null;
+    return data.user ?? null;
+  },
+
+  async generateRecoveryLink(email: string, redirectTo: string): Promise<string> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: { redirectTo },
+    });
+
+    if (error) throw new Error(error.message);
+    return data.properties.action_link;
   },
 
   async create(input: UtilisateurUpsertInput): Promise<UtilisateurRow> {

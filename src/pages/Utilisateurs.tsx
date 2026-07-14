@@ -365,7 +365,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required={formMode === 'CREATE'}
-                  minLength={form.password ? 12 : undefined}
+                  minLength={form.password ? 8 : undefined}
                   className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm"
                 />
               </div>
@@ -475,7 +475,6 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
               <tr>
                 <th className="py-3.5 px-4">Matricule</th>
-                <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Profil</th>
                 <th className="py-3.5 px-4 text-center">Statut</th>
                 <th className="py-3.5 px-4 text-center">Connexion</th>
@@ -488,12 +487,6 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
               {users.map((user) => (
                 <tr key={user.id_utilisateur} className="hover:bg-slate-50/50 transition">
                   <td className="py-3.5 px-4 font-bold font-mono text-slate-800">{user.matricule}</td>
-                  <td className="py-3.5 px-4">
-                    <div className="font-semibold text-slate-800">{user.email}</div>
-                    {user.telephone && (
-                      <div className="text-xs text-slate-500 mt-0.5">{user.telephone}</div>
-                    )}
-                  </td>
                   <td className="py-3.5 px-4">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs border ${roleBadge(user.profil)}`}>
                       <ShieldCheck className="w-3.5 h-3.5" />

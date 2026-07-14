@@ -119,7 +119,6 @@ async function ensureFirstLoginAccess(user: AuthenticatedUser, adhesion: AnyRow)
   return {
     login: matricule,
     email,
-    temporary_password: temporaryPassword,
     must_change_password: true,
   };
 }
@@ -175,6 +174,21 @@ function parsePercent(value: string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function dateKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}${iso[2]}${iso[3]}`;
+
+  const fr = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (fr) return `${fr[3]}${fr[2]}${fr[1]}`;
+
+  const compact = raw.replace(/\D/g, '');
+  return compact.length === 8 ? compact : null;
+}
+
 async function enrichWithCurrentActuarialParams(payload: OnlineAdhesionPayload): Promise<OnlineAdhesionPayload> {
   const params = (await parametresRepository.findParametresGeneraux()) as AnyRow[];
   const tauxGar = parsePercent(findParamValue(params, 'TAUX_GAR'));
@@ -190,8 +204,23 @@ async function enrichWithCurrentActuarialParams(payload: OnlineAdhesionPayload):
 }
 
 export const adhesionsEnLigneService = {
-  async searchAgent(matricule: string) {
-    return agentsService.searchByMatricule(matricule.trim().toUpperCase());
+  async searchAgent(matricule: string, dateNaissance: string) {
+    const result = await agentsService.searchByMatricule(matricule.trim().toUpperCase());
+    if (!result.found || !result.data) return result;
+
+    const expectedDate = dateKey(result.data.date_naissance);
+    const submittedDate = dateKey(dateNaissance);
+    if (!expectedDate || !submittedDate || expectedDate !== submittedDate) {
+      return {
+        found: false,
+        data: null,
+        error: 'Matricule ou date de naissance incorrect.',
+      };
+    }
+
+    const safeAgent = { ...result.data };
+    delete safeAgent.raw;
+    return { ...result, data: safeAgent };
   },
 
   async getPublicReferentiels(): Promise<unknown> {

@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
 import { DBUser, UserProfile } from '../types';
 import { apiGet, apiPost } from '../lib/apiClient';
+import { toFrenchErrorMessage } from '../utils/errorMessages';
 
 type ApiResponse<T> = { data: T; error: string | null };
 
@@ -16,7 +17,7 @@ export const authService = {
         if ((import.meta as any).env.DEV) {
           console.error('[AUTH] signInWithPassword error', { message: error.message, status: (error as any).status });
         }
-        throw new Error(error.message);
+        throw new Error(toFrenchErrorMessage(error.message));
       }
       if (!data.user) throw new Error('Connexion incomplète. Veuillez réessayer.');
 
@@ -33,7 +34,7 @@ export const authService = {
         error: null,
       };
     } catch (e: any) {
-      return { user: null, error: e };
+      return { user: null, error: new Error(toFrenchErrorMessage(e)) };
     }
   },
 
@@ -45,7 +46,7 @@ export const authService = {
       return { error: null };
     } catch (e: any) {
       console.error('Erreur de deconnexion:', e);
-      return { error: e };
+      return { error: new Error(toFrenchErrorMessage(e)) };
     }
   },
 
@@ -88,10 +89,10 @@ export const authService = {
     }
 
     if (error) {
-      throw new Error(error);
+      throw new Error(toFrenchErrorMessage(error));
     }
     if (data?.error) {
-      throw new Error(data.error);
+      throw new Error(toFrenchErrorMessage(data.error));
     }
     if (!data?.data) {
       throw new Error(`Profil metier ESR introuvable pour auth_user_id = ${authUserId}`);
@@ -106,8 +107,8 @@ export const authService = {
         new_password: newPassword,
       });
 
-      if (error) throw new Error(error);
-      if (data?.error) throw new Error(data.error);
+      if (error) throw new Error(toFrenchErrorMessage(error));
+      if (data?.error) throw new Error(toFrenchErrorMessage(data.error));
       if (!data?.data) throw new Error('Changement de mot de passe incomplet.');
 
       const refreshed = await supabase.auth.refreshSession();
@@ -126,8 +127,67 @@ export const authService = {
 
       return { user: { ...data.data, must_change_password: false }, error: null };
     } catch (e: any) {
-      return { user: null, error: e };
+      return { user: null, error: new Error(toFrenchErrorMessage(e)) };
     }
+  },
+
+  async checkFirstLogin(matricule: string): Promise<{ firstLogin: boolean } | null> {
+    const { data, error } = await apiPost<ApiResponse<{ firstLogin: boolean }>>(
+      '/api/auth/first-login/check',
+      { matricule },
+    );
+    if (error) throw new Error(toFrenchErrorMessage(error));
+    if (data?.error) throw new Error(toFrenchErrorMessage(data.error));
+    if (!data?.data) throw new Error('Verification impossible. Veuillez reessayer.');
+    return data.data;
+  },
+
+  async sendFirstLoginOtp(matricule: string): Promise<{
+    maskedPhone: string;
+    expiresInSeconds: number;
+    smsSkipped?: boolean;
+    debugOtpCode?: string;
+  } | null> {
+    const { data, error } = await apiPost<ApiResponse<{
+      maskedPhone: string;
+      expiresInSeconds: number;
+      smsSkipped?: boolean;
+      debugOtpCode?: string;
+    }>>(
+      '/api/auth/first-login/send-otp',
+      { matricule },
+    );
+    if (error) throw new Error(toFrenchErrorMessage(error));
+    if (data?.error) throw new Error(toFrenchErrorMessage(data.error));
+    if (!data?.data) throw new Error('Envoi du code SMS impossible. Veuillez reessayer.');
+    return data.data;
+  },
+
+  async requestPasswordReset(matricule: string): Promise<{ maskedEmail: string } | null> {
+    const { data, error } = await apiPost<ApiResponse<{ maskedEmail: string }>>(
+      '/api/auth/password-reset/request',
+      { matricule },
+    );
+    if (error) throw new Error(toFrenchErrorMessage(error));
+    if (data?.error) throw new Error(toFrenchErrorMessage(data.error));
+    if (!data?.data) throw new Error('Demande impossible. Veuillez réessayer.');
+    return data.data;
+  },
+
+  async setFirstLoginPassword(input: {
+    matricule: string;
+    otp_code: string;
+    new_password: string;
+    confirm_password: string;
+  }): Promise<{ login: string; email: string } | null> {
+    const { data, error } = await apiPost<ApiResponse<{ login: string; email: string }>>(
+      '/api/auth/first-login/set-password',
+      input,
+    );
+    if (error) throw new Error(toFrenchErrorMessage(error));
+    if (data?.error) throw new Error(toFrenchErrorMessage(data.error));
+    if (!data?.data) throw new Error('Creation du mot de passe impossible. Veuillez reessayer.');
+    return data.data;
   },
 
   loginAsDemo(role: UserProfile): DBUser {

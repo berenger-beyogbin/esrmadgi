@@ -45,6 +45,24 @@ function isRetirementBeforeFirstPrecompte(dateRetraite?: string | null, datePrec
   return Boolean(retraite && precompte && retraite < precompte);
 }
 
+type StatutEsr = 'ACTIF' | 'INACTIF' | 'RETRAITE' | 'DECEDE';
+
+function normalizeStatutEsr(
+  value: unknown,
+  flags?: Pick<VAdherentComplet, 'decede' | 'retraite'>,
+): StatutEsr {
+  if (flags?.decede) return 'DECEDE';
+  if (flags?.retraite) return 'RETRAITE';
+  if (value === true) return 'ACTIF';
+  if (value === false) return 'INACTIF';
+
+  const statut = String(value ?? '').trim().toUpperCase();
+  if (statut === 'ACTIF' || statut === 'INACTIF' || statut === 'RETRAITE' || statut === 'DECEDE') {
+    return statut;
+  }
+  return 'ACTIF';
+}
+
 export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: AdherentFormProps) {
   const [civilites, setCivilites] = useState<Civilite[]>([]);
   const [situations, setSituations] = useState<SituationMatrimoniale[]>([]);
@@ -140,7 +158,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           telephone: adherent.telephone || '',
           email: adherent.email || '',
           emploi: adherent.emploi || '',
-          statut: adherent.statut || 'ACTIF',
+          statut: normalizeStatutEsr(adherent.statut, adherent),
           grade_id: adherent.grade_id || '',
           grade: adherent.grade_libelle || '',
           date_effet: adherent.date_effet || '',
@@ -551,8 +569,13 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         return;
       }
 
+      const payload = {
+        ...formData,
+        statut: normalizeStatutEsr(formData.statut),
+      };
+
       if (adherent) {
-        const { error } = await adherentService.updateAdherent(adherent.id, formData);
+        const { error } = await adherentService.updateAdherent(adherent.id, payload);
         if (error) throw error;
       } else {
         if (!formData.grade_id) {
@@ -560,7 +583,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           setIsSubmitting(false);
           return;
         }
-        const { error } = await adherentService.saveAdherent(formData);
+        const { error } = await adherentService.saveAdherent(payload);
         if (error) throw error;
       }
       onSaveSuccess();

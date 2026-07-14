@@ -84,7 +84,7 @@ export default function FirstLoginPasswordChange({
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  minLength={12}
+                  minLength={8}
                   className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
                   autoComplete="new-password"
                   required
@@ -100,7 +100,7 @@ export default function FirstLoginPasswordChange({
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={12}
+                  minLength={8}
                   className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
                   autoComplete="new-password"
                   required

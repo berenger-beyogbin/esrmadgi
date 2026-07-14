@@ -31,14 +31,15 @@ export const onlineAdhesionService = {
     return getSingle<OnlineAdhesionReferentiels>('/api/adhesions-en-ligne/referentiels');
   },
 
-  async searchAgent(matricule: string, captchaToken?: string | null): Promise<{ data: ExternalAgentInfo | null; error: string | null }> {
+  async searchAgent(matricule: string, dateNaissance: string): Promise<{ data: ExternalAgentInfo | null; error: string | null }> {
     const mat = matricule.trim().toUpperCase();
     if (!mat) return { data: null, error: 'Matricule requis' };
+    if (!dateNaissance) return { data: null, error: 'Date de naissance requise' };
 
     type SearchResponse = { found: boolean; data: ExternalAgentInfo | null; error: string | null };
     const { data, error } = await apiPost<SearchResponse>('/api/adhesions-en-ligne/search-agent', {
       matricule: mat,
-      captchaToken,
+      date_naissance: dateNaissance,
     });
     if (error) return { data: null, error };
     if (!data) return { data: null, error: 'Reponse vide du serveur' };

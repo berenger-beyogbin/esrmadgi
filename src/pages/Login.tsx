@@ -3,19 +3,113 @@ import { authService } from '../services/authService';
 import { DBUser, UserProfile } from '../types';
 import { Loader2, Lock, ShieldCheck, CheckCircle2, ClipboardList, CalendarCheck, HelpCircle } from 'lucide-react';
 import HeaderBanner from '../components/HeaderBanner';
+import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
 
 interface LoginProps {
   onLoginSuccess: (user: DBUser) => void;
   onStartOnlineAdhesion?: () => void;
+  sessionExpiredMsg?: string | null;
 }
 
-export default function Login({ onLoginSuccess, onStartOnlineAdhesion }: LoginProps) {
+type LoginStep = 'MATRICULE' | 'PASSWORD' | 'FIRST_LOGIN_OTP' | 'INFO';
+
+export default function Login({ onLoginSuccess, onStartOnlineAdhesion, sessionExpiredMsg }: LoginProps) {
   const [matriculeOrEmail, setMatriculeOrEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [maskedPhone, setMaskedPhone] = useState('');
+  const [debugOtpCode, setDebugOtpCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
+  const [step, setStep] = useState<LoginStep>('MATRICULE');
   const [showDemoFlyout, setShowDemoFlyout] = useState(false);
   const isDemoEnabled = (import.meta as any).env.DEV === true;
+
+  const resetToMatriculeStep = () => {
+    setStep('MATRICULE');
+    setPassword('');
+    setOtpCode('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setMaskedPhone('');
+    setDebugOtpCode('');
+    setErrorMsg(null);
+    setInfoMsg(null);
+  };
+
+  const handleContinue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!matriculeOrEmail.trim()) {
+      setErrorMsg('Veuillez renseigner votre matricule.');
+      return;
+    }
+
+    const rawInput = matriculeOrEmail.trim();
+
+    // Direct email logins (comptes gestionnaire/admin) ne passent pas par la verification premiere connexion par matricule.
+    if (rawInput.includes('@')) {
+      setErrorMsg(null);
+      setInfoMsg(null);
+      setStep('PASSWORD');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg(null);
+    setInfoMsg(null);
+
+    try {
+      const result = await authService.checkFirstLogin(rawInput);
+      if (result?.firstLogin) {
+        const otp = await authService.sendFirstLoginOtp(rawInput);
+        setMaskedPhone(otp?.maskedPhone ?? '');
+        setDebugOtpCode(otp?.debugOtpCode ?? '');
+        setOtpCode('');
+        if (otp?.smsSkipped) {
+          setInfoMsg('Envoi SMS temporairement suspendu. Saisissez le code OTP par defaut communique par MADGI.');
+        } else if (otp?.debugOtpCode) {
+          setInfoMsg(
+            `Mode test local : utilisez le code ${otp.debugOtpCode}. L'envoi SMS a aussi ete tente vers ${otp?.maskedPhone ?? 'le numero enregistre'}.`,
+          );
+        } else {
+          setInfoMsg(`Premiere connexion : un code SMS a ete envoye au ${otp?.maskedPhone ?? 'numero enregistre'}.`);
+        }
+        setStep('FIRST_LOGIN_OTP');
+      } else {
+        setInfoMsg(null);
+        setStep('PASSWORD');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Impossible de vérifier ce matricule. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!matriculeOrEmail.trim()) {
+      setErrorMsg('Veuillez renseigner votre matricule.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg(null);
+
+    try {
+      const result = await authService.requestPasswordReset(matriculeOrEmail.trim());
+      setInfoMsg(
+        `Un email vous a été envoyé à ${result?.maskedEmail ?? 'votre adresse enregistrée'} pour réinitialiser votre mot de passe. Consultez votre boîte de réception (et vos spams).`,
+      );
+      setStep('INFO');
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Impossible d\'envoyer le lien de réinitialisation. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +137,86 @@ export default function Login({ onLoginSuccess, onStartOnlineAdhesion }: LoginPr
       setErrorMsg(error.message || 'Identifiants de connexion invalides. Veuillez réessayer.');
     } else if (user) {
       onLoginSuccess(user);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    const rawInput = matriculeOrEmail.trim();
+    if (!rawInput) {
+      setErrorMsg('Veuillez renseigner votre matricule.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg(null);
+
+    try {
+      const otp = await authService.sendFirstLoginOtp(rawInput);
+      const nextMaskedPhone = otp?.maskedPhone ?? maskedPhone;
+      setMaskedPhone(nextMaskedPhone);
+      setDebugOtpCode(otp?.debugOtpCode ?? '');
+      setOtpCode('');
+      if (otp?.smsSkipped) {
+        setInfoMsg('Envoi SMS temporairement suspendu. Saisissez le code OTP par defaut communique par MADGI.');
+      } else if (otp?.debugOtpCode) {
+        setInfoMsg(
+          `Mode test local : utilisez le nouveau code ${otp.debugOtpCode}. L'envoi SMS a aussi ete tente vers ${nextMaskedPhone || 'le numero enregistre'}.`,
+        );
+      } else {
+        setInfoMsg(`Un nouveau code SMS a ete envoye au ${nextMaskedPhone || 'numero enregistre'}.`);
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Impossible d envoyer le code SMS. Veuillez reessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFirstLoginPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const rawInput = matriculeOrEmail.trim();
+
+    if (!rawInput || !otpCode || !newPassword || !confirmPassword) {
+      setErrorMsg('Veuillez renseigner tous les champs.');
+      return;
+    }
+    if (!/^\d{6}$/.test(otpCode.trim())) {
+      setErrorMsg('Le code SMS doit contenir 6 chiffres.');
+      return;
+    }
+    if (!isStrongPassword(newPassword)) {
+      setErrorMsg(PASSWORD_POLICY_MESSAGE);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Les deux mots de passe ne correspondent pas.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg(null);
+
+    try {
+      const result = await authService.setFirstLoginPassword({
+        matricule: rawInput,
+        otp_code: otpCode.trim(),
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      const loginEmail = result?.email || `${rawInput.toLowerCase()}@madgi.ci`;
+      const { user, error } = await authService.login(loginEmail, newPassword);
+
+      if (error) {
+        setErrorMsg(error.message || 'Mot de passe cree. Veuillez vous connecter.');
+        setStep('PASSWORD');
+        setPassword('');
+        return;
+      }
+      if (user) onLoginSuccess(user);
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Creation du mot de passe impossible. Veuillez reessayer.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -172,81 +346,217 @@ export default function Login({ onLoginSuccess, onStartOnlineAdhesion }: LoginPr
                 {errorMsg}
               </div>
             )}
-
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              
-              {/* Matricule Row (Horizontal Aligned on Desktop) */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <label htmlFor="matricule" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
-                  Matricule
-                </label>
-                <div className="flex-1">
-                  <input
-                    id="matricule"
-                    type="text"
-                    required
-                    value={matriculeOrEmail}
-                    disabled={isLoading}
-                    onChange={(e) => setMatriculeOrEmail(e.target.value)}
-                    placeholder="11816P"
-                    className="w-full px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 placeholder-slate-450 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
-                  />
-                </div>
+            {!errorMsg && step !== 'INFO' && sessionExpiredMsg && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-xs font-semibold text-amber-700" id="login-session-expired">
+                {sessionExpiredMsg}
               </div>
+            )}
+            {!errorMsg && step !== 'INFO' && infoMsg && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-semibold text-emerald-800" id="login-info-message">
+                {infoMsg}
+              </div>
+            )}
 
-              {/* Password Row (Horizontal Aligned on Desktop) */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 relative">
-                <label htmlFor="password" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
-                  Mot de passe
-                </label>
-                <div className="flex-1 space-y-1.5">
-                  <input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    disabled={isLoading}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="•••"
-                    className="w-full px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 placeholder-slate-450 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
-                  />
-                  
-                  {/* Password Forgotten on Right */}
-                  <div className="text-right">
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        alert("Veuillez contacter le service gestionnaire MADGI pour réinitialiser votre mot de passe.");
-                      }}
-                      className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline transition"
-                    >
-                      Mot de passe oublié ?
-                    </a>
+            {step === 'INFO' ? (
+              /* Email Confirmation Step */
+              <div className="space-y-5">
+                {infoMsg && (
+                  <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-semibold text-emerald-800" id="login-info-message">
+                    {infoMsg}
                   </div>
-                </div>
-              </div>
-
-              {/* Se connecter Blue Button */}
-              <div className="pt-2">
+                )}
                 <button
-                  id="btn-login-submit"
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3.5 px-4 bg-[#2f5597] hover:bg-[#203f7a] text-white font-bold rounded text-sm transition-all duration-150 shadow-md flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60"
+                  type="button"
+                  onClick={resetToMatriculeStep}
+                  className="w-full py-3 px-4 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold rounded text-sm transition"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="animate-spin h-4 w-4" />
-                      Connexion en cours...
-                    </>
-                  ) : (
-                    'Se connecter'
-                  )}
+                  Retour à la connexion
                 </button>
               </div>
-            </form>
+            ) : (
+              /* Login Form */
+              <form
+                onSubmit={
+                  step === 'MATRICULE'
+                    ? handleContinue
+                    : step === 'FIRST_LOGIN_OTP'
+                      ? handleFirstLoginPasswordSubmit
+                      : handleSubmit
+                }
+                className="space-y-5"
+              >
+
+                {/* Matricule Row (Horizontal Aligned on Desktop) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <label htmlFor="matricule" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
+                    Matricule
+                  </label>
+                  <div className="flex-1 space-y-1.5">
+                    <input
+                      id="matricule"
+                      type="text"
+                      required
+                      value={matriculeOrEmail}
+                      disabled={isLoading || step === 'PASSWORD' || step === 'FIRST_LOGIN_OTP'}
+                      onChange={(e) => setMatriculeOrEmail(e.target.value)}
+                      placeholder="Ex : 000000Y ou 11111R"
+                      className="w-full px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 placeholder-slate-450 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition disabled:opacity-70"
+                    />
+                    {(step === 'PASSWORD' || step === 'FIRST_LOGIN_OTP') && (
+                      <div className="text-right">
+                        <button
+                          type="button"
+                          onClick={resetToMatriculeStep}
+                          className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline transition"
+                        >
+                          Modifier le matricule
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Password Row (Horizontal Aligned on Desktop) — only once the matricule has been verified */}
+                {step === 'PASSWORD' && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 relative">
+                    <label htmlFor="password" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
+                      Mot de passe
+                    </label>
+                    <div className="flex-1 space-y-1.5">
+                      <input
+                        id="password"
+                        type="password"
+                        required
+                        autoFocus
+                        value={password}
+                        disabled={isLoading}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="•••"
+                        className="w-full px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 placeholder-slate-450 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
+                      />
+
+                      {/* Password Forgotten on Right */}
+                      <div className="text-right">
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleForgotPassword();
+                          }}
+                          className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline transition"
+                        >
+                          Mot de passe oublié ?
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {step === 'FIRST_LOGIN_OTP' && (
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <label htmlFor="otp-code" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
+                        Code SMS
+                      </label>
+                      <input
+                        id="otp-code"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        pattern="[0-9]{6}"
+                        required
+                        autoFocus
+                        value={otpCode}
+                        disabled={isLoading}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="Saisir le code"
+                        className="flex-1 px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
+                      />
+                    </div>
+
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={isLoading}
+                        className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline transition disabled:opacity-60"
+                      >
+                        Renvoyer le code SMS
+                      </button>
+                    </div>
+
+                    {debugOtpCode && (
+                      <div className="ml-0 sm:ml-[8rem] p-3 bg-amber-50 border border-amber-200 rounded-md text-xs font-semibold text-amber-800">
+                        Code OTP par defaut temporaire : <span className="font-mono text-sm">{debugOtpCode}</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <label htmlFor="new-password" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
+                        Nouveau mot de passe
+                      </label>
+                      <input
+                        id="new-password"
+                        type="password"
+                        required
+                        minLength={8}
+                        value={newPassword}
+                        disabled={isLoading}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="********"
+                        autoComplete="new-password"
+                        className="flex-1 px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <label htmlFor="confirm-password" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
+                        Confirmer
+                      </label>
+                      <input
+                        id="confirm-password"
+                        type="password"
+                        required
+                        minLength={8}
+                        value={confirmPassword}
+                        disabled={isLoading}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="********"
+                        autoComplete="new-password"
+                        className="flex-1 px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Continuer / Se connecter Blue Button */}
+                <div className="pt-2">
+                  <button
+                    id="btn-login-submit"
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-3.5 px-4 bg-[#2f5597] hover:bg-[#203f7a] text-white font-bold rounded text-sm transition-all duration-150 shadow-md flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="animate-spin h-4 w-4" />
+                        {step === 'MATRICULE'
+                          ? 'Verification...'
+                          : step === 'FIRST_LOGIN_OTP'
+                            ? 'Creation du mot de passe...'
+                            : 'Connexion en cours...'}
+                      </>
+                    ) : step === 'MATRICULE' ? (
+                      'Continuer'
+                    ) : step === 'FIRST_LOGIN_OTP' ? (
+                      'Creer mon mot de passe'
+                    ) : (
+                      'Se connecter'
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* Separator Line */}
             <div className="py-2">

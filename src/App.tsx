@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { DBUser, UserProfile } from './types';
 import { authService } from './services/authService';
+import { onSessionExpired } from './lib/apiClient';
+import { supabase } from './services/supabaseClient';
 
 // Module import
 import Login from './pages/Login';
@@ -13,7 +15,6 @@ import AdhesionsEnLigne from './pages/AdhesionsEnLigne';
 import ComptesEsr from './pages/ComptesEsr';
 import Cotisations from './pages/Cotisations';
 import Precomptes from './pages/Precomptes';
-import Paiements from './pages/Paiements';
 import Prestations from './pages/Prestations';
 import Parametres from './pages/Parametres';
 import Audit from './pages/Audit';
@@ -28,7 +29,6 @@ import {
   Briefcase,
   Wallet,
   RefreshCw,
-  Landmark,
   BarChart,
   Sliders,
   UserCog,
@@ -47,7 +47,6 @@ type ModuleType =
   | 'PRESTATIONS'
   | 'COMPTES'
   | 'PRECOMPTES'
-  | 'PLACEMENTS'
   | 'REPORTING'
   | 'PARAMETRES'
   | 'UTILISATEURS'
@@ -59,6 +58,8 @@ export default function App() {
   const [publicView, setPublicView] = useState<'LOGIN' | 'ONLINE_ADHESION'>('LOGIN');
   const [activeModule, setActiveModule] = useState<ModuleType>('DASHBOARD');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState<string | null>(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   // Sync with actual active session on boot
   useEffect(() => {
@@ -73,9 +74,41 @@ export default function App() {
     checkSession();
   }, []);
 
+  // Catch password-reset links: Supabase fires this event when the session comes from a recovery link,
+  // regardless of the must_change_password flag, so a "forgot password" reset also lands on the set-password screen.
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event !== 'PASSWORD_RECOVERY' || !session?.user) return;
+      try {
+        const profile = await authService.getUserProfile(session.user.id);
+        setCurrentUser(profile);
+        setIsPasswordRecovery(true);
+        setIsSessionLoading(false);
+      } catch {
+        // Le profil sera resynchronise au prochain checkSession() si besoin.
+      }
+    });
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
+  // Force a clean return to the login screen whenever the backend rejects the session (expired token)
+  useEffect(() => {
+    onSessionExpired(() => {
+      setCurrentUser((prev) => {
+        if (!prev) return prev;
+        authService.logout();
+        setSessionExpiredMsg('Votre session a expiré. Veuillez vous reconnecter.');
+        setIsPasswordRecovery(false);
+        return null;
+      });
+    });
+  }, []);
+
   const handleLoginSuccess = (user: DBUser) => {
     setCurrentUser(user);
     setActiveModule('DASHBOARD');
+    setSessionExpiredMsg(null);
+    setIsPasswordRecovery(false);
   };
 
   const handleSignOut = async () => {
@@ -83,6 +116,7 @@ export default function App() {
       await authService.logout();
       setCurrentUser(null);
       setActiveModule('DASHBOARD');
+      setIsPasswordRecovery(false);
     }
   };
 
@@ -104,16 +138,18 @@ export default function App() {
       <Login
         onLoginSuccess={handleLoginSuccess}
         onStartOnlineAdhesion={() => setPublicView('ONLINE_ADHESION')}
+        sessionExpiredMsg={sessionExpiredMsg}
       />
     );
   }
 
-  if (currentUser.must_change_password) {
+  if (currentUser.must_change_password || isPasswordRecovery) {
     return (
       <FirstLoginPasswordChange
         currentUser={currentUser}
         onPasswordChanged={(user) => {
           setCurrentUser(user);
+          setIsPasswordRecovery(false);
           setActiveModule('DASHBOARD');
         }}
         onSignOut={handleSignOut}
@@ -170,12 +206,6 @@ export default function App() {
       allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
     },
     {
-      id: 'PLACEMENTS' as ModuleType,
-      label: 'Paiements directs',
-      icon: Landmark,
-      allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
-    },
-    {
       id: 'REPORTING' as ModuleType,
       label: 'Audit & Reporting',
       icon: BarChart,
@@ -219,8 +249,6 @@ export default function App() {
         return <Cotisations currentUser={currentUser} />;
       case 'PRECOMPTES':
         return <Precomptes currentUser={currentUser} />;
-      case 'PLACEMENTS':
-        return <Paiements currentUser={currentUser} />; // placements manages payments direct
       case 'PRESTATIONS':
         return <Prestations currentUser={currentUser} />;
       case 'PARAMETRES':

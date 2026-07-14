@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { AppError } from '../middleware/errorHandler';
 import { adhesionsEnLigneService } from '../services/adhesions-en-ligne.service';
-import { turnstileService } from '../services/turnstile.service';
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide. Format attendu : YYYY-MM-DD');
 
@@ -16,7 +15,7 @@ const searchSchema = z.object({
     .max(20, 'Matricule trop long')
     .regex(/^[a-zA-Z0-9._/-]+$/, 'Matricule invalide')
     .transform((value) => value.toUpperCase()),
-  captchaToken: z.string().trim().max(4096).optional(),
+  date_naissance: dateSchema,
 });
 
 const nullableEmailSchema = z
@@ -85,8 +84,7 @@ export const adhesionsEnLigneController = {
     try {
       const parsed = searchSchema.safeParse(req.body);
       if (!parsed.success) throw new AppError(400, parsed.error.errors[0]?.message ?? 'Donnees invalides');
-      await turnstileService.verify(parsed.data.captchaToken, req.ip);
-      const result = await adhesionsEnLigneService.searchAgent(parsed.data.matricule);
+      const result = await adhesionsEnLigneService.searchAgent(parsed.data.matricule, parsed.data.date_naissance);
       res.json(result);
     } catch (err) {
       next(err);

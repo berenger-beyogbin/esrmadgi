@@ -428,7 +428,7 @@ export interface OnlineAdhesion extends OnlineAdhesionPayload {
 export interface FirstLoginCredentials {
   login: string;
   email: string;
-  temporary_password: string;
+  temporary_password?: string;
   must_change_password: boolean;
 }
 

@@ -492,7 +492,7 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mot de passe</label>
                     <input
                       type="password"
-                      minLength={12}
+                      minLength={8}
                       value={accessPassword}
                       onChange={(e) => setAccessPassword(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700"
