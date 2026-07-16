@@ -68,20 +68,28 @@ export default function Dashboard({ currentUser }: DashboardProps) {
     <div className="space-y-6" id="dashboard-wrapper">
 
       {/* Upper bar */}
-      <div className="flex justify-between items-center bg-white/45 px-2 py-1 rounded-lg">
-        <p className="text-sm text-slate-600 font-medium">
-          Rapport en date du {new Date().toLocaleDateString('fr-FR')} — Connecté en tant que :{' '}
-          <span className="font-bold text-[#2b529f]">
-            {currentUser.prenoms} {currentUser.nom}
-          </span>
-        </p>
+      <div className="flex justify-between items-center gap-2 bg-white/45 px-2 py-1 rounded-lg">
+        <div className="min-w-0">
+          <p className="sm:hidden text-xs text-slate-600 font-medium truncate">
+            {new Date().toLocaleDateString('fr-FR')} ·{' '}
+            <span className="font-bold text-[#2b529f]">
+              {currentUser.prenoms || currentUser.nom || currentUser.matricule}
+            </span>
+          </p>
+          <p className="hidden sm:block text-sm text-slate-600 font-medium">
+            Rapport en date du {new Date().toLocaleDateString('fr-FR')} — Connecté en tant que :{' '}
+            <span className="font-bold text-[#2b529f]">
+              {currentUser.prenoms} {currentUser.nom}
+            </span>
+          </p>
+        </div>
         <button
           onClick={fetchStats}
           disabled={isLoading}
-          className="flex items-center gap-1.5 text-sm text-[#2b529f] hover:underline font-bold transition"
+          className="flex items-center gap-1.5 text-sm text-[#2b529f] hover:underline font-bold transition shrink-0"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>Actualiser</span>
+          <span className="hidden sm:inline">Actualiser</span>
         </button>
       </div>
 
@@ -294,52 +302,96 @@ export default function Dashboard({ currentUser }: DashboardProps) {
             <h3 className="text-lg font-bold tracking-tight text-left">
               Dernières cotisations
             </h3>
-            <div className="overflow-x-auto bg-white rounded shadow-sm text-slate-800 text-left">
-              <table className="w-full min-w-[280px] border-collapse">
-                <thead>
-                  <tr className="bg-[#dce4f0] text-sm font-bold text-slate-700 border-b border-slate-300">
-                    <th className="py-3.5 px-4 text-left">Date</th>
-                    <th className="py-3.5 px-4 text-center">Montant</th>
-                    <th className="py-3.5 px-4 text-center">Adhérent</th>
-                    <th className="py-3.5 px-4 text-center">Source</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm font-medium divide-y divide-slate-100">
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
-                        Chargement…
-                      </td>
+            <div className="bg-white rounded shadow-sm text-slate-800 text-left overflow-hidden">
+              <div className="md:hidden">
+                {isLoading ? (
+                  <div className="py-10 px-4 text-center text-slate-400 font-medium">
+                    Chargement…
+                  </div>
+                ) : stats && stats.dernieresCotisations.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {stats.dernieresCotisations.slice(0, 2).map((c, i) => (
+                      <article key={i} className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black uppercase text-slate-500">Date</p>
+                            <p className="mt-1 text-sm font-mono text-slate-700">{formatDateFr(c.date)}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-[11px] font-black uppercase text-slate-500">Montant</p>
+                            <p className="mt-1 text-base font-black text-slate-900">{formatFCFA(c.montant)}</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-1 gap-3 rounded bg-slate-50 p-3">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black uppercase text-slate-500">Adhérent</p>
+                            <p className="mt-1 truncate text-sm font-bold text-slate-800">{c.adherent || '—'}</p>
+                            {c.matricule && (
+                              <p className="mt-0.5 text-xs font-mono text-slate-500">{c.matricule}</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black uppercase text-slate-500">Source</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">{c.source || '—'}</p>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-10 px-4 text-center text-slate-400 font-medium">
+                    Aucune cotisation récente disponible.
+                  </div>
+                )}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full min-w-[640px] border-collapse">
+                  <thead>
+                    <tr className="bg-[#dce4f0] text-sm font-bold text-slate-700 border-b border-slate-300">
+                      <th className="py-3.5 px-4 text-left">Date</th>
+                      <th className="py-3.5 px-4 text-center">Montant</th>
+                      <th className="py-3.5 px-4 text-center">Adhérent</th>
+                      <th className="py-3.5 px-4 text-center">Source</th>
                     </tr>
-                  ) : stats && stats.dernieresCotisations.length > 0 ? (
-                    stats.dernieresCotisations.map((c, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-4 text-left text-slate-600 font-mono">
-                          {formatDateFr(c.date)}
-                        </td>
-                        <td className="py-3 px-4 text-center font-semibold text-slate-800">
-                          {formatFCFA(c.montant)}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-semibold text-slate-800">{c.adherent}</span>
-                          {c.matricule && (
-                            <span className="block text-xs text-slate-500">{c.matricule}</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-center text-slate-600">
-                          {c.source || '—'}
+                  </thead>
+                  <tbody className="text-sm font-medium divide-y divide-slate-100">
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
+                          Chargement…
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
-                        Aucune cotisation récente disponible.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ) : stats && stats.dernieresCotisations.length > 0 ? (
+                      stats.dernieresCotisations.map((c, i) => (
+                        <tr key={i} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3 px-4 text-left text-slate-600 font-mono">
+                            {formatDateFr(c.date)}
+                          </td>
+                          <td className="py-3 px-4 text-center font-semibold text-slate-800">
+                            {formatFCFA(c.montant)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="font-semibold text-slate-800">{c.adherent}</span>
+                            {c.matricule && (
+                              <span className="block text-xs text-slate-500">{c.matricule}</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center text-slate-600">
+                            {c.source || '—'}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
+                          Aucune cotisation récente disponible.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -348,51 +400,94 @@ export default function Dashboard({ currentUser }: DashboardProps) {
             <h3 className="text-lg font-bold tracking-tight text-left">
               Dernières prestations
             </h3>
-            <div className="overflow-x-auto bg-white rounded shadow-sm text-slate-800 text-left min-h-[110px] flex flex-col justify-between">
-              <table className="w-full min-w-[280px] border-collapse">
-                <thead>
-                  <tr className="bg-[#dce4f0] text-sm font-bold text-slate-700 border-b border-slate-300">
-                    <th className="py-3.5 px-4 text-left">Date</th>
-                    <th className="py-3.5 px-4 text-center">Adhérent</th>
-                    <th className="py-3.5 px-4 text-center">Type</th>
-                    <th className="py-3.5 px-4 text-center">Statut</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm font-medium divide-y divide-slate-100">
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
-                        Chargement…
-                      </td>
+            <div className="bg-white rounded shadow-sm text-slate-800 text-left overflow-hidden min-h-[110px]">
+              <div className="md:hidden">
+                {isLoading ? (
+                  <div className="py-10 px-4 text-center text-slate-400 font-medium">
+                    Chargement…
+                  </div>
+                ) : stats && stats.dernieresPrestations.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {stats.dernieresPrestations.slice(0, 2).map((p, i) => (
+                      <article key={i} className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black uppercase text-slate-500">Date</p>
+                            <p className="mt-1 text-sm font-mono text-slate-700">{formatDateFr(p.date)}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-[11px] font-black uppercase text-slate-500">Statut</p>
+                            <span className="mt-1 inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                              {p.statut || '—'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-1 gap-3 rounded bg-slate-50 p-3">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black uppercase text-slate-500">Adhérent</p>
+                            <p className="mt-1 truncate text-sm font-bold text-slate-800">{p.adherent || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black uppercase text-slate-500">Type</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">{p.type || '—'}</p>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-10 px-4 text-center text-slate-400 font-medium">
+                    Aucune prestation récente disponible.
+                  </div>
+                )}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full min-w-[640px] border-collapse">
+                  <thead>
+                    <tr className="bg-[#dce4f0] text-sm font-bold text-slate-700 border-b border-slate-300">
+                      <th className="py-3.5 px-4 text-left">Date</th>
+                      <th className="py-3.5 px-4 text-center">Adhérent</th>
+                      <th className="py-3.5 px-4 text-center">Type</th>
+                      <th className="py-3.5 px-4 text-center">Statut</th>
                     </tr>
-                  ) : stats && stats.dernieresPrestations.length > 0 ? (
-                    stats.dernieresPrestations.map((p, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-4 text-left text-slate-600 font-mono">
-                          {formatDateFr(p.date)}
-                        </td>
-                        <td className="py-3 px-4 text-center font-semibold text-slate-800">
-                          {p.adherent || '—'}
-                        </td>
-                        <td className="py-3 px-4 text-center text-slate-600">
-                          {p.type || '—'}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                            {p.statut || '—'}
-                          </span>
+                  </thead>
+                  <tbody className="text-sm font-medium divide-y divide-slate-100">
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
+                          Chargement…
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
-                        Aucune prestation récente disponible.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ) : stats && stats.dernieresPrestations.length > 0 ? (
+                      stats.dernieresPrestations.map((p, i) => (
+                        <tr key={i} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3 px-4 text-left text-slate-600 font-mono">
+                            {formatDateFr(p.date)}
+                          </td>
+                          <td className="py-3 px-4 text-center font-semibold text-slate-800">
+                            {p.adherent || '—'}
+                          </td>
+                          <td className="py-3 px-4 text-center text-slate-600">
+                            {p.type || '—'}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                              {p.statut || '—'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
+                          Aucune prestation récente disponible.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 

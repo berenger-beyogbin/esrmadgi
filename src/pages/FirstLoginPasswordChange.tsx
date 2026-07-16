@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, Lock, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { DBUser } from '../types';
 import { authService } from '../services/authService';
 import HeaderBanner from '../components/HeaderBanner';
@@ -18,6 +18,7 @@ export default function FirstLoginPasswordChange({
 }: FirstLoginPasswordChangeProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -81,14 +82,23 @@ export default function FirstLoginPasswordChange({
               <div className="relative">
                 <Lock className="w-5 h-5 absolute left-4 top-3.5 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   minLength={8}
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
+                  className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
                   autoComplete="new-password"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-[#2b529f] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f]/40"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </label>
 
@@ -97,14 +107,23 @@ export default function FirstLoginPasswordChange({
               <div className="relative">
                 <Lock className="w-5 h-5 absolute left-4 top-3.5 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={8}
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
+                  className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
                   autoComplete="new-password"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-[#2b529f] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f]/40"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </label>
           </div>

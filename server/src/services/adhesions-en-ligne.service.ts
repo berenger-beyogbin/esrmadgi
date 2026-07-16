@@ -32,6 +32,18 @@ function temporaryPasswordFor(matricule: string): string {
   return generateTemporaryPassword(matricule.trim().toUpperCase());
 }
 
+function calculateDateEffetFromPrecompte(datePrecompte: string | null | undefined): string | null {
+  const isoDatePrecompte = toStrictIsoDate(datePrecompte);
+  if (!isoDatePrecompte) return null;
+
+  const year = Number(isoDatePrecompte.slice(0, 4));
+  const month = Number(isoDatePrecompte.slice(5, 7));
+  const currentQuarter = Math.floor((month - 1) / 3) + 1;
+  const nextQuarterYear = currentQuarter === 4 ? year + 1 : year;
+  const nextQuarterMonth = currentQuarter === 4 ? 1 : currentQuarter * 3 + 1;
+  return `${nextQuarterYear}-${String(nextQuarterMonth).padStart(2, '0')}-01`;
+}
+
 async function findAuthUserByEmail(email: string) {
   const users = await utilisateursRepository.listAuthUsers();
   return users.find((user) => user.email?.toLowerCase() === email.toLowerCase()) ?? null;
@@ -124,6 +136,9 @@ async function ensureFirstLoginAccess(user: AuthenticatedUser, adhesion: AnyRow)
 }
 
 function normalizePayload(payload: OnlineAdhesionPayload): OnlineAdhesionPayload {
+  const normalizedDatePrecompte = toStrictIsoDate(payload.date_precompte) ?? payload.date_precompte ?? null;
+  const normalizedDateEffet = calculateDateEffetFromPrecompte(normalizedDatePrecompte) ?? payload.date_effet;
+
   return {
     ...payload,
     matricule: payload.matricule.trim().toUpperCase(),
@@ -132,6 +147,8 @@ function normalizePayload(payload: OnlineAdhesionPayload): OnlineAdhesionPayload
     email: payload.email?.trim() || null,
     sexe: payload.sexe || sexeFromCivilite(payload.civilite),
     grade: payload.grade?.trim() || '',
+    date_precompte: normalizedDatePrecompte,
+    date_effet: normalizedDateEffet,
     taux_gar: payload.taux_gar ?? null,
     frais_rente: payload.frais_rente ?? null,
     taux_rachat: payload.taux_rachat ?? null,
@@ -149,12 +166,63 @@ function sexeFromCivilite(civilite: string): string | null {
   return null;
 }
 
+function toStrictIsoDate(value: string | null | undefined): string | null {
+  const match = String(value ?? '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
+function getAllowedPremierPrecompteDates(dateSouscription: string): string[] {
+  const isoDateSouscription = toStrictIsoDate(dateSouscription);
+  if (!isoDateSouscription) return [];
+
+  const adhesionYear = Number(isoDateSouscription.slice(0, 4));
+  if (!Number.isInteger(adhesionYear)) return [];
+
+  return [adhesionYear, adhesionYear + 1]
+    .flatMap((year) => [
+      `${year}-01-01`,
+      `${year}-04-01`,
+      `${year}-07-01`,
+      `${year}-10-01`,
+    ])
+    .filter((datePrecompte) => datePrecompte >= isoDateSouscription);
+}
+
 function ensureSubmittable(payload: OnlineAdhesionPayload): void {
   if (!payload.grade_id) {
     throw new AppError(400, 'Le grade professionnel est obligatoire.');
   }
   if (!payload.date_precompte || !payload.date_effet || !payload.date_retraite) {
     throw new AppError(400, 'Les dates ESR calculees sont incompletes.');
+  }
+  const allowedPrecompteDates = getAllowedPremierPrecompteDates(payload.date_souscription);
+  const datePrecompte = toStrictIsoDate(payload.date_precompte);
+  if (!datePrecompte || !allowedPrecompteDates.includes(datePrecompte)) {
+    throw new AppError(
+      400,
+      allowedPrecompteDates.length === 0
+        ? "Aucun trimestre de premier precompte n'est disponible pour cette date d'adhesion."
+      : "Le premier precompte doit etre le premier jour d'un trimestre autorise de l'annee d'adhesion ou de l'annee suivante.",
+    );
+  }
+  const dateEffet = toStrictIsoDate(payload.date_effet);
+  const expectedDateEffet = calculateDateEffetFromPrecompte(datePrecompte);
+  if (!dateEffet || dateEffet !== expectedDateEffet) {
+    throw new AppError(400, 'La date d effet du contrat est incoherente avec le trimestre de premier precompte.');
   }
   if (Number(payload.nb_trimestre) <= 0) {
     throw new AppError(400, 'Le nombre de trimestres est invalide.');

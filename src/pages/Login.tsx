@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { authService } from '../services/authService';
 import { DBUser, UserProfile } from '../types';
-import { Loader2, Lock, ShieldCheck, CheckCircle2, ClipboardList, CalendarCheck, HelpCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, ShieldCheck, CheckCircle2, ClipboardList, CalendarCheck, HelpCircle } from 'lucide-react';
 import HeaderBanner from '../components/HeaderBanner';
 import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
 
@@ -19,6 +19,9 @@ export default function Login({ onLoginSuccess, onStartOnlineAdhesion, sessionEx
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [maskedPhone, setMaskedPhone] = useState('');
   const [debugOtpCode, setDebugOtpCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +37,9 @@ export default function Login({ onLoginSuccess, onStartOnlineAdhesion, sessionEx
     setOtpCode('');
     setNewPassword('');
     setConfirmPassword('');
+    setShowPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
     setMaskedPhone('');
     setDebugOtpCode('');
     setErrorMsg(null);
@@ -423,17 +429,29 @@ export default function Login({ onLoginSuccess, onStartOnlineAdhesion, sessionEx
                       Mot de passe
                     </label>
                     <div className="flex-1 space-y-1.5">
+                      <div className="relative">
                       <input
                         id="password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         required
                         autoFocus
                         value={password}
                         disabled={isLoading}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="•••"
-                        className="w-full px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 placeholder-slate-450 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
+                        className="w-full px-3.5 py-2.5 pr-11 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 placeholder-slate-450 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
                       />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((value) => !value)}
+                          disabled={isLoading}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-[#2b529f] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f]/40 disabled:opacity-60"
+                          aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                          title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
 
                       {/* Password Forgotten on Right */}
                       <div className="text-right">
@@ -495,36 +513,60 @@ export default function Login({ onLoginSuccess, onStartOnlineAdhesion, sessionEx
                       <label htmlFor="new-password" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
                         Nouveau mot de passe
                       </label>
-                      <input
-                        id="new-password"
-                        type="password"
-                        required
-                        minLength={8}
-                        value={newPassword}
-                        disabled={isLoading}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="********"
-                        autoComplete="new-password"
-                        className="flex-1 px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
-                      />
+                      <div className="relative flex-1">
+                        <input
+                          id="new-password"
+                          type={showNewPassword ? 'text' : 'password'}
+                          required
+                          minLength={8}
+                          value={newPassword}
+                          disabled={isLoading}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="********"
+                          autoComplete="new-password"
+                          className="w-full px-3.5 py-2.5 pr-11 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword((value) => !value)}
+                          disabled={isLoading}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-[#2b529f] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f]/40 disabled:opacity-60"
+                          aria-label={showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                          title={showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                          {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <label htmlFor="confirm-password" className="w-full sm:w-28 text-left text-xs sm:text-sm font-bold text-slate-700 shrink-0">
                         Confirmer
                       </label>
-                      <input
-                        id="confirm-password"
-                        type="password"
-                        required
-                        minLength={8}
-                        value={confirmPassword}
-                        disabled={isLoading}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="********"
-                        autoComplete="new-password"
-                        className="flex-1 px-3.5 py-2.5 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
-                      />
+                      <div className="relative flex-1">
+                        <input
+                          id="confirm-password"
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          required
+                          minLength={8}
+                          value={confirmPassword}
+                          disabled={isLoading}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="********"
+                          autoComplete="new-password"
+                          className="w-full px-3.5 py-2.5 pr-11 bg-[#f0f3f8] border border-slate-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:border-[#2b529f] text-sm font-medium transition"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword((value) => !value)}
+                          disabled={isLoading}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-[#2b529f] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f]/40 disabled:opacity-60"
+                          aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                          title={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

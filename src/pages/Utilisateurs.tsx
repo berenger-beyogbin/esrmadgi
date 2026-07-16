@@ -6,6 +6,8 @@ import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPoli
 import {
   Ban,
   CheckCircle2,
+  Eye,
+  EyeOff,
   KeyRound,
   Mail,
   Plus,
@@ -93,6 +95,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UtilisateurAcces | null>(null);
   const [form, setForm] = useState<UserFormState>(emptyForm);
+  const [showFormPassword, setShowFormPassword] = useState(false);
 
   const activeCount = useMemo(() => users.filter((u) => u.user_actif).length, [users]);
   const adminCount = useMemo(
@@ -126,6 +129,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
     setFormMode('CREATE');
     setEditingUser(null);
     setForm(emptyForm);
+    setShowFormPassword(false);
     setErrorMsg(null);
     setSuccessMsg(null);
     setShowForm(true);
@@ -143,6 +147,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
       user_actif: user.user_actif,
       id_adherent: user.id_adherent ?? '',
     });
+    setShowFormPassword(false);
     setErrorMsg(null);
     setSuccessMsg(null);
     setShowForm(true);
@@ -152,6 +157,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
     setShowForm(false);
     setEditingUser(null);
     setForm(emptyForm);
+    setShowFormPassword(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -361,13 +367,22 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
               <div className="relative">
                 <KeyRound className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
                 <input
-                  type="password"
+                  type={showFormPassword ? 'text' : 'password'}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required={formMode === 'CREATE'}
                   minLength={form.password ? 8 : undefined}
-                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm"
+                  className="w-full pl-9 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowFormPassword((value) => !value)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-[#2b529f] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f]/40"
+                  aria-label={showFormPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  title={showFormPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showFormPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

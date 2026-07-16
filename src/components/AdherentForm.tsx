@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { adherentService } from '../services/adherentService';
 import { adherentCalculationService, MortalitePoint, CalculCotisationTrimestrielleResult } from '../services/adherentCalculationService';
 import { parametreService } from '../services/parametreService';
@@ -11,6 +11,17 @@ import { formatDateFr, toIsoDate } from '../utils/formatters';
 function formatFCFA(n: number): string {
   if (isNaN(n) || !isFinite(n)) return '0 FCFA';
   return `${Math.round(n).toLocaleString('fr-FR')} FCFA`;
+}
+
+function formatNumberInput(n: number): string {
+  if (isNaN(n) || !isFinite(n) || n === 0) return '';
+  return Math.round(n).toLocaleString('fr-FR');
+}
+
+function parseFormattedNumber(value: string): number {
+  const normalized = value.replace(/\s/g, '').replace(/\u202f/g, '').replace(',', '.');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function formatPercent(n: number): string {
@@ -91,10 +102,6 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
 
   const [formData, setFormData] = useState(() => {
     const todayISO = new Date().toISOString().split('T')[0];
-    const initPrecompte = adherentCalculationService.calculateDatePremierPrecompte(todayISO);
-    const initDateEffet = initPrecompte
-      ? adherentCalculationService.calculateDateEffet(initPrecompte)
-      : '';
     return {
       date_souscription: todayISO,
       matricule: '',
@@ -109,16 +116,32 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       statut: 'ACTIF',
       grade_id: '',
       grade: '',
-      date_effet: initDateEffet,
+      date_effet: '',
       date_retraite: '',
       age_retraite: 60,
       cotisation_annuelle: 0,
-      date_precompte: initPrecompte,
+      date_precompte: '',
       nb_trimestre: 0,
       cotisation_es: 0,
     };
   });
 
+  const precompteOptions = useMemo(
+    () => adherentCalculationService.getPremierPrecompteTrimestreOptions(formData.date_souscription, true),
+    [formData.date_souscription],
+  );
+  const displayedPrecompteOptions = useMemo(() => {
+    if (
+      formData.date_precompte &&
+      !precompteOptions.some((option) => option.date === formData.date_precompte)
+    ) {
+      return [
+        { date: formData.date_precompte, label: `Date actuelle (${formatDateFr(formData.date_precompte)})` },
+        ...precompteOptions,
+      ];
+    }
+    return precompteOptions;
+  }, [formData.date_precompte, precompteOptions]);
   useEffect(() => {
     async function loadAuxData() {
       const [civRes, sitRes, empRes, grdList] = await Promise.all([
@@ -236,6 +259,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
 
   // C1-D : Recalcul cotisation_es dès que les paramètres actuariels sont disponibles
   useEffect(() => {
+    if (adherent) return;
     if (!parametresCalcul || mortaliteData.length === 0) return;
     setFormData(prev => {
       if (prev.cotisation_annuelle <= 0 || prev.nb_trimestre <= 0) return prev;
@@ -256,7 +280,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       if (result.status !== 'OK') return prev;
       return { ...prev, cotisation_es: result.cotisationTrimestrielle };
     });
-  }, [parametresCalcul, mortaliteData]);
+  }, [adherent, parametresCalcul, mortaliteData]);
 
   // C1-E : Calcul complet pour le résumé pré-calcul — stocke tous les détails actuariels
   useEffect(() => {
@@ -284,8 +308,12 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     date_souscription: string;
     date_naissance: string;
     age_retraite: number;
+    date_precompte?: string | null;
   }) => {
-    const date_precompte = adherentCalculationService.calculateDatePremierPrecompte(data.date_souscription);
+    const date_precompte = adherentCalculationService.resolveDatePremierPrecompteChoisie(
+      data.date_souscription,
+      data.date_precompte,
+    );
     const date_effet = date_precompte
       ? adherentCalculationService.calculateDateEffet(date_precompte)
       : '';
@@ -341,6 +369,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         date_souscription: prev.date_souscription,
         date_naissance: prev.date_naissance,
         age_retraite: newAgeRetraite,
+        date_precompte: prev.date_precompte,
       });
       const cotisation_es = computeCotisationEs(
         { cotisation_annuelle: newCotisationAnnuelle, age_retraite: newAgeRetraite, nb_trimestre: dates.nb_trimestre },
@@ -363,11 +392,12 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     const { name, value } = e.target;
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
-      if (name === 'date_souscription' || name === 'date_naissance') {
+      if (name === 'date_souscription' || name === 'date_naissance' || name === 'date_precompte') {
         const dates = recalculateDates({
           date_souscription: updated.date_souscription,
           date_naissance: updated.date_naissance,
           age_retraite: updated.age_retraite,
+          date_precompte: updated.date_precompte,
         });
         const merged = { ...updated, ...dates };
         return {
@@ -391,6 +421,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           date_souscription: updated.date_souscription,
           date_naissance: updated.date_naissance,
           age_retraite: val,
+          date_precompte: updated.date_precompte,
         });
         const merged = { ...updated, ...dates };
         return {
@@ -469,6 +500,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         date_souscription: prev.date_souscription,
         date_naissance: newDateNaissance,
         age_retraite: ageRetraite,
+        date_precompte: prev.date_precompte,
       });
       const cotisation_es = computeCotisationEs(
         { cotisation_annuelle: cotisationAnnuelle, age_retraite: ageRetraite, nb_trimestre: dates.nb_trimestre },
@@ -535,7 +567,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       }
 
       if (!formData.date_precompte) {
-        setFormError('La date de premier précompte est manquante. Vérifiez la date d\'adhésion.');
+        setFormError('Veuillez selectionner le trimestre du premier precompte.');
         setIsSubmitting(false);
         return;
       }
@@ -874,9 +906,33 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             </div>
 
             <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Trimestre du premier precompte</label>
+              <select
+                name="date_precompte"
+                required
+                value={formData.date_precompte}
+                onChange={handleChange}
+                disabled={displayedPrecompteOptions.length === 0}
+                className="mt-1 block w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 font-medium disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                {displayedPrecompteOptions.length === 0 ? (
+                  <option value="">Aucun trimestre disponible</option>
+                ) : (
+                  <>
+                    <option value="">-- Selectionner un trimestre --</option>
+                    {displayedPrecompteOptions.map((option) => (
+                      <option key={option.date} value={option.date}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </>
+                )}
+              </select>
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-slate-600 uppercase">
-                Date d'effet du contrat{' '}
-                <span className="text-emerald-600 normal-case font-normal">(auto)</span>
+                Date d'effet du contrat
               </label>
               <input
                 type="date"
@@ -890,12 +946,11 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             <div>
               <label className="block text-sm font-semibold text-slate-600 uppercase">Âge de retraite (Ans)</label>
               <input
-                type="number"
+                type="text"
                 name="age_retraite"
-                required
+                disabled
                 value={formData.age_retraite}
-                onChange={(e) => handleCustomNumberChange('age_retraite', parseInt(e.target.value) || 0)}
-                className="mt-1 block w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 font-semibold font-mono"
+                className="mt-1 block w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-600 font-semibold font-mono cursor-not-allowed"
               />
             </div>
 
@@ -914,19 +969,19 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             <div>
               <label className="block text-sm font-semibold text-slate-600 uppercase">Cotisation Annuelle Globale (FCFA)</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 name="cotisation_annuelle"
                 required
-                value={formData.cotisation_annuelle}
-                onChange={(e) => handleCustomNumberChange('cotisation_annuelle', parseFloat(e.target.value) || 0)}
+                value={formatNumberInput(formData.cotisation_annuelle)}
+                onChange={(e) => handleCustomNumberChange('cotisation_annuelle', parseFormattedNumber(e.target.value))}
                 className="mt-1 block w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 font-bold font-mono"
               />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-slate-600 uppercase">
-                Date de premier précompte{' '}
-                <span className="text-emerald-600 normal-case font-normal">(auto)</span>
+                Date de premier precompte
               </label>
               <input
                 type="date"
@@ -951,13 +1006,12 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             <div>
               <label className="block text-sm font-semibold text-slate-600 uppercase">
                 Cotisation Épargne Santé-Retraite calculée{' '}
-                <span className="text-emerald-600 normal-case font-normal">(auto)</span>
               </label>
               <input
-                type="number"
+                type="text"
                 name="cotisation_es"
                 disabled
-                value={formData.cotisation_es}
+                value={formatNumberInput(formData.cotisation_es)}
                 className="mt-1 block w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-emerald-700 font-bold font-mono cursor-not-allowed"
               />
               <p className="mt-1 text-xs text-slate-500">
@@ -965,9 +1019,6 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
               </p>
             </div>
 
-            <div className="flex items-center justify-center p-3 bg-emerald-50/50 rounded-xl border border-dotted border-emerald-200 text-sm text-emerald-800">
-              Cotisation Retraite Complémentaire : {((formData.cotisation_annuelle - formData.cotisation_es) || 0).toLocaleString('fr-FR')} FCFA / an
-            </div>
           </div>
         </div>
 

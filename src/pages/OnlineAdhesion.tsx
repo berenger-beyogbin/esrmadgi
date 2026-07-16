@@ -46,7 +46,7 @@ function isRetirementBeforeFirstPrecompte(dateRetraite?: string | null, datePrec
 
 function initialPayload(): OnlineAdhesionPayload {
   const dateSouscription = todayISO();
-  const datePrecompte = adherentCalculationService.calculateDatePremierPrecompte(dateSouscription);
+  const datePrecompte = adherentCalculationService.resolveDatePremierPrecompteChoisie(dateSouscription);
   const dateEffet = datePrecompte ? adherentCalculationService.calculateDateEffet(datePrecompte) : '';
 
   return {
@@ -111,13 +111,20 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
 
   const gradeOptions = refs?.grades ?? [];
   const civiliteOptions = useMemo(() => refs?.civilites.map((c) => c.libelle_civilite) ?? [], [refs]);
+  const precompteOptions = useMemo(
+    () => adherentCalculationService.getPremierPrecompteTrimestreOptions(formData.date_souscription, true),
+    [formData.date_souscription],
+  );
   const lookupDisabled = isSearching || isLoadingRefs || !matricule.trim() || !lookupDateNaissance;
 
   const recalculateFrom = (data: OnlineAdhesionPayload, grade?: Grade | null): OnlineAdhesionPayload => {
     const selectedGrade = grade ?? gradeOptions.find((g) => String(g.id_grade) === data.grade_id) ?? null;
     const ageRetraite = selectedGrade?.age_retraite ?? data.age_retraite;
     const cotisationAnnuelle = selectedGrade?.cotisation_annuelle ?? data.cotisation_annuelle;
-    const datePrecompte = adherentCalculationService.calculateDatePremierPrecompte(data.date_souscription);
+    const datePrecompte = adherentCalculationService.resolveDatePremierPrecompteChoisie(
+      data.date_souscription,
+      data.date_precompte,
+    );
     const dateEffet = datePrecompte ? adherentCalculationService.calculateDateEffet(datePrecompte) : '';
     const dateRetraite =
       data.date_naissance && ageRetraite > 0
@@ -218,7 +225,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
   const updateField = (name: keyof OnlineAdhesionPayload, value: string | number | null) => {
     setFormData((prev) => {
       const next = { ...prev, [name]: value } as OnlineAdhesionPayload;
-      if (name === 'date_souscription' || name === 'date_naissance') return recalculateFrom(next);
+      if (name === 'date_souscription' || name === 'date_naissance' || name === 'date_precompte') return recalculateFrom(next);
       return next;
     });
   };
@@ -247,6 +254,10 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
     }
     if (!formData.situation_matrimoniale) {
       setErrorMsg('Veuillez selectionner la situation matrimoniale.');
+      return;
+    }
+    if (!formData.date_precompte) {
+      setErrorMsg("Aucun trimestre de premier precompte n'est disponible pour cette date d'adhesion.");
       return;
     }
     if (isRetirementBeforeFirstPrecompte(formData.date_retraite, formData.date_precompte)) {
@@ -439,7 +450,35 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                   <Field label="Age retraite">
                     <input value={formData.age_retraite} readOnly className={`${fieldClass} bg-slate-100`} />
                   </Field>
+                  <Field label="Trimestre du premier precompte">
+                    <select
+                      value={formData.date_precompte || ''}
+                      onChange={(e) => updateField('date_precompte', e.target.value)}
+                      className={fieldClass}
+                      disabled={precompteOptions.length === 0}
+                      required
+                    >
+                      {precompteOptions.length === 0 ? (
+                        <option value="">Aucun trimestre disponible</option>
+                      ) : (
+                        <>
+                          <option value="">-- Selectionner un trimestre --</option>
+                          {precompteOptions.map((option) => (
+                            <option key={option.date} value={option.date}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </>
+                      )}
+                    </select>
+                  </Field>
                 </div>
+
+                {precompteOptions.length === 0 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-semibold">
+                    Aucun trimestre de l'annee d'adhesion ou de l'annee suivante ne commence a partir de cette date.
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-5">
                   <Summary label="Cotisation annuelle" value={formatFCFA(formData.cotisation_annuelle)} />

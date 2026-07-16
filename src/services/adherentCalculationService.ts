@@ -47,6 +47,12 @@ export interface CalculCotisationTrimestrielleResult {
   status: 'OK' | 'PARAMETRES_INVALIDES' | 'LX_INTROUVABLE' | 'LX_NUL' | 'DENOMINATEUR_INVALIDE';
 }
 
+export interface PremierPrecompteTrimestreOption {
+  trimestre: 1 | 2 | 3 | 4;
+  date: string;
+  label: string;
+}
+
 // ─── Utilitaire d'arrondi ────────────────────────────────────────────────────
 
 /**
@@ -78,6 +84,41 @@ export function roundToStep(
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export const adherentCalculationService = {
+
+  /**
+   * Retourne les premiers jours de trimestre disponibles pour l'annee d'adhesion
+   * et l'annee suivante.
+   * Avec onlyOnOrAfterAdhesion=true, seuls les trimestres dont le premier jour
+   * n'est pas anterieur a la date d'adhesion sont proposes.
+   */
+  getPremierPrecompteTrimestreOptions(
+    dateAdhesion: string,
+    onlyOnOrAfterAdhesion = true,
+  ): PremierPrecompteTrimestreOption[] {
+    const isoDateAdhesion = toIsoDate(dateAdhesion);
+    if (!isoDateAdhesion) return [];
+
+    const adhesionYear = Number(isoDateAdhesion.split('-')[0]);
+    if (!Number.isInteger(adhesionYear)) return [];
+
+    const options: PremierPrecompteTrimestreOption[] = [adhesionYear, adhesionYear + 1].flatMap((year) => [
+      { trimestre: 1, date: `${year}-01-01`, label: `1er trimestre ${year}` },
+      { trimestre: 2, date: `${year}-04-01`, label: `2e trimestre ${year}` },
+      { trimestre: 3, date: `${year}-07-01`, label: `3e trimestre ${year}` },
+      { trimestre: 4, date: `${year}-10-01`, label: `4e trimestre ${year}` },
+    ]);
+
+    return onlyOnOrAfterAdhesion
+      ? options.filter((option) => option.date >= isoDateAdhesion)
+      : options;
+  },
+
+  resolveDatePremierPrecompteChoisie(dateAdhesion: string, selectedDate?: string | null): string {
+    const options = this.getPremierPrecompteTrimestreOptions(dateAdhesion, true);
+    const selectedIso = toIsoDate(selectedDate);
+    if (selectedIso && options.some((option) => option.date === selectedIso)) return selectedIso;
+    return '';
+  },
 
   /**
    * Retourne la première fin de trimestre >= dateAdhesion.
@@ -121,15 +162,16 @@ export const adherentCalculationService = {
   },
 
   /**
-   * Retourne datePrecompte + 1 jour.
+   * Retourne le premier jour du trimestre qui suit le trimestre du précompte.
    * WebDev : DateEffet
    *
-   * Gère le passage d'année : 2025-12-31 → 2026-01-01
+   * Compatible avec l'ancienne date de fin de trimestre et le nouveau choix
+   * manuel du trimestre, qui enregistre le premier jour du trimestre.
    *
    * Exemples :
    *   2025-03-31 → 2025-04-01
-   *   2025-06-30 → 2025-07-01
-   *   2025-09-30 → 2025-10-01
+   *   2025-04-01 → 2025-07-01
+   *   2025-10-01 → 2026-01-01
    *   2025-12-31 → 2026-01-01
    */
   calculateDateEffet(datePrecompte: string): string {
@@ -138,14 +180,11 @@ export const adherentCalculationService = {
     try {
       const parts = isoDatePrecompte.split('-').map(Number);
       if (parts.length !== 3 || parts.some(isNaN)) return '';
-      const [year, month, day] = parts;
-      // UTC pour éviter les décalages DST
-      const d = new Date(Date.UTC(year, month - 1, day));
-      d.setUTCDate(d.getUTCDate() + 1);
-      const y = d.getUTCFullYear();
-      const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const dd = String(d.getUTCDate()).padStart(2, '0');
-      return `${y}-${m}-${dd}`;
+      const [year, month] = parts;
+      const currentQuarter = Math.floor((month - 1) / 3) + 1;
+      const nextQuarterYear = currentQuarter === 4 ? year + 1 : year;
+      const nextQuarterMonth = currentQuarter === 4 ? 1 : currentQuarter * 3 + 1;
+      return `${nextQuarterYear}-${String(nextQuarterMonth).padStart(2, '0')}-01`;
     } catch (e) {
       console.error('Erreur calculateDateEffet:', e);
       return '';
