@@ -4,16 +4,17 @@ import { VAdherentComplet, DBUser, AuditLog } from '../types';
 import AdherentForm from '../components/AdherentForm';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import BeneficiairesList from '../components/BeneficiairesList';
-import { Search, Plus, Edit2, Eye, UserPlus, Milestone, Filter, RefreshCw, Calendar, Mail, Phone, Users, ShieldAlert, KeyRound, Power } from 'lucide-react';
+import { Search, Plus, Edit2, Eye, UserPlus, Milestone, Filter, RefreshCw, Calendar, Mail, Phone, Users, ShieldAlert, KeyRound, Power, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
-import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
 
 interface AdherentsProps {
   currentUser: DBUser;
 }
 
 type ViewState = 'LIST' | 'FORM' | 'DETAILS';
+const DEFAULT_ADHERENTS_PER_PAGE = 6;
+const ADHERENTS_PER_PAGE_OPTIONS = [6, 10, 20, 50];
 
 export default function Adherents({ currentUser }: AdherentsProps) {
   const [adherents, setAdherents] = useState<VAdherentComplet[]>([]);
@@ -23,6 +24,8 @@ export default function Adherents({ currentUser }: AdherentsProps) {
   // Filter States
   const [search, setSearch] = useState('');
   const [statutFilter, setStatutFilter] = useState<'TOUS' | 'ACTIF' | 'RETRAITE' | 'DECEDE' | 'INACTIF'>('TOUS');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ADHERENTS_PER_PAGE);
 
   // Page Routing states
   const [viewState, setViewState] = useState<ViewState>('LIST');
@@ -50,6 +53,7 @@ export default function Adherents({ currentUser }: AdherentsProps) {
 
       if (error) throw error;
       setAdherents(data || []);
+      setCurrentPage(1);
     } catch (e: any) {
       console.error(e);
       setErrorMsg(typeof e === 'string' ? e : (e?.message ?? 'Erreur de récupération des adhérents de la MADGI.'));
@@ -175,6 +179,12 @@ export default function Adherents({ currentUser }: AdherentsProps) {
     return Number.isNaN(parsed.getTime()) ? date : parsed.toLocaleString('fr-FR');
   };
 
+  const totalPages = Math.max(1, Math.ceil(adherents.length / rowsPerPage));
+  const paginatedAdherents = adherents.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage,
+  );
+
   return (
     <div className="space-y-6" id="adherents-main-container">
       {/* 1. LIST MODULE */}
@@ -273,8 +283,9 @@ export default function Adherents({ currentUser }: AdherentsProps) {
               )}
             </div>
           ) : (
-            <ScrollableTableWrapper>
-              <table className="min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-adherents-complets">
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-adherents-complets">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
                   <tr>
                     <th className="py-3.5 px-4">Matricule</th>
@@ -288,7 +299,7 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {adherents.map((ad) => (
+                  {paginatedAdherents.map((ad) => (
                     <tr key={ad.id} className="hover:bg-slate-50 transition-colors duration-150">
                       <td className="py-4 px-4 font-bold text-slate-800 font-mono tracking-wide">
                         {ad.matricule}
@@ -359,8 +370,71 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </ScrollableTableWrapper>
+                </table>
+              </div>
+
+              {adherents.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/70">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                    <p className="text-xs font-semibold text-slate-500">
+                      Affichage {(currentPage - 1) * rowsPerPage + 1} à{' '}
+                      {Math.min(currentPage * rowsPerPage, adherents.length)} sur {adherents.length} adhérents
+                    </p>
+                    <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
+                      Lignes par page
+                      <select
+                        value={rowsPerPage}
+                        onChange={(event) => {
+                          setRowsPerPage(Number(event.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        aria-label="Nombre de lignes par page"
+                      >
+                        {ADHERENTS_PER_PAGE_OPTIONS.map((size) => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-1" aria-label="Pagination du registre des adhérents">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="Page précédente"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-9 h-9 px-2 rounded-lg border text-sm font-bold transition ${
+                          currentPage === page
+                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                        aria-current={currentPage === page ? 'page' : undefined}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="Page suivante"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
