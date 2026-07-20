@@ -88,8 +88,8 @@ export const adherentCalculationService = {
   /**
    * Retourne les premiers jours de trimestre disponibles pour l'annee d'adhesion
    * et l'annee suivante.
-   * Avec onlyOnOrAfterAdhesion=true, seuls les trimestres dont le premier jour
-   * n'est pas anterieur a la date d'adhesion sont proposes.
+   * Avec onlyOnOrAfterAdhesion=true, la liste commence par le trimestre qui
+   * contient la date d'adhesion, puisque le precompte est effectue en fin de trimestre.
    */
   getPremierPrecompteTrimestreOptions(
     dateAdhesion: string,
@@ -100,6 +100,10 @@ export const adherentCalculationService = {
 
     const adhesionYear = Number(isoDateAdhesion.split('-')[0]);
     if (!Number.isInteger(adhesionYear)) return [];
+    const adhesionMonth = Number(isoDateAdhesion.split('-')[1]);
+    if (!Number.isInteger(adhesionMonth) || adhesionMonth < 1 || adhesionMonth > 12) return [];
+    const currentQuarterStartMonth = Math.floor((adhesionMonth - 1) / 3) * 3 + 1;
+    const currentQuarterStart = `${adhesionYear}-${String(currentQuarterStartMonth).padStart(2, '0')}-01`;
 
     const options: PremierPrecompteTrimestreOption[] = [adhesionYear, adhesionYear + 1].flatMap((year) => [
       { trimestre: 1, date: `${year}-01-01`, label: `1er trimestre ${year}` },
@@ -109,7 +113,7 @@ export const adherentCalculationService = {
     ]);
 
     return onlyOnOrAfterAdhesion
-      ? options.filter((option) => option.date >= isoDateAdhesion)
+      ? options.filter((option) => option.date >= currentQuarterStart)
       : options;
   },
 

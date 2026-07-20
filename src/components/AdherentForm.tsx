@@ -534,7 +534,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
 
     setAgentSearchStatus('found');
     setAgentSearchMessage(
-      `Agent trouvé (${agentData.source}) — informations préchargées, grade à sélectionner.`,
+      `Agent trouvé (${agentData.source}) — informations préchargées, grade et trimestre du premier précompte à sélectionner.`,
     );
   };
 

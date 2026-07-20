@@ -191,6 +191,10 @@ function getAllowedPremierPrecompteDates(dateSouscription: string): string[] {
 
   const adhesionYear = Number(isoDateSouscription.slice(0, 4));
   if (!Number.isInteger(adhesionYear)) return [];
+  const adhesionMonth = Number(isoDateSouscription.slice(5, 7));
+  if (!Number.isInteger(adhesionMonth) || adhesionMonth < 1 || adhesionMonth > 12) return [];
+  const currentQuarterStartMonth = Math.floor((adhesionMonth - 1) / 3) * 3 + 1;
+  const currentQuarterStart = `${adhesionYear}-${String(currentQuarterStartMonth).padStart(2, '0')}-01`;
 
   return [adhesionYear, adhesionYear + 1]
     .flatMap((year) => [
@@ -199,7 +203,7 @@ function getAllowedPremierPrecompteDates(dateSouscription: string): string[] {
       `${year}-07-01`,
       `${year}-10-01`,
     ])
-    .filter((datePrecompte) => datePrecompte >= isoDateSouscription);
+    .filter((datePrecompte) => datePrecompte >= currentQuarterStart);
 }
 
 function ensureSubmittable(payload: OnlineAdhesionPayload): void {

@@ -503,7 +503,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
 
                 {precompteOptions.length === 0 && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-semibold">
-                    Aucun trimestre de l'annee d'adhesion ou de l'annee suivante ne commence a partir de cette date.
+                    Aucun trimestre n'est disponible pour l'annee d'adhesion ou l'annee suivante.
                   </div>
                 )}
 
