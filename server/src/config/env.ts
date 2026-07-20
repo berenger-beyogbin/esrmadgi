@@ -25,7 +25,6 @@ export const env = {
   IS_DEV: process.env.NODE_ENV !== 'production',
   ENABLE_DEMO_AUTH: process.env.ENABLE_DEMO_AUTH === 'true',
   TRUST_PROXY: process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1',
-  TURNSTILE_SECRET_KEY: opt('TURNSTILE_SECRET_KEY'),
 
   SMTP_HOST: opt('SMTP_HOST'),
   SMTP_PORT: parseInt(process.env.SMTP_PORT ?? '587', 10),

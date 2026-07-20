@@ -271,6 +271,10 @@ async function enrichWithCurrentActuarialParams(payload: OnlineAdhesionPayload):
   };
 }
 
+const PUBLIC_REFERENTIELS_CACHE_TTL_MS = 5 * 60 * 1000;
+let publicReferentielsCache: { data: unknown; expiresAt: number } | null = null;
+let publicReferentielsRequest: Promise<unknown> | null = null;
+
 export const adhesionsEnLigneService = {
   async searchAgent(matricule: string, dateNaissance: string) {
     const result = await agentsService.searchByMatricule(matricule.trim().toUpperCase());
@@ -292,33 +296,47 @@ export const adhesionsEnLigneService = {
   },
 
   async getPublicReferentiels(): Promise<unknown> {
-    const [civilites, situations, emplois, grades, mortalite, params] = await Promise.all([
-      adherentsRepository.findActiveCivilites(),
-      adherentsRepository.findActiveSituationsMatrimoniales(),
-      adherentsRepository.findActiveEmplois(),
-      adherentsRepository.findActiveGrades(),
-      parametresRepository.findMortalite(),
-      parametresRepository.findParametresGeneraux(),
-    ]);
+    if (publicReferentielsCache && publicReferentielsCache.expiresAt > Date.now()) {
+      return publicReferentielsCache.data;
+    }
+    if (publicReferentielsRequest) return publicReferentielsRequest;
 
-    const paramRows = params as AnyRow[];
-    const tauxGar = parsePercent(findParamValue(paramRows, 'TAUX_GAR'));
-    const fraisRente = parsePercent(findParamValue(paramRows, 'FRAIS_RENTE'));
-    const ageMaxRaw = findParamValue(paramRows, 'AGE_MAX');
-    const ageMax = ageMaxRaw ? Number(ageMaxRaw) : null;
+    publicReferentielsRequest = (async () => {
+      const [civilites, situations, emplois, grades, mortalite, params] = await Promise.all([
+        adherentsRepository.findActiveCivilites(),
+        adherentsRepository.findActiveSituationsMatrimoniales(),
+        adherentsRepository.findActiveEmplois(),
+        adherentsRepository.findActiveGrades(),
+        parametresRepository.findMortalite(),
+        parametresRepository.findParametresGeneraux(),
+      ]);
 
-    return {
-      civilites,
-      situations_matrimoniales: situations,
-      emplois,
-      grades,
-      mortalite,
-      parametres_calcul: {
-        tauxAnnuel: tauxGar == null ? null : tauxGar / 100,
-        fraisRente: fraisRente == null ? null : fraisRente / 100,
-        ageMax: Number.isFinite(ageMax) ? ageMax : null,
-      },
-    };
+      const paramRows = params as AnyRow[];
+      const tauxGar = parsePercent(findParamValue(paramRows, 'TAUX_GAR'));
+      const fraisRente = parsePercent(findParamValue(paramRows, 'FRAIS_RENTE'));
+      const ageMaxRaw = findParamValue(paramRows, 'AGE_MAX');
+      const ageMax = ageMaxRaw ? Number(ageMaxRaw) : null;
+      const data = {
+        civilites,
+        situations_matrimoniales: situations,
+        emplois,
+        grades,
+        mortalite,
+        parametres_calcul: {
+          tauxAnnuel: tauxGar == null ? null : tauxGar / 100,
+          fraisRente: fraisRente == null ? null : fraisRente / 100,
+          ageMax: Number.isFinite(ageMax) ? ageMax : null,
+        },
+      };
+      publicReferentielsCache = { data, expiresAt: Date.now() + PUBLIC_REFERENTIELS_CACHE_TTL_MS };
+      return data;
+    })();
+
+    try {
+      return await publicReferentielsRequest;
+    } finally {
+      publicReferentielsRequest = null;
+    }
   },
 
   async submitPublic(payload: OnlineAdhesionPayload): Promise<unknown> {

@@ -84,6 +84,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMatricule, setSuccessMatricule] = useState('');
+  const [pendingAgent, setPendingAgent] = useState<ExternalAgentInfo | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -115,7 +116,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
     () => adherentCalculationService.getPremierPrecompteTrimestreOptions(formData.date_souscription, true),
     [formData.date_souscription],
   );
-  const lookupDisabled = isSearching || isLoadingRefs || !matricule.trim() || !lookupDateNaissance;
+  const lookupDisabled = isSearching || !matricule.trim() || !lookupDateNaissance;
 
   const recalculateFrom = (data: OnlineAdhesionPayload, grade?: Grade | null): OnlineAdhesionPayload => {
     const selectedGrade = grade ?? gradeOptions.find((g) => String(g.id_grade) === data.grade_id) ?? null;
@@ -192,6 +193,21 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
     setFormData(recalculateFrom(loaded));
   };
 
+  useEffect(() => {
+    if (!pendingAgent || !refs) return;
+    preloadFromAgent(pendingAgent);
+    setPendingAgent(null);
+    setIsSearching(false);
+    setStep('FORM');
+  }, [pendingAgent, refs]);
+
+  useEffect(() => {
+    if (!pendingAgent || isLoadingRefs || refs) return;
+    setPendingAgent(null);
+    setIsSearching(false);
+    setErrorMsg('Impossible de charger les informations necessaires au formulaire. Veuillez reessayer.');
+  }, [pendingAgent, isLoadingRefs, refs]);
+
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const mat = matricule.trim().toUpperCase();
@@ -207,18 +223,29 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
     setIsSearching(true);
     setErrorMsg(null);
     const { data, error } = await onlineAdhesionService.searchAgent(mat, lookupDateNaissance);
-    setIsSearching(false);
-
     if (error) {
+      setIsSearching(false);
       setErrorMsg(error);
       return;
     }
     if (!data) {
+      setIsSearching(false);
       setErrorMsg('Aucun agent trouve pour ce matricule.');
       return;
     }
 
+    if (!refs) {
+      if (!isLoadingRefs) {
+        setIsSearching(false);
+        setErrorMsg('Impossible de charger les informations necessaires au formulaire. Veuillez reessayer.');
+        return;
+      }
+      setPendingAgent(data);
+      return;
+    }
+
     preloadFromAgent(data);
+    setIsSearching(false);
     setStep('FORM');
   };
 
@@ -357,7 +384,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                     onChange={(e) => setMatricule(e.target.value.toUpperCase())}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
                     placeholder="Ex : 000000Y ou 11111R"
-                    disabled={isSearching || isLoadingRefs}
+                    disabled={isSearching}
                   />
                 </div>
 
@@ -368,7 +395,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                     value={lookupDateNaissance}
                     onChange={(e) => setLookupDateNaissance(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
-                    disabled={isSearching || isLoadingRefs}
+                    disabled={isSearching}
                     required
                   />
                 </div>
@@ -378,7 +405,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                   disabled={lookupDisabled}
                   className="w-full py-3 bg-[#2b529f] hover:bg-[#1f3e7a] text-white rounded-xl font-bold inline-flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {isSearching || isLoadingRefs ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                  {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
                   Rechercher
                 </button>
               </form>

@@ -29,7 +29,6 @@ FRONTEND_URL=http://localhost:5173
 SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ENABLE_DEMO_AUTH=false
-TURNSTILE_SECRET_KEY=...
 ```
 
 Variables optionnelles (search-by-matricule) :
