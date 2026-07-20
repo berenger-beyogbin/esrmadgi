@@ -97,8 +97,18 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
         </div>
       ) : (
         <ScrollableTableWrapper>
-          <table className="min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-comptes-esr">
-            <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
+          <table className="w-full table-fixed divide-y divide-slate-100 text-left text-xs" id="tbl-comptes-esr">
+            <colgroup>
+              <col className="w-[9%]" />
+              <col className="w-[18%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
+              <col className="w-[14%]" />
+              <col className="w-[13%]" />
+              <col className="w-[10%]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-[11px] leading-tight [&_th]:whitespace-normal [&_th]:break-words [&_th]:px-2 [&_th]:py-3">
               <tr>
                 <th className="py-3.5 px-4">Matricule</th>
                 <th className="py-3.5 px-4">Nom & Prénoms</th>
@@ -110,7 +120,7 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
                 <th className="py-3.5 px-4 text-center">Date calcul / Version</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
+            <tbody className="divide-y divide-slate-100 bg-white text-slate-700 [&_td]:break-words [&_td]:px-2">
               {comptes.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50/55 transition-colors">
                   <td className="py-4 px-4 font-bold text-slate-800 font-mono tracking-wide">

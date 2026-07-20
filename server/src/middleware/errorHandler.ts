@@ -23,10 +23,14 @@ export function errorHandler(
 
   const status = (err as { status?: number; statusCode?: number }).status ?? (err as { statusCode?: number }).statusCode;
   if (status && status >= 400 && status < 500) {
-    res.status(status).json({ data: null, error: err.message || 'Requete invalide' });
+    res.status(status).json({ data: null, error: err.message || 'Requête invalide.' });
     return;
   }
 
   console.error('[error]', err.message);
-  res.status(500).json({ data: null, error: 'Erreur serveur interne' });
+  res.status(500).json({
+    data: null,
+    error:
+      "Impossible de traiter la demande pour le moment. Veuillez réessayer. Si le problème persiste, contactez l'administrateur.",
+  });
 }

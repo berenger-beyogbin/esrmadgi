@@ -6,6 +6,7 @@ import { parametresGenerauxService } from '../services/parametresGenerauxService
 import { Civilite, SituationMatrimoniale, Emploi, Grade, VAdherentComplet } from '../types';
 import { Save, ArrowLeft, Loader2, User, FileText, AlertTriangle, Calculator, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { formatDateFr, toIsoDate } from '../utils/formatters';
+import { toFrenchErrorMessage } from '../utils/errorMessages';
 
 // C1-E : Helpers de formatage locaux (aucune librairie externe)
 function formatFCFA(n: number): string {
@@ -621,7 +622,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       onSaveSuccess();
     } catch (e: any) {
       console.error('Erreur lors de l enregistrement:', e);
-      setFormError(e.message || "Impossible de sauvegarder l'adhérent. Vérifiez la connexion ou les permissions.");
+      setFormError(toFrenchErrorMessage(e));
     } finally {
       setIsSubmitting(false);
     }

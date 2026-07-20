@@ -2,7 +2,7 @@ import { AppError } from '../middleware/errorHandler';
 import { AuthenticatedUser } from '../types';
 import {
   LifecyclePayload,
-  CreateAdherentRpcPayload,
+  CreateAdherentPayload,
   UpdateAdherentPayload,
   adherentsRepository,
 } from '../repositories/adherents.repository';
@@ -75,31 +75,40 @@ function ensureCanAccessAdherent(user: AuthenticatedUser, adherent: unknown): vo
   }
 }
 
-function toCreateRpcPayload(user: AuthenticatedUser, payload: AdherentFormPayload): CreateAdherentRpcPayload {
-  const statutStr = payload.statut || 'ACTIF';
+function normalizeFormPayload(payload: AdherentFormPayload): AdherentFormPayload {
   return {
-    p_matricule: payload.matricule,
-    p_nom: payload.nom,
-    p_prenoms: payload.prenoms,
-    p_civilite: payload.civilite,
-    p_telephone: payload.telephone,
-    p_email: payload.email,
-    p_date_naissance: payload.date_naissance,
-    p_emploi: payload.emploi,
-    p_situation_matrimoniale: payload.situation_matrimoniale,
-    p_date_souscription: payload.date_souscription,
-    p_statut: statutStr === 'ACTIF',
-    p_etat: statutStr,
-    p_grade: payload.grade || '',
-    p_id_grade: Number(payload.grade_id) || null,
-    p_date_effet: payload.date_effet,
-    p_date_retraite: payload.date_retraite,
-    p_age_retraite: Number(payload.age_retraite) || 60,
-    p_cotisation_annuelle: Number(payload.cotisation_annuelle) || 0,
-    p_date_precompte: payload.date_precompte || null,
-    p_cotisation_es: Number(payload.cotisation_es) || 0,
-    p_nb_trimestre: Number(payload.nb_trimestre) || 0,
-    p_utilisateur: user.matricule || user.email || payload.matricule,
+    ...payload,
+    matricule: payload.matricule.trim().toUpperCase(),
+    nom: payload.nom.trim().toUpperCase(),
+    prenoms: payload.prenoms.trim(),
+    email: payload.email.trim(),
+    telephone: payload.telephone.trim(),
+    grade: payload.grade?.trim() || '',
+  };
+}
+
+function toCreatePayload(payload: AdherentFormPayload): CreateAdherentPayload {
+  return {
+    date_souscription: payload.date_souscription,
+    matricule: payload.matricule,
+    civilite: payload.civilite,
+    nom: payload.nom,
+    prenoms: payload.prenoms,
+    telephone: payload.telephone,
+    email: payload.email,
+    statut: payload.statut || 'ACTIF',
+    date_naissance: payload.date_naissance,
+    situation_matrimoniale: payload.situation_matrimoniale,
+    emploi: payload.emploi,
+    grade_id: payload.grade_id,
+    grade: payload.grade,
+    date_precompte: payload.date_precompte || null,
+    date_effet: payload.date_effet,
+    date_retraite: payload.date_retraite,
+    age_retraite: Number(payload.age_retraite) || 60,
+    cotisation_annuelle: Number(payload.cotisation_annuelle) || 0,
+    cotisation_es: Number(payload.cotisation_es) || 0,
+    nb_trimestre: Number(payload.nb_trimestre) || 0,
   };
 }
 
@@ -173,16 +182,28 @@ export const adherentsService = {
   },
 
   async create(user: AuthenticatedUser, payload: AdherentFormPayload): Promise<unknown> {
-    if (!payload.grade_id) {
+    const normalized = normalizeFormPayload(payload);
+    if (!normalized.grade_id) {
       throw new AppError(400, 'Le grade professionnel est obligatoire');
     }
-    const data = await adherentsRepository.createComplete(toCreateRpcPayload(user, payload));
+
+    const existing = await adherentsRepository.findByMatricule(normalized.matricule);
+    if (existing) {
+      throw new AppError(409, 'Ce matricule est déjà enregistré. Vérifiez le matricule ou recherchez la fiche existante.');
+    }
+
+    const existingEmail = await adherentsRepository.findByEmail(normalized.email);
+    if (existingEmail) {
+      throw new AppError(409, 'Cette adresse email est déjà utilisée. Renseignez une autre adresse ou vérifiez la fiche existante.');
+    }
+
+    const data = await adherentsRepository.createComplete(toCreatePayload(normalized));
     await auditService
       .logEvent(user, {
         action: 'CREATION_ADHERENT',
         objetAudit: 'ADHERENT',
-        idObjet: payload.matricule,
-        details: `Creation de l'adherent ${payload.matricule} - ${payload.nom} ${payload.prenoms}.`,
+        idObjet: normalized.matricule,
+        details: `Creation de l'adherent ${normalized.matricule} - ${normalized.nom} ${normalized.prenoms}.`,
       })
       .catch(() => undefined);
     return data;

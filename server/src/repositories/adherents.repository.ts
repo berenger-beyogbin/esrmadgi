@@ -1,29 +1,27 @@
 import { getSupabaseServer } from '../config/supabaseServer';
 import { buildIlikeOrFilter } from '../utils/postgrestFilters';
 
-export interface CreateAdherentRpcPayload {
-  p_matricule: string;
-  p_nom: string;
-  p_prenoms: string;
-  p_civilite: string;
-  p_telephone: string;
-  p_email: string;
-  p_date_naissance: string;
-  p_emploi: string;
-  p_situation_matrimoniale: string;
-  p_date_souscription: string;
-  p_statut: boolean;
-  p_etat: string;
-  p_grade: string;
-  p_id_grade: number | null;
-  p_date_effet: string;
-  p_date_retraite: string;
-  p_age_retraite: number;
-  p_cotisation_annuelle: number;
-  p_date_precompte: string | null;
-  p_cotisation_es: number;
-  p_nb_trimestre: number;
-  p_utilisateur: string;
+export interface CreateAdherentPayload {
+  date_souscription: string;
+  matricule: string;
+  civilite: string;
+  nom: string;
+  prenoms: string;
+  telephone: string;
+  email: string;
+  statut: string;
+  date_naissance: string;
+  situation_matrimoniale: string;
+  emploi: string;
+  grade_id: string;
+  grade?: string;
+  date_precompte?: string | null;
+  date_effet: string;
+  date_retraite: string;
+  age_retraite: number;
+  cotisation_annuelle: number;
+  cotisation_es: number;
+  nb_trimestre: number;
 }
 
 export interface UpdateAdherentPayload {
@@ -54,6 +52,101 @@ export interface LifecyclePayload {
   etat: 'ACTIF' | 'INACTIF' | 'RETRAITE' | 'DECEDE';
   decede: boolean;
   retraite: boolean;
+}
+
+function sexeFromCivilite(civilite: string): string | null {
+  const normalized = civilite
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
+
+  if (normalized.includes('MONSIEUR')) return 'M';
+  if (normalized.includes('MADAME') || normalized.includes('MADEMOISELLE')) return 'F';
+  return null;
+}
+
+function adherentBasePayload(payload: CreateAdherentPayload | UpdateAdherentPayload) {
+  const statutActif = payload.statut === 'ACTIF';
+
+  return {
+    date_souscription: payload.date_souscription,
+    matricule: payload.matricule,
+    civilite: payload.civilite,
+    nom: payload.nom,
+    prenoms: payload.prenoms,
+    telephone: payload.telephone,
+    email: payload.email,
+    statut: statutActif,
+    etat: payload.statut,
+    decede: payload.statut === 'DECEDE',
+    retraite: payload.statut === 'RETRAITE',
+    date_naissance: payload.date_naissance,
+    situation_matrimoniale: payload.situation_matrimoniale,
+    emploi: payload.emploi,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function infoCotisationPayload(idAdherent: number | string, payload: CreateAdherentPayload | UpdateAdherentPayload) {
+  return {
+    id_adherent: Number(idAdherent),
+    grade: payload.grade || null,
+    id_grade: Number(payload.grade_id) || null,
+    date_naissance: payload.date_naissance,
+    date_retraite: payload.date_retraite,
+    age_retraite: payload.age_retraite,
+    cotisation_annuelle: payload.cotisation_annuelle,
+    date_precompte: payload.date_precompte || null,
+    date_effet: payload.date_effet,
+    nb_trimestre: payload.nb_trimestre,
+    cotisation_es: payload.cotisation_es,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function throwSupabaseWriteError(error: { message: string; code?: string }): never {
+  const message = error.message.toLowerCase();
+  if (
+    error.code === '23505' ||
+    message.includes('duplicate key') ||
+    message.includes('violates unique constraint')
+  ) {
+    const conflict = new Error(
+      message.includes('email')
+        ? 'Cette adresse email est déjà utilisée. Renseignez une autre adresse ou vérifiez la fiche existante.'
+        : 'Ce matricule est déjà enregistré. Vérifiez le matricule ou recherchez la fiche existante.',
+    ) as Error & { statusCode?: number };
+    conflict.statusCode = 409;
+    throw conflict;
+  }
+
+  throw new Error(error.message);
+}
+
+async function ensureCompteEsr(idAdherent: number): Promise<void> {
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from('comptes_esr')
+    .select('id_compte_esr')
+    .eq('id_adherent', idAdherent)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (data) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const { error: insertError } = await supabase.from('comptes_esr').insert({
+    id_adherent: idAdherent,
+    capital_acquis: 0,
+    pm: 0,
+    pp: 0,
+    pu: 0,
+    valeur_rachat: 0,
+    date_calcul: today,
+    version_calc: 'V1',
+  });
+
+  if (insertError) throw new Error(insertError.message);
 }
 
 export const adherentsRepository = {
@@ -121,59 +214,93 @@ export const adherentsRepository = {
     return data ?? null;
   },
 
-  async createComplete(payload: CreateAdherentRpcPayload): Promise<unknown> {
+  async findByMatricule(matricule: string): Promise<unknown | null> {
     const supabase = getSupabaseServer();
-    const { data, error } = await supabase.rpc('rpc_creer_adherent_complet', payload);
+    const { data, error } = await supabase
+      .from('adherents')
+      .select('id_adherent, matricule')
+      .eq('matricule', matricule)
+      .maybeSingle();
 
     if (error) throw new Error(error.message);
-    return data;
+    return data ?? null;
+  },
+
+  async findByEmail(email: string): Promise<unknown | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('adherents')
+      .select('id_adherent, email')
+      .eq('email', email)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data ?? null;
+  },
+
+  async createComplete(payload: CreateAdherentPayload): Promise<unknown> {
+    const supabase = getSupabaseServer();
+    let createdAdherentId: number | null = null;
+
+    try {
+      const { data, error } = await supabase
+        .from('adherents')
+        .insert({
+          ...adherentBasePayload(payload),
+          sexe: sexeFromCivilite(payload.civilite),
+          adhesion_en_ligne: false,
+          created_at: new Date().toISOString(),
+        })
+        .select('id_adherent')
+        .single();
+
+      if (error) throwSupabaseWriteError(error);
+
+      createdAdherentId = Number((data as { id_adherent?: unknown } | null)?.id_adherent);
+      if (!Number.isFinite(createdAdherentId) || createdAdherentId <= 0) {
+        throw new Error("L'identifiant adherent cree est invalide.");
+      }
+
+      const { error: infoError } = await supabase
+        .from('info_cotisations')
+        .insert({
+          ...infoCotisationPayload(createdAdherentId, payload),
+          info_actif: true,
+          created_at: new Date().toISOString(),
+        });
+
+      if (infoError) throw new Error(infoError.message);
+
+      await ensureCompteEsr(createdAdherentId);
+      return this.findById(String(createdAdherentId));
+    } catch (error) {
+      if (createdAdherentId) {
+        try {
+          await supabase.from('info_cotisations').delete().eq('id_adherent', createdAdherentId);
+          await supabase.from('comptes_esr').delete().eq('id_adherent', createdAdherentId);
+          await supabase.from('adherents').delete().eq('id_adherent', createdAdherentId);
+        } catch {
+          // Best-effort cleanup only; preserve the original creation error.
+        }
+      }
+      throw error;
+    }
   },
 
   async update(id: string, payload: UpdateAdherentPayload): Promise<unknown | null> {
     const supabase = getSupabaseServer();
-    const statutActif = payload.statut === 'ACTIF';
-    const basePayload = {
-      date_souscription: payload.date_souscription,
-      matricule: payload.matricule,
-      civilite: payload.civilite,
-      nom: payload.nom,
-      prenoms: payload.prenoms,
-      telephone: payload.telephone,
-      email: payload.email,
-      statut: statutActif,
-      etat: payload.statut,
-      decede: payload.statut === 'DECEDE',
-      retraite: payload.statut === 'RETRAITE',
-      date_naissance: payload.date_naissance,
-      situation_matrimoniale: payload.situation_matrimoniale,
-      emploi: payload.emploi,
-      updated_at: new Date().toISOString(),
-    };
 
     const { error } = await supabase
       .from('adherents')
-      .update(basePayload)
+      .update(adherentBasePayload(payload))
       .eq('id_adherent', id);
 
     if (error) throw new Error(error.message);
 
-    const infoPayload = {
-      grade: payload.grade || null,
-      id_grade: Number(payload.grade_id) || null,
-      date_naissance: payload.date_naissance,
-      date_retraite: payload.date_retraite,
-      age_retraite: payload.age_retraite,
-      cotisation_annuelle: payload.cotisation_annuelle,
-      date_precompte: payload.date_precompte || null,
-      date_effet: payload.date_effet,
-      nb_trimestre: payload.nb_trimestre,
-      cotisation_es: payload.cotisation_es,
-      updated_at: new Date().toISOString(),
-    };
-
     const { error: infoError } = await supabase
       .from('info_cotisations')
-      .update(infoPayload)
+      .update(infoCotisationPayload(id, payload))
       .eq('id_adherent', id)
       .eq('info_actif', true);
 
