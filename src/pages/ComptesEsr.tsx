@@ -42,6 +42,21 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
     }
   };
 
+  const handleAvisAnnuel = async (compte: VCompteEsrDetails) => {
+    const annee = new Date().getFullYear();
+    const { data, error } = await compteEsrService.telechargerAvisAnnuel(compte.adherent_id, annee);
+    if (error || !data) {
+      setErrorMsg(error?.message || 'Avis annuel indisponible.');
+      return;
+    }
+    const url = URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `avis-annuel-esr-${compte.matricule}-${annee}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6" id="comptes-esr-container">
       {/* Portlet Header */}
@@ -148,6 +163,12 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
                     <div>
                       <p className="font-semibold text-slate-600 font-mono text-xs">{formatDateFr(c.date_calcul)}</p>
                       <p className="text-xs text-slate-400 font-mono mt-0.5">v.{c.version_calc || '1.0'}</p>
+                      <button
+                        onClick={() => handleAvisAnnuel(c)}
+                        className="mt-2 px-2 py-1 bg-slate-800 text-white rounded text-[9px] font-bold"
+                      >
+                        Avis annuel
+                      </button>
                     </div>
                   </td>
                 </tr>

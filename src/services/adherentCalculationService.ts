@@ -257,34 +257,11 @@ export const adherentCalculationService = {
    * NOTE C1-C : sera remplacé par le moteur actuariel CalculCotisationTrimestrielle_Simple.
    * La valeur 20% est provisoire et ne reflète pas la formule WebDev.
    */
-  calculateCotisationES(cotisationAnnuelle: number, partSantePourcent: number = 20): number {
-    if (!cotisationAnnuelle || isNaN(cotisationAnnuelle)) return 0;
-    return Math.round((cotisationAnnuelle * partSantePourcent) / 100);
-  },
 
   /**
    * Placeholder actuariel — non utilisé dans le formulaire.
    * Sera remplacé en C1-C par CalculCotisationTrimestrielle_Simple.
    */
-  calculateProvisionsActuariellesPlaceholder(
-    _ageActuel: number,
-    _ageRetraite: number,
-    cotisationAnnuelle: number,
-    dureeCotisationTrimestres: number
-  ) {
-    const tauxRendementAnnuel = 0.035;
-    const annees = dureeCotisationTrimestres / 4;
-    let capitalFictif = 0;
-    for (let i = 0; i < annees; i++) {
-      capitalFictif = (capitalFictif + cotisationAnnuelle) * (1 + tauxRendementAnnuel);
-    }
-    return {
-      capitalAcquisEstime: Math.round(capitalFictif),
-      provisionMathematiqueEstime: Math.round(capitalFictif * 0.95),
-      valeurRachatFictive: Math.round(capitalFictif * 0.90),
-      status: 'PLACEHOLDER_ACTUARIEL',
-    };
-  },
 
   /**
    * Moteur actuariel C1-C — équivalent WebDev CalculCotisationTrimestrielle_Simple.

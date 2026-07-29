@@ -61,6 +61,9 @@ export function validateEnv(): void {
   if (env.NODE_ENV === 'production' && env.ENABLE_DEMO_AUTH) {
     throw new Error('[env] ENABLE_DEMO_AUTH ne doit jamais etre active en production.');
   }
+  if (env.NODE_ENV === 'production' && env.FIRST_LOGIN_FIXED_OTP) {
+    throw new Error('[env] FIRST_LOGIN_FIXED_OTP ne doit jamais etre actif en production.');
+  }
 
   const missingSupabase: string[] = [];
   if (!env.SUPABASE_URL) missingSupabase.push('SUPABASE_URL');

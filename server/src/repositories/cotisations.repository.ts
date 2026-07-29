@@ -49,7 +49,7 @@ export const cotisationsRepository = {
       query = query.eq('periode', filters.periode);
     }
     if (filters?.statut && filters.statut !== 'TOUS') {
-      query = query.eq('statut', filters.statut);
+      query = query.eq('statut_detail', filters.statut);
     }
     if (filters?.source && filters.source !== 'TOUS') {
       query = query.eq('source', filters.source);
@@ -92,6 +92,27 @@ export const cotisationsRepository = {
 
     if (error) throw new Error(error.message);
     return data ?? [];
+  },
+
+  async findEncaisseesByAdherentId(idAdherent: string, dateCalcul: string): Promise<Array<{
+    montant: number;
+    date_valeur: string;
+  }>> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_cotisations_details')
+      .select('montant,date_valeur')
+      .eq('id_adherent', idAdherent)
+      .eq('statut_detail', 'ENCAISSEE')
+      .not('date_valeur', 'is', null)
+      .lte('date_valeur', dateCalcul)
+      .order('date_valeur', { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row: any) => ({
+      montant: Number(row.montant ?? 0),
+      date_valeur: String(row.date_valeur),
+    }));
   },
 
   async findActiveAdherentsForCotisation(): Promise<ActiveAdherentForCotisation[]> {

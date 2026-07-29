@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '../lib/apiClient';
+import { apiDownloadBlob, apiGet, apiPost, apiPut } from '../lib/apiClient';
 import { Paiement } from '../types';
 
 type ApiResponse<T> = { data: T; error: string | null };
@@ -28,5 +28,23 @@ export const paiementService = {
 
     if (error) return { data: null, error: new Error(error) };
     return { data: data?.data ?? null, error: toError(data?.error) };
+  },
+
+  async changerStatut(
+    id: string,
+    statut: 'CONTROLE' | 'VALIDE' | 'REJETE' | 'ENCAISSE',
+    observation = '',
+  ): Promise<{ data: Paiement | null; error: Error | null }> {
+    const { data, error } = await apiPut<ApiResponse<Paiement>>(
+      `/api/paiements/${encodeURIComponent(id)}/statut`,
+      { statut, observation },
+    );
+    if (error) return { data: null, error: new Error(error) };
+    return { data: data?.data ?? null, error: toError(data?.error) };
+  },
+
+  async telechargerRecu(id: string): Promise<{ data: Blob | null; error: Error | null }> {
+    const { data, error } = await apiDownloadBlob(`/api/paiements/${encodeURIComponent(id)}/recu.pdf`);
+    return { data, error: error ? new Error(error) : null };
   },
 };

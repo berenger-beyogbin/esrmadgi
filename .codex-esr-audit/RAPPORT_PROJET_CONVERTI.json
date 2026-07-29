@@ -1,0 +1,3160 @@
+{
+  "paragraphs": [
+    {
+      "style": "Normal",
+      "text": "SOMMAIRE"
+    },
+    {
+      "style": "Normal",
+      "text": "INTRODUCTION"
+    },
+    {
+      "style": "Normal",
+      "text": "La Mutuelle des Agents de la Direction Générale des Impôts (MADGI) est une Mutuelle sociale qui a pour objet, à titre principal, la prévention des risques sociaux liés à la personne et la réparation de leurs conséquences. A titre accessoire, elle exerce toute activité ayant pour objet l’amélioration des conditions de vie et d’épanouissement de ses membres."
+    },
+    {
+      "style": "Normal",
+      "text": "Selon les dispositions du cahier des charges de la MADGI, les membres admis à faire valoir leurs droits à la retraite ont la faculté de conserver la couverture maladie, à condition de s’acquitter de la totalité de la prime annuelle requise. Dans la pratique, la mise en œuvre de cette disposition du cahier des charges s’avère difficile dans la mesure où le mutualiste retraité se retrouve en face d’une réduction drastique de ses revenus."
+    },
+    {
+      "style": "Normal",
+      "text": "Afin d’en trouver des solutions, les dirigeants de la MADGI ont entamé des réflexions pour la mise en place d’un système de couverture adapté à la situation des retraités, avec un coût supportable sans mettre à mal sa solvabilité globale."
+    },
+    {
+      "style": "Normal",
+      "text": "Pour ce fait, ils ont diligenté une étude actuarielle pour la réalisation dudit projet."
+    },
+    {
+      "style": "Normal",
+      "text": "A la suite de la validation de cette étude, une Equipe-Projet a été mise en place au sein de l’Administration générale de la MADGI, avec pour missions, sous la supervision de l’Administrateur général de :"
+    },
+    {
+      "style": "Normal",
+      "text": "- Finaliser les aspects techniques du projet"
+    },
+    {
+      "style": "Normal",
+      "text": "- Elaborer le cahier des charges, et le suivi de la conception et de l’implémentation du logiciel métier"
+    },
+    {
+      "style": "Normal",
+      "text": "- Définir l’organisation administrative et financière du projet"
+    },
+    {
+      "style": "Normal",
+      "text": "- Mettre en place un plan de déploiement du projet"
+    },
+    {
+      "style": "Normal",
+      "text": "- Elaborer un plan de communication relatif au projet."
+    },
+    {
+      "style": "Normal",
+      "text": "Le présent rapport regroupe donc les livrables issus des travaux effectués par une équipe de onze (11) personnes, sous la conduite d’un Chef de Projet."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "DISPOSITIONS DU CAHIER DES CHARGES"
+    },
+    {
+      "style": "Normal",
+      "text": "A.1. CONDITIONS D’ACCES AUX SOINS"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Bénéficiaire"
+    },
+    {
+      "style": "Normal",
+      "text": "Sont désignés \"bénéficiaire\", l’adhérent et ses ayants droit."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Ayants droit"
+    },
+    {
+      "style": "Normal",
+      "text": "Le terme \"ayants-droit\" désigne :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "L’époux ou l’épouse légal (e), à défaut, le conjoint ou la conjointe déclaré (e) ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "L’enfant légitime âgé de moins de 21 ans ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "L’enfant né hors mariage, âgé de moins de 21 ans ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "L’enfant légitime ou né hors mariage âgé de plus de 21 ans jusqu’à 26 ans révolus, poursuivant ses études ou mis en apprentissage dans un établissement ou un centre de formation agréé par l’Etat."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Nombre de personnes pris en charge"
+    },
+    {
+      "style": "Normal",
+      "text": "L’assurance santé des retraités de la MADGI couvre six (06) personnes. A savoir :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "L’adhérent (e),"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "L’époux ou l’épouse légal (e), à défaut, le conjoint ou la conjointe déclaré (e)"
+    },
+    {
+      "style": "Normal",
+      "text": "Quatre (04) enfants de moins de 21 ans ou âgés de 26 ans révolus, à condition de poursuivre ses études ou d’être mis en apprentissage dans un établissement ou un centre de formation agréé par l’Etat."
+    },
+    {
+      "style": "Normal",
+      "text": "Toutefois, l’adhérent peut déclarer un ou plusieurs enfant (s) supplémentaires, moyennant le paiement d’une surprime par enfant."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : Les ayants-droit pris en compte sont ceux connus du fichier de l’adhérent au moment de son départ à la retraite. Les nouvelles incorporations ne sont pas admises."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Taux de couverture"
+    },
+    {
+      "style": "Normal",
+      "text": "La MADGI offre à ses adhérents un taux couverture santé unique de 80%."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Retrait de l’assurance santé des retraités"
+    },
+    {
+      "style": "Normal",
+      "text": "Le retrait automatique de l’assurance santé"
+    },
+    {
+      "style": "Normal",
+      "text": "Il se produit :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Pour les bénéficiaires en cas de décès de l’adhérent ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Pour les enfants, à l’âge de 21 ans révolus. Cependant ces derniers peuvent être maintenus dans l’assurance santé des retraités s’ils poursuivent des études ou suivent un apprentissage dans un établissement ou un centre de formation agréé par l’Etat ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Pour les enfants après l’âge de 26 ans révolus ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Pour les enfants ayant contracté une grossesse. Et ce, peu importe l’issue de celle-ci."
+    },
+    {
+      "style": "Normal",
+      "text": "Le retrait à la demande de l’adhérent"
+    },
+    {
+      "style": "Normal",
+      "text": "Les ayants-droit peuvent être retirés de la couverture maladie des retraités à tout moment à la demande de l’adhérent."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Conditions de prise en charge"
+    },
+    {
+      "style": "Normal",
+      "text": "Ne peuvent bénéficier des prestations de l’assurance santé des retraités que les retraités à jour de leurs cotisations."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Lieu et délai de confection de la carte d’assurance maladie des retraités"
+    },
+    {
+      "style": "Normal",
+      "text": "La carte d’assurance maladie des retraités est établie au Département en charge de l’Assurance Maladie de la MADGI. Le délai de production des cartes est de 07 jours ouvrés à compter de la date de dépôt des dossiers."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : L’utilisation de la carte est strictement limitée aux besoins personnels de son titulaire."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Duplicata de la carte d’assurance maladie des retraités"
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de perte ou de détérioration de la carte d’assurance Epargne Santé Retraite MADGI, (ESR), l’intéressé(e) peut se faire établir un duplicata. Pour ce faire, il ou elle devra fournir les éléments suivants :"
+    },
+    {
+      "style": "Normal",
+      "text": "- un certificat de perte délivré par un Commissariat de police ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- une somme de 5000 F CFA."
+    },
+    {
+      "style": "Normal",
+      "text": "Le duplicata est établi et délivré sur place."
+    },
+    {
+      "style": "Normal",
+      "text": "A.2 COTISATION DE LA PRIME D’ASSURANCE SANTE"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Montant de la prime d’assurance santé des retraités"
+    },
+    {
+      "style": "Normal",
+      "text": "La cotisation de la prime d’assurance maladie des retraités de la DGI est unique pour toutes les catégories professionnelles, et s’élève trimestriellement à 150 000 F CFA, et payé par le service de gestion de l’ESR-MADGI."
+    },
+    {
+      "style": "Normal",
+      "text": "Pour tout enfant supplémentaire connu du fichier au départ à la retraite, une surprime trimestrielle de 65 000 F CFA par enfant devra être payée."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : La cotisation de la prime d’assurance est susceptible de variations en fonction de l’inflation et de l’augmentation des dépenses de santé."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Périodicité des cotisations"
+    },
+    {
+      "style": "Normal",
+      "text": "Les cotisations de la prime d’assurance santé des retraités sont payées trimestriellement par le service de gestion de l’ESR-MADGI."
+    },
+    {
+      "style": "Normal",
+      "text": "A.3. LES PRESTATIONS"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les parcours de soins"
+    },
+    {
+      "style": "Normal",
+      "text": "Deux parcours de soins sont proposés aux assurés ESR MADGI. Et ce, en fonction de la localisation géographique des établissements de soins."
+    },
+    {
+      "style": "Normal",
+      "text": "On note ainsi : le parcours de soins dans la zone dite \" ABIDJAN \" et le parcours de soins de la zone dite \" HORS ABIDJAN\""
+    },
+    {
+      "style": "Normal",
+      "text": "1-1-Parcours de soins ZONE \"ABIDJAN\""
+    },
+    {
+      "style": "Normal",
+      "text": "On entend par ZONE \"ABIDJAN\", le territoire des dix communes d’Abidjan, à savoir :"
+    },
+    {
+      "style": "Normal",
+      "text": "Cocody, Abobo, Yopougon, Adjamé, Plateau, Attécoubé, Treichville, Marcory, Koumassi, et Port-Bouët."
+    },
+    {
+      "style": "Normal",
+      "text": "Pour toute consultation et/ou hospitalisation dans une structure sanitaire située dans cette zone, le mutualiste devra obligatoirement se rendre à l’Hôtel Médical des Impôts KESSE-Feh (HMI-KF)."
+    },
+    {
+      "style": "Normal",
+      "text": "Toutefois, l’obligation de passer par le HMI-KF avant de se rendre dans tout établissement de la zone \"ABIDJAN\" est dérogée dans les situations suivantes :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Cas de maladies pour les nourrissons de moins de 12 mois ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les complications cardio-respiratoires ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les urgences chirurgicales ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les crises vaso-occlusives ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les accidents de la voie publique ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les troubles de la conscience ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "En somme toutes les situations mettant en jeu le pronostic vital et/ou fonctionnel de l’assuré."
+    },
+    {
+      "style": "Normal",
+      "text": "Ainsi dans les situations sus évoquées les patients peuvent se rendre directement dans les établissements conventionnés situés dans la ZONE \"ABIDJAN\"."
+    },
+    {
+      "style": "Normal",
+      "text": "En dehors des cas sus évoqués, toute admission dans un établissement de soins de la ZONE \"ABIDJAN\" pour des actes médicaux (consultation de médecine générale et/ou de spécialités offertes ou non par l’Hôtel Médical des Impôts KESSE-Feh (HMI-KF), hospitalisations programmées, requièrent l’accord préalable obligatoire d’un Médecin Conseil."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : Les mutualistes qui souhaitent réaliser leurs prestations dans la ZONE \"ABIDJAN\" en dehors du cadre ci-dessus décrit, ont la possibilité de le faire en payant l’entièreté (sans la part la MADGI) du coût des prestations. Ils pourront secondairement faire une demande de remboursement des frais engagés. Ces remboursements se feront sur la base de 50 % des tarifs appliqués à l’HMI-KF et dans les limites prévues par les garanties et exclusions de la police d’assurance de la MADGI."
+    },
+    {
+      "style": "Normal",
+      "text": "1-2-Parcours de soins ZONE \" HORS ABIDJAN\""
+    },
+    {
+      "style": "Normal",
+      "text": "On entend par ZONE \" HORS ABIDJAN\" les localisations géographiques situées en dehors du territoire des dix communes d’Abidjan."
+    },
+    {
+      "style": "Normal",
+      "text": "Le recours aux structures sanitaires de cette zone est libre et n’est donc pas soumise à l’obligation de passer par l’HMI-KF"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Réalisation des examens paracliniques"
+    },
+    {
+      "style": "Normal",
+      "text": "La priorité est accordée à l’HMI-KF pour le lieu de réalisation des examens paracliniques et des consultations spécialistes qui peuvent se réaliser dans les établissements sanitaires situées dans la zone « ABIDJAN » étendue aux communes de Bingerville et Songon."
+    },
+    {
+      "style": "Normal",
+      "text": "En cas d’urgence mettant en jeu le pronostic vital et/ou fonctionnel, la priorité sera accordée au centre le plus proche."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Hospitalisations programmées"
+    },
+    {
+      "style": "Normal",
+      "text": "Pour tous les cas d’hospitalisations programmées notamment chirurgicales, le patient devra obtenir une facture proforma de la structure d’accueil avant de bénéficier d’une prise en charge. Ladite facture pro-forma pourra être soumise pour validation par la structure sanitaire ou l’assuré sur la plateforme SIAPS."
+    },
+    {
+      "style": "Normal",
+      "text": "Le non-respect de cette disposition expose l’assuré au refus d’octroi d’une prise en charge de l’hospitalisation."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Plafond des chambres d’hospitalisations"
+    },
+    {
+      "style": "Normal",
+      "text": "Le tarif de chambre applicable à la MADGI est plafonné à 30.000 frs TTC par jour."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : Les accompagnants ne sont pas pris en compte."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Grossesse d’une enfant d’un (e) adhérent (e)"
+    },
+    {
+      "style": "Normal",
+      "text": "Il sera procédé à la radiation définitive de la couverture de l’assurance santé, de tout enfant à charge (bénéficiaire) ayant contracté une grossesse. Et ce peu importe l’issue de la grossesse (fausse couche, accouchement, avortement provoqué)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Retrait d’un enfant supplémentaire"
+    },
+    {
+      "style": "Normal",
+      "text": "Le retrait d’un enfant supplémentaire n’est pris en compte qu’à la fin de chaque trimestre."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Renouvellement de verres pharmaceutiques"
+    },
+    {
+      "style": "Normal",
+      "text": "Le renouvellement de verres pharmaceutiques et/ou de monture ne peut intervenir qu’à l’expiration de deux (2) années révolues."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Prise en charge de l’IRM"
+    },
+    {
+      "style": "Normal",
+      "text": "L’Imagerie par Résonnance Magnétique (IRM) est prise en charge par la MADGI selon le taux de couverture de l’assuré, avec un montant plafond. Le plafond est fixé à 100.000 FCFA."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Prise en charge des prothèses dentaires"
+    },
+    {
+      "style": "Normal",
+      "text": "Les prothèses dentaires sont prises en charge dans le cadre d’un remboursement direct après une entente préalable avec le médecin conseil."
+    },
+    {
+      "style": "Normal",
+      "text": "Le plafond par an est fixé à 100.000 FCFA pour les assurés."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "les remboursements directs"
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de non utilisation de la carte d’assurance maladie des retraités pour les soins médicaux, l’assuré peut se faire rembourser les frais engagés. Les remboursements se font sur la base du cahier de charges (garanties et exclusions) selon les dispositions suivantes :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Remboursements à 80% des frais engagés"
+    },
+    {
+      "style": "Normal",
+      "text": "Sont concernées :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les prestations réalisées dans les centres de santé publics ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les prestations réalisées avec l’accord préalable des médecins conseils dans les centres de santé conventionnées ou non."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Remboursements à 50%"
+    },
+    {
+      "style": "Normal",
+      "text": "Sont concernées :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les prestations en rapport avec des spécialités existantes ou non à l’HMI-KF mais réalisées dans les centres conventionnés."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les consultations de pédiatrie et gynécologie, réalisées en dehors comme à l’intérieur du réseau de soins hors HMI-KF."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : Le dépôt des dossiers de demande de remboursement se fait dans un délai de 3 mois maximum à compter de la date d’obtention de la facture. Passé ce délai, les remboursements ne sont plus acceptés."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Remboursement direct de soins à l’étranger"
+    },
+    {
+      "style": "Normal",
+      "text": "La couverture de soins de l’assurance maladie des retraités est circonscrite géographiquement au territoire national."
+    },
+    {
+      "style": "Normal",
+      "text": "Par conséquent, tous les soins effectués à l’étranger ne sont pas remboursables."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Remboursement en cas de recours à une assurance complémentaire"
+    },
+    {
+      "style": "Normal",
+      "text": "Le remboursement à 100% du ticket modérateur est accordé à l’adhérent lorsque celui-ci fait usage d’une autre assurance maladie dans la limite du cahier de charges de la MADGI."
+    },
+    {
+      "style": "Normal",
+      "text": "Par exemple, lorsqu’un (e) assuré (e) utilise les bons de médicaments MUGEFCI, les 30% (ticket modérateur) à sa charge lui sont remboursés à 100% par la MADGI dans la limite du cahier de charges."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Sortie contre avis médical et refus de soins"
+    },
+    {
+      "style": "Normal",
+      "text": "Tout assuré qui décide de sortir contre avis médical ou qui refuse les soins à lui proposé sans un motif jugée valable ne pourra pas bénéficier de prise en charge pour les complications découlant du refus de soins."
+    },
+    {
+      "style": "Normal",
+      "text": "B. LES GARANTIES"
+    },
+    {
+      "style": "Normal",
+      "text": "De façon générale, sont pris en charge par l’assurance maladie des retraités de la MADGI :"
+    },
+    {
+      "style": "Normal",
+      "text": "- Les consultations de médecine générale et de spécialités ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Les hospitalisations médicales ou chirurgicales ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- les frais de radiologie, d'analyses médicales et d’explorations fonctionnelles ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- les frais de médicaments sur ordonnance ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Les soins dentaires ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Les frais d’optiques ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- la Kinésithérapie et les actes de rééducation."
+    },
+    {
+      "style": "Normal",
+      "text": "La mise en œuvre des groupes d’actes pris en charge ci-dessus évoqué, obéit à des règles que sont \"l’entente préalable \" et les \"exclusions \""
+    },
+    {
+      "style": "Normal",
+      "text": "B.1. ENTENTE PRÉALABLE"
+    },
+    {
+      "style": "Normal",
+      "text": "Il s’agit de l’accord donné, avant l'exécution de l'acte ou du traitement, par le Médecin Conseil de la MADGI pour sa prise en charge."
+    },
+    {
+      "style": "Normal",
+      "text": "Le tableau ci-dessous donne la liste des actes soumis à entente préalable (Liste non exhaustive)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Les produits pharmaceutiques"
+    },
+    {
+      "style": "Normal",
+      "text": "Les produits pharmaceutiques ci-après désignés ne sont pas pris en charge quel que soit la qualité de leurs prescripteurs. Ce sont :"
+    },
+    {
+      "style": "Normal",
+      "text": "CONDITIONS GENERALES DU CONTRAT :"
+    },
+    {
+      "style": "Normal",
+      "text": "« EPARGNE SANTE RETRAITE – MADGI » (ESR-MADGI)"
+    },
+    {
+      "style": "Normal",
+      "text": "TITRE I : DISPOSITIONS GÉNÉRALES"
+    },
+    {
+      "style": "Normal",
+      "text": "Article 1 : Définitions"
+    },
+    {
+      "style": "Normal",
+      "text": "Pour l’application de l’ensemble des dispositions du présent contrat, il faut entendre par :"
+    },
+    {
+      "style": "Normal",
+      "text": "Adhérent : La personne sur laquelle repose le contrat, qui signe et s’engage à payer les cotisations ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Bénéficiaire : La personne en faveur de qui est stipulé le versement de la valeur du compte en cas de survenance des divers événements garantis par le contrat ; Ce sont les ayants droit légaux ou toute personne désignée dans le bulletin individuel d’adhésion"
+    },
+    {
+      "style": "Normal",
+      "text": "Cotisation : la somme que doit verser l’adhérent à la MADGI en contrepartie de la garantie ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Ayants droit : Ce sont les bénéficiaires de la couverture ESR. Il s’agit des ayants droit connus du fichier de l’assurance maladie de la MADGI au moment du départ à la retraite."
+    },
+    {
+      "style": "Normal",
+      "text": "Résiliation : cessation des garanties du contrat de plein droit ou à l’initiative de l’une des parties."
+    },
+    {
+      "style": "Normal",
+      "text": "Les identités de l’adhérent et des bénéficiaires sont précisées dans la Fiche d’Adhésion édictant les Conditions Particulières du contrat."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 2 : Documents contractuels"
+    },
+    {
+      "style": "Normal",
+      "text": "Le contrat « ESR-MADGI » est défini par :"
+    },
+    {
+      "style": "Normal",
+      "text": "les présentes Conditions Générales, qui constituent son cadre juridique ;"
+    },
+    {
+      "style": "Normal",
+      "text": "le Bulletin Individuel d’Adhésion (BIA) édictant les Conditions Particulières, qui traduisent les aspects personnels ;"
+    },
+    {
+      "style": "Normal",
+      "text": "les Avenants qui constatent les modifications qui interviennent en cours de vie du contrat."
+    },
+    {
+      "style": "Normal",
+      "text": "Il est régi par les Statuts et Règlement intérieur de la MADGI, ainsi que toutes autres lois et règlements en vigueur en Côte d’Ivoire, applicables aux mutuelles sociales."
+    },
+    {
+      "style": "Normal",
+      "text": "TITRE II : CONSTITUTION DU CONTRAT"
+    },
+    {
+      "style": "Normal",
+      "text": "Article 3 : Objet du contrat"
+    },
+    {
+      "style": "Normal",
+      "text": "« ESR-MADGI » est un contrat individuel d’assurance sur la vie qui a pour objet le paiement, après une période de différée, d’une rente viagère permettant de couvrir la cotisation santé de l’adhérent, en cas de vie au terme du différé."
+    },
+    {
+      "style": "Normal",
+      "text": "A la retraite de l’adhérent (fin du différé), la MADGI paie pour son compte, par prélèvement sur son épargne constituée, 100% de la cotisation pour sa couverture maladie dans les conditions définies par le règlement intérieur et le cahier de charges de ESR-MADGI, tant qu’il demeure en vie."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 4 : Adhésion et effet"
+    },
+    {
+      "style": "Normal",
+      "text": "L’adhésion au contrat Epargne Santé Retraite est facultative et ouverte à tout membre de la MADGI."
+    },
+    {
+      "style": "Normal",
+      "text": "Peuvent souscrire au contrat « ESR-MADGI », tout agent, fonctionnaire ou contractuel en activité à la Direction Générale des Impôts ou à la Mutuelle des Agents de la Direction générale des Impôts."
+    },
+    {
+      "style": "Normal",
+      "text": "Pour adhérer au contrat « ESR-MADGI », l’agent doit remplir et signer un Bulletin Individuel d’Adhésion (BIA)."
+    },
+    {
+      "style": "Normal",
+      "text": "Le contrat prend effet le premier jour du mois civil suivant la fin du trimestre d’adhésion, après le précompte de la première cotisation, à condition que l’adhérent soit vivant à ce  moment."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 5 : Durée du contrat"
+    },
+    {
+      "style": "Normal",
+      "text": "Le contrat est établi pour une durée de différé correspondant à la durée résiduelle d’activité de l’adhérent au moment de la souscription."
+    },
+    {
+      "style": "Normal",
+      "text": "A la fin du différé (au départ à la retraite de l’adhérent), la rente, correspondant au montant de la cotisation de la couverture maladie ESR MADGI en vigueur, est servie jusqu’au décès de l’adhérent."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 6 : Durée de cotisation"
+    },
+    {
+      "style": "Normal",
+      "text": "La durée de paiement des cotisations du contrat est égale à la durée résiduelle d’activité."
+    },
+    {
+      "style": "Normal",
+      "text": "Pour un agent qui passe à un grade supérieur entraînant le rallongement de sa durée d’activité, la cotisation est recalculée en fonction de la nouvelle durée résiduelle d’activité."
+    },
+    {
+      "style": "Normal",
+      "text": "TITRE III : GARANTIES"
+    },
+    {
+      "style": "Normal",
+      "text": "Article 7 : Prestations garanties"
+    },
+    {
+      "style": "Normal",
+      "text": "A la retraite de l’adhérent, la MADGI prend en charge, tant qu’il est en vie, sa couverture maladie et celle de ses ayants droit."
+    },
+    {
+      "style": "Normal",
+      "text": "Par ayants droit, il faut entendre :"
+    },
+    {
+      "style": "Normal",
+      "text": "L’époux ou l’épouse légal(e), à défaut, le conjoint ou la conjointe déclaré(e) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Les enfants légitimes ou nés hors mariage et légalement reconnus ou adoptés, âgés de moins de 21 ans ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Les enfants légitimes ou nés hors mariage et légalement reconnus ou adoptés, âgés de moins de 21 ans révolus à 26 ans, poursuivant leurs études ou mis en apprentissage dans un établissement ou un centre de formation agréé par l’Etat."
+    },
+    {
+      "style": "Normal",
+      "text": "Le nombre d’enfants à prendre en charge est de quatre (04). Toutefois, il sera exigé le paiement d’une prime complémentaire par enfant supplémentaire déclaré."
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de décès de l’adhérent en cours de service de la rente, il est reversé aux bénéficiaires désignés 80% du capital constitutif de rente restant dû."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 8 : Garantie en cas de décès ou d’invalidité permanente totale de l’adhérent durant la période de cotisation"
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de décès ou d’invalidité permanente totale de l’adhérent avant la retraite, il est payé aux bénéficiaires désignés ou aux ayants droit légaux, 95% de la valeur de son épargne à cette date."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 9 : Montant de la prestation"
+    },
+    {
+      "style": "Normal",
+      "text": "Le montant de la rente garantie, correspondant à la cotisation MADGI, est fixé par les règlements mutualistes de la MADGI en vigueur au moment du départ à la retraite de l’adhérent."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 10 : Chargement de gestion et taux d’intérêt technique"
+    },
+    {
+      "style": "Normal",
+      "text": "Pour le contrat « ESR-MADGI », il est appliqué un chargement de gestion sur rente de 5%."
+    },
+    {
+      "style": "Normal",
+      "text": "Le taux d’intérêt technique est fixé à 3,5%."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 11 : Capital décès en cours de service de rente"
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de décès de l’adhérent en cours de service de rente, il est reversé aux bénéficiaires désignés ou ayants droit légaux 80% du capital constitutif de rente restant dû."
+    },
+    {
+      "style": "Normal",
+      "text": "TITRE IV : VIE DU CONTRAT"
+    },
+    {
+      "style": "Normal",
+      "text": "Article 12 : Montant de la cotisation"
+    },
+    {
+      "style": "Normal",
+      "text": "Le montant de la cotisation périodique est indiqué dans la Fiche d’Adhésion signée par les parties. Elle est déterminée à la souscription en fonction de l’âge de départ à la retraite de l’adhérent, de la durée résiduelle d’activité, du taux de couverture choisi et du montant de la cotisation MADGI en vigueur au jour de la souscription."
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de modification à la hausse de la cotisation « ESR-MADGI », pendant la période de paiement des cotisations, la cotisation du contrat « ESR-MADGI », est réajustée en fonction du nouveau montant à garantir par « ESR-MADGI »."
+    },
+    {
+      "style": "Normal",
+      "text": "Si l'Adhérent ne consent pas à l’augmentation éventuelle de la cotisation qui en résulte, le contrat est résilié de plein droit dans les conditions définies à l’article 10 des présentes conditions générales."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 13 : Périodicité et mode de paiement de la cotisation"
+    },
+    {
+      "style": "Normal",
+      "text": "Les cotisations sont payables trimestriellement par prélèvement automatique à la source sur les ristournes trimestrielles."
+    },
+    {
+      "style": "Normal",
+      "text": "La signature du Bulletin Individuel d’Adhésion (BIA) emporte autorisation à « ESR-MADGI », pour effectuer ce prélèvement"
+    },
+    {
+      "style": "Normal",
+      "text": "Les paiements spontanés sont également admis."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 14 : Résiliation du contrat - Rachats"
+    },
+    {
+      "style": "Normal",
+      "text": "Rachat partiel"
+    },
+    {
+      "style": "Normal",
+      "text": "Ce contrat ne prévoit pas de rachat partiel."
+    },
+    {
+      "style": "Normal",
+      "text": "Rachat total"
+    },
+    {
+      "style": "Normal",
+      "text": "Le rachat total n’est possible que pendant la période de paiement des primes. Et ne peut intervenir qu’après deux (02) ans minimums de cotisation."
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de rachat total une pénalité de 5% sera ajoutée aux frais de gestion estimés à 5%."
+    },
+    {
+      "style": "Normal",
+      "text": "Aucun rachat n’est possible en cours de service de rente."
+    },
+    {
+      "style": "Normal",
+      "text": "Résiliation"
+    },
+    {
+      "style": "Normal",
+      "text": "L’adhérent peut en toute liberté, pendant la période de cotisation, mettre fin au contrat en contrepartie de l’annulation de tous les engagements de « ESR-MADGI », et le reversement de la valeur de rachat."
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de rachat total ou de résiliation, il est appliqué une pénalité fixée à 5% de la valeur de rachat qui est égale au capital acquis."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 15 : Règlement de la valeur du compte en cas d’invalidité permanente totale de"
+    },
+    {
+      "style": "Normal",
+      "text": "l’adhérent"
+    },
+    {
+      "style": "Normal",
+      "text": "Est considéré comme Invalidité Permanente Totale, l’état qui rend l’adhérent inapte à tout travail, définitivement incapable de se livrer à la moindre activité susceptible de lui procurer un revenu et l’oblige à recourir à une tierce personne pour effectuer les actes ordinaires de la vie."
+    },
+    {
+      "style": "Normal",
+      "text": "En cas d’invalidité médicalement constatée avant la retraite, le capital acquis est payé à l’adhérent."
+    },
+    {
+      "style": "Normal",
+      "text": "Formalités"
+    },
+    {
+      "style": "Normal",
+      "text": "Dès que l’adhérent (ou toute personne intéressée au contrat) a eu connaissance d’un accident ou d’une maladie susceptible d’engager « ESR-MADGI », il doit en faire la déclaration dans les meilleurs délais."
+    },
+    {
+      "style": "Normal",
+      "text": "Modalités de paiement"
+    },
+    {
+      "style": "Normal",
+      "text": "Article 16 : Compte épargne santé"
+    },
+    {
+      "style": "Normal",
+      "text": "« ESR-MADGI » paie au terme d’un délai de quinze (15) jours ouvrés suivant la date de l’établissement de la preuve de l’Invalidité Permanente Totale."
+    },
+    {
+      "style": "Normal",
+      "text": "« ESR-MADGI », tient pour chaque adhérent un compte individuel où figure le montant du capital épargne santé."
+    },
+    {
+      "style": "Normal",
+      "text": "Le compte de l’adhérent est alimenté par la somme des cotisations prélevées, capitalisées"
+    },
+    {
+      "style": "Normal",
+      "text": "au taux d’intérêt technique équivalent."
+    },
+    {
+      "style": "Normal",
+      "text": "La date de valeur est fixée au 1er jour du mois suivant la fin du trimestre de prélèvement de la cotisation."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 17 : Règlement de la valeur du compte en cas de décès de l’adhérent"
+    },
+    {
+      "style": "Normal",
+      "text": "La valeur du compte est reversée aux bénéficiaires désignés dans un délai de quinze (15) jours ouvrés, à compter du dépôt de la totalité des pièces suivantes :"
+    },
+    {
+      "style": "Normal",
+      "text": "Le courrier de déclaration du sinistre à « ESR-MADGI » ;"
+    },
+    {
+      "style": "Normal",
+      "text": "L’acte de décès ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Les actes de naissance des bénéficiaires ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Les certificats d’administration légale des bénéficiaires mineurs."
+    },
+    {
+      "style": "Normal",
+      "text": "------------------**-----------------"
+    },
+    {
+      "style": "Normal",
+      "text": "BULLETIN INDIVIDUEL D’ADHESION"
+    },
+    {
+      "style": "Normal",
+      "text": "EPARGNE SANTE RETRAITE MADGI\t\t\tBULLETIN INDIVIDUEL D’ADHESION"
+    },
+    {
+      "style": "Normal",
+      "text": "ADHERENT (E) :\t\t\t\t\tMATRICULE : /________________________/"
+    },
+    {
+      "style": "Normal",
+      "text": "Nom & Prénoms : …………………….………………………………………………………………………….."
+    },
+    {
+      "style": "Normal",
+      "text": "Né(e) le : /_____/_____/_________/ Lieu de naissance : ………………………..…………………….……"
+    },
+    {
+      "style": "Normal",
+      "text": "Sexe : Masculin   \t\tFéminin"
+    },
+    {
+      "style": "Normal",
+      "text": "Situation matrimoniale : Mairé(e) \t\tdivorcé(e)\t\tveuf(ve) \t    concubinage"
+    },
+    {
+      "style": "Normal",
+      "text": "Emploi : …………………………………………………………………………..…….. Grade : ………………"
+    },
+    {
+      "style": "Normal",
+      "text": "Fonction : …………………………………………………………………………………..………………….….."
+    },
+    {
+      "style": "Normal",
+      "text": "Direction : …………………………………………………………………………………………………………."
+    },
+    {
+      "style": "Normal",
+      "text": "Adresse postale : ………………………… Adresse géographique : …………………..……………….……"
+    },
+    {
+      "style": "Normal",
+      "text": "Contact(s) : ………………………………….………………………… E-mail : ………………………………."
+    },
+    {
+      "style": "Normal",
+      "text": "BÉNÉFICIAIRES"
+    },
+    {
+      "style": "Normal",
+      "text": "CARACTERISTIQUES DE LA GARANTIE"
+    },
+    {
+      "style": "Normal",
+      "text": "Date d’effet : /______/______/_________/"
+    },
+    {
+      "style": "Normal",
+      "text": "MONTANT COTISATION :"
+    },
+    {
+      "style": "Normal",
+      "text": "Cotisation maladie garantie :                             Cotisation épargne santé retraite :"
+    },
+    {
+      "style": "Normal",
+      "text": "Je déclare avoir pris connaissance et accepter les Conditions Générales du contrat « ESR-MADGI » , annexé au présent Bulletin d’adhésion individuel, et autorise la Mutuelle des Agents de la Direction Générale des Impôts (MADGI), à percevoir mes cotisations par précompte sur mes émoluments trimestriels."
+    },
+    {
+      "style": "Normal",
+      "text": "Les cotisations d’un montant de …………………………….…………………. / trimestre, seront perçues du /______/______/_________/ au /______/______/__________/ pour un taux de couverture à 80%."
+    },
+    {
+      "style": "Normal",
+      "text": "J’ai été informé que si je passe à un grade supérieur entrainant le rallongement de ma durée d’activité, la cotisation sera recalculée en fonction de la nouvelle durée résiduelle d’activité."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : L’Adhérent(e) est tenu(e) d’informer la MADGI, par courrier de toutes modifications intervenues dans ses déclarations."
+    },
+    {
+      "style": "Normal",
+      "text": "Fait à Abidjan, le ………………………."
+    },
+    {
+      "style": "Normal",
+      "text": "L’ADHERENT (E) \t\tPOUR LA MADGI,"
+    },
+    {
+      "style": "Normal",
+      "text": "(Signature, précédée de la mention"
+    },
+    {
+      "style": "Normal",
+      "text": "«Lu et approuvé »)"
+    },
+    {
+      "style": "Normal",
+      "text": "L’Administrateur Général"
+    },
+    {
+      "style": "Normal",
+      "text": "SPECIMEN DE CARTE ESR MADGI"
+    },
+    {
+      "style": "Normal",
+      "text": "CAHIER DES CHARGES"
+    },
+    {
+      "style": "Normal",
+      "text": "DU LOGICIEL METIER"
+    },
+    {
+      "style": "Normal",
+      "text": "ESR-MADGI"
+    },
+    {
+      "style": "Normal",
+      "text": "(TECHNIQUE ET FONCTIONNEL)"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "RÉSUMÉ EXÉCUTIF"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Contexte & enjeu"
+    },
+    {
+      "style": "Normal",
+      "text": "La MADGI souhaite mettre en place un logiciel web de gestion intégré pour le produit Épargne Santé Retraite (ESR). Aujourd’hui, les calculs (cotisations, provisions, capitaux décès, valeurs de rachat) s’appuient sur un fichier Excel/VBA. Cette organisation limite l’industrialisation, la traçabilité et la conformité prudentielle pour un risque long (sortie en rente viagère). L’objectif est de migrer vers une solution WebDev robuste, centralisée et auditable, adossée à une base HFSQL Client/Serveur."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Objectif du projet logiciel"
+    },
+    {
+      "style": "Normal",
+      "text": "Concevoir, développer et déployer une application 100 % web permettant :"
+    },
+    {
+      "style": "Normal",
+      "text": "l’adhésion et la gestion des comptes individuels ESR ;"
+    },
+    {
+      "style": "Normal",
+      "text": "le calcul automatique des cotisations (trimestrielles/unique), provisions et capitaux décès selon les paramètres techniques (taux garanti, frais de gestion, table de mortalité) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "le pilotage des prestations (retraite, invalidité, décès) et des rentes viagères ;"
+    },
+    {
+      "style": "Normal",
+      "text": "la production d’états individuels et agrégés (reporting réglementaire et interne)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Périmètre fonctionnel (vue d’ensemble)"
+    },
+    {
+      "style": "Normal",
+      "text": "Gestion des adhérents & bénéficiaires (bulletin d’adhésion numérique)."
+    },
+    {
+      "style": "Normal",
+      "text": "Calcul & gestion des cotisations (automatisation des règles actuarielles issues du VBA)."
+    },
+    {
+      "style": "Normal",
+      "text": "Prestations : retraite (rente), invalidité, décès (règlements & délais)."
+    },
+    {
+      "style": "Normal",
+      "text": "Comptes individuels : capital acquis, provision mathématique, valeur de rachat."
+    },
+    {
+      "style": "Normal",
+      "text": "Reporting : situations individuelles, provisions techniques, états annuels."
+    },
+    {
+      "style": "Normal",
+      "text": "Administration : profils (adhérent, gestionnaire, administrateur), paramétrage."
+    },
+    {
+      "style": "Normal",
+      "text": "Communication (optionnel) : notifications email/SMS."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Périmètre technique (vue d’ensemble)"
+    },
+    {
+      "style": "Normal",
+      "text": "Technologie : WebDev (dernière version stable)."
+    },
+    {
+      "style": "Normal",
+      "text": "Base de données : HFSQL Client/Serveur (sécurisée, centralisée)."
+    },
+    {
+      "style": "Normal",
+      "text": "Migration : traduction des règles VBA → procédures WLangage (WL) ; import des historiques Excel ; export Excel/PDF pour les rapports."
+    },
+    {
+      "style": "Normal",
+      "text": "Sécurité : authentification, gestion des droits, chiffrement, sauvegardes & PRA."
+    },
+    {
+      "style": "Normal",
+      "text": "Déploiement : application responsive, accessible via navigateur (poste & mobile)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Bénéfices clés attendus"
+    },
+    {
+      "style": "Normal",
+      "text": "Fiabilité des calculs (référentiel unique, tests de non-régression vs Excel)."
+    },
+    {
+      "style": "Normal",
+      "text": "Traçabilité & auditabilité (journalisation des paramètres et versions)."
+    },
+    {
+      "style": "Normal",
+      "text": "Conformité (cantonnement risques longs, comptabilité d’engagement, audits)."
+    },
+    {
+      "style": "Normal",
+      "text": "Productivité (réduction des manipulations Excel, délais de règlement maîtrisés)."
+    },
+    {
+      "style": "Normal",
+      "text": "Qualité de service (avis annuels automatiques, vision 360° des adhérents)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Livrables majeurs"
+    },
+    {
+      "style": "Normal",
+      "text": "Application WebDev ESR opérationnelle + schéma HFSQL."
+    },
+    {
+      "style": "Normal",
+      "text": "Moteur actuariel WL (cotisations, PM, capitaux décès, rentes)."
+    },
+    {
+      "style": "Normal",
+      "text": "Connecteurs : import historiques Excel ; exports Excel/PDF."
+    },
+    {
+      "style": "Normal",
+      "text": "Jeux de tests & référentiel de validation (parité Excel ↔ WebDev)."
+    },
+    {
+      "style": "Normal",
+      "text": "Documentation : technique, admin, procédures métier, guide utilisateur."
+    },
+    {
+      "style": "Normal",
+      "text": "Dossier de déploiement & sécurité (sauvegardes, PRA)."
+    },
+    {
+      "style": "Normal",
+      "text": "Plan de formation des gestionnaires."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Hypothèses & décisions clés à arbitrer"
+    },
+    {
+      "style": "Normal",
+      "text": "Modèle de prise en charge à la retraite : 80 % - impact direct sur les formules, interfaces et documents (à paramétrer)"
+    },
+    {
+      "style": "Normal",
+      "text": "Paramètres techniques : taux minimum garanti (3,5 %), frais sur rente (5 %), table de mortalité (CIMA F) - confirmés comme paramétrables."
+    },
+    {
+      "style": "Normal",
+      "text": "Calendrier de valeur : capitalisation trimestrielle avec date de valeur en début de période."
+    },
+    {
+      "style": "Normal",
+      "text": "Architecture : hébergement (LAN/Internet), exigences de disponibilité et sauvegardes."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Parties prenantes"
+    },
+    {
+      "style": "Normal",
+      "text": "Direction MADGI (sponsor, arbitrages)."
+    },
+    {
+      "style": "Normal",
+      "text": "Actuariat/Finance (règles métier, validation des calculs)."
+    },
+    {
+      "style": "Normal",
+      "text": "Équipe de gestion (exploitation quotidienne, reporting)."
+    },
+    {
+      "style": "Normal",
+      "text": "DSI / Prestataire WebDev (réalisation technique, sécurité)."
+    },
+    {
+      "style": "Normal",
+      "text": "Communication"
+    },
+    {
+      "style": "Normal",
+      "text": "Adhérents (portail de consultation)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Indicateurs de succès (KPI)"
+    },
+    {
+      "style": "Normal",
+      "text": "Exactitude des calculs vs table de référence Excel : écart ≤ 0,1 %."
+    },
+    {
+      "style": "Normal",
+      "text": "Délai moyen de règlement événements (invalidité/décès) : ≤ 15 jours ouvrés."
+    },
+    {
+      "style": "Normal",
+      "text": "Disponibilité applicative : ≥ 99,5 %."
+    },
+    {
+      "style": "Normal",
+      "text": "Temps de génération d’un avis individuel : ≤ 5 s."
+    },
+    {
+      "style": "Normal",
+      "text": "Taux d’adoption (adhérents/gestionnaires) à 2 mois : ≥ 80 %."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Macro-planning (jalons)"
+    },
+    {
+      "style": "Normal",
+      "text": "Audit & extraction des règles (VBA + docs)"
+    },
+    {
+      "style": "Normal",
+      "text": "Conception (données HFSQL + UX écrans)"
+    },
+    {
+      "style": "Normal",
+      "text": "Développement (modules + moteur WL)"
+    },
+    {
+      "style": "Normal",
+      "text": "Migration (données historiques)"
+    },
+    {
+      "style": "Normal",
+      "text": "Tests croisés (Excel ↔ WebDev)"
+    },
+    {
+      "style": "Normal",
+      "text": "Déploiement & formation"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "PRÉSENTATION DU PROJET"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Contexte institutionnel"
+    },
+    {
+      "style": "Normal",
+      "text": "La Mutuelle des Agents de la Direction Générale des Impôts (MADGI) a pour mission principale la prévention et la couverture des risques sociaux liés à la personne de ses membres, actifs et retraités."
+    },
+    {
+      "style": "Normal",
+      "text": "Un problème majeur a été identifié : au moment de la retraite, les membres doivent continuer à payer la totalité de leur prime santé. Or, leurs revenus diminuent fortement, rendant la couverture difficilement soutenable."
+    },
+    {
+      "style": "Normal",
+      "text": "Pour répondre à ce défi, la MADGI a lancé la conception d’un produit spécifique : Épargne Santé Retraite (ESR)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Problématique"
+    },
+    {
+      "style": "Normal",
+      "text": "Les retraités souhaitent maintenir leur couverture maladie ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Le financement intégral par l’adhérent entraîne un risque de non-couverture ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Les outils actuels (Excel/VBA) ne permettent ni une gestion centralisée et sécurisée, ni une traçabilité réglementaire (règles UEMOA sur les risques longs, cantonnement des fonds, comptabilité d’engagement)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Objectifs du projet logiciel"
+    },
+    {
+      "style": "Normal",
+      "text": "Automatiser les calculs actuarielles (cotisations, provisions, capitaux décès, valeur de rachat) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Centraliser les données adhérents et bénéficiaires dans une base HFSQL Client / Serveur ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Fiabiliser le suivi des prestations (rentes viagères, décès, invalidité) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Produire des états de reporting conformes aux obligations réglementaires (comptabilité d’engagement, études actuarielles quinquennales) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Améliorer la transparence pour les adhérents (avis annuel automatisé)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Portée fonctionnelle du logiciel (vue macro)"
+    },
+    {
+      "style": "Normal",
+      "text": "Adhésion & gestion des adhérents : bulletin numérique, suivi des bénéficiaires ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Gestion des cotisations : calcul automatique selon l’âge, durée d’activité, cotisation santé, paramètres techniques (3,5 % taux garanti, 5 % frais, table CIMA F) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Prestations : retraite (rente viagère), décès, invalidité ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Comptes individuels : capital acquis, provisions, valeur de rachat ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Reporting : états individuels, provisions techniques globales, reporting réglementaire ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Administration multi-profils : adhérent, gestionnaire, administrateur."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Hors-périmètre"
+    },
+    {
+      "style": "Normal",
+      "text": "La gestion opérationnelle des placements financiers (bien que le logiciel puisse générer les flux de trésorerie nécessaires au suivi prudentiel) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "La gestion médicale des remboursements de soins (reste couverte par le système santé existant) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "La communication SMS/email (en option, intégrable si l’infrastructure MADGI le permet)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Contraintes & hypothèses"
+    },
+    {
+      "style": "Normal",
+      "text": "Contraintes réglementaires : respect du règlement UEMOA 003/2022 sur la gestion des risques longs (cantonnement, provisions techniques, audit)."
+    },
+    {
+      "style": "Normal",
+      "text": "Contraintes techniques :"
+    },
+    {
+      "style": "Normal",
+      "text": "Utilisation exclusive de WebDev pour le développement."
+    },
+    {
+      "style": "Normal",
+      "text": "Base de données HFSQL centralisée."
+    },
+    {
+      "style": "Normal",
+      "text": "Application responsive, utilisable sur PC et smartphone."
+    },
+    {
+      "style": "Normal",
+      "text": "Hypothèses clés :"
+    },
+    {
+      "style": "Normal",
+      "text": "Confirmation du modèle de prise en charge : 80 % prise en charge (conditions générales)."
+    },
+    {
+      "style": "Normal",
+      "text": "Les paramètres techniques (taux garanti, frais, tables) doivent être configurables dans l’application."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "CAHIER DES CHARGES FONCTIONNEL"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Gestion des adhérents"
+    },
+    {
+      "style": "Normal",
+      "text": "Enregistrement d’un adhérent : matricule, état civil, emploi/fonction, grade, situation matrimoniale, contacts, email."
+    },
+    {
+      "style": "Normal",
+      "text": "Gestion des bénéficiaires : ajout/suppression/modification des ayants droit désignés (conjoint, enfants, héritiers légaux)."
+    },
+    {
+      "style": "Normal",
+      "text": "Bulletin d’adhésion numérique : formulaire électronique reprenant les champs du bulletin papier."
+    },
+    {
+      "style": "Normal",
+      "text": "Mise à jour des données : changement de grade, évolution situation familiale, modifications bénéficiaires."
+    },
+    {
+      "style": "Normal",
+      "text": "Historisation : traçabilité de toutes les modifications."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Gestion des cotisations"
+    },
+    {
+      "style": "Normal",
+      "text": "Calcul automatique de la cotisation en fonction de :"
+    },
+    {
+      "style": "Normal",
+      "text": "âge à la souscription,"
+    },
+    {
+      "style": "Normal",
+      "text": "durée résiduelle d’activité (n),"
+    },
+    {
+      "style": "Normal",
+      "text": "cotisation annuelle maladie en vigueur (R),"
+    },
+    {
+      "style": "Normal",
+      "text": "taux technique (3,5 %),"
+    },
+    {
+      "style": "Normal",
+      "text": "frais de gestion sur rente (5 %),"
+    },
+    {
+      "style": "Normal",
+      "text": "table de mortalité CIMA F."
+    },
+    {
+      "style": "Normal",
+      "text": "Modes de cotisation :"
+    },
+    {
+      "style": "Normal",
+      "text": "périodique (trimestrielle, par défaut),"
+    },
+    {
+      "style": "Normal",
+      "text": "unique (au départ à la retraite ou à la souscription)."
+    },
+    {
+      "style": "Normal",
+      "text": "Réajustements :"
+    },
+    {
+      "style": "Normal",
+      "text": "si modification du montant R par la MADGI,"
+    },
+    {
+      "style": "Normal",
+      "text": "si rallongement de l’âge de départ à la retraite (grade ou loi)."
+    },
+    {
+      "style": "Normal",
+      "text": "Historique des paiements : suivi des cotisations prélevées, dates de valeur trimestrielles."
+    },
+    {
+      "style": "Normal",
+      "text": "Résiliation/Rachat : application automatique de la pénalité de 5 % du capital acquis."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Suivi des prestations"
+    },
+    {
+      "style": "Normal",
+      "text": "Retraite : calcul et mise en paiement de la rente viagère couvrant la cotisation santé (95 % ou 100 % selon décision)."
+    },
+    {
+      "style": "Normal",
+      "text": "Invalidité : liquidation du capital acquis si invalidité permanente totale médicalement constatée."
+    },
+    {
+      "style": "Normal",
+      "text": "Décès :"
+    },
+    {
+      "style": "Normal",
+      "text": "avant la retraite → versement de la valeur total du compte aux bénéficiaires,"
+    },
+    {
+      "style": "Normal",
+      "text": "en cours de rente → versement de 80 % du capital constitutif de rente restant dû."
+    },
+    {
+      "style": "Normal",
+      "text": "Délais de règlement : intégration d’un workflow garantissant le paiement sous 15 jours ouvrés après réception des pièces justificatives."
+    },
+    {
+      "style": "Normal",
+      "text": "Dossiers sinistres : interface gestionnaire pour valider et suivre les paiements."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Comptes individuels épargne santé"
+    },
+    {
+      "style": "Normal",
+      "text": "Capital acquis : cumuls des cotisations versées et capitalisées."
+    },
+    {
+      "style": "Normal",
+      "text": "Provision mathématique (PM) : calculée à chaque trimestre selon la formule actuarielle."
+    },
+    {
+      "style": "Normal",
+      "text": "Valeur de rachat : capital acquis – pénalité 5 % en cas de sortie anticipée."
+    },
+    {
+      "style": "Normal",
+      "text": "Consultation en ligne : interface adhérente pour consulter son compte épargne santé."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Reporting et états financiers"
+    },
+    {
+      "style": "Normal",
+      "text": "Situations individuelles : génération d’un avis annuel adressé à chaque adhérent avant le 30 juin (cotisation garantie, cumul cotisations, valeur acquise, valeur de rachat)."
+    },
+    {
+      "style": "Normal",
+      "text": "États techniques : provisions globales, capitaux décès, flux de rentes."
+    },
+    {
+      "style": "Normal",
+      "text": "États réglementaires : conformes aux règles UEMOA (comptabilité d’engagement, bilan cantonné)."
+    },
+    {
+      "style": "Normal",
+      "text": "Exports : Excel, PDF pour diffusion."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Administration multi-profils"
+    },
+    {
+      "style": "Normal",
+      "text": "Profils définis :"
+    },
+    {
+      "style": "Normal",
+      "text": "Adhérent : accès limité à son compte, relevés, avis annuel."
+    },
+    {
+      "style": "Normal",
+      "text": "Gestionnaire : gestion des adhésions, cotisations, prestations, reporting."
+    },
+    {
+      "style": "Normal",
+      "text": "Administrateur : paramétrage des taux, frais, tables de mortalité, gestion des utilisateurs."
+    },
+    {
+      "style": "Normal",
+      "text": "Gestion des droits : accès différencié selon profil."
+    },
+    {
+      "style": "Normal",
+      "text": "Audit & journalisation : traçabilité des opérations sensibles (calculs, règlements)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Communication (optionnel)"
+    },
+    {
+      "style": "Normal",
+      "text": "Notifications email/SMS :"
+    },
+    {
+      "style": "Normal",
+      "text": "confirmation d’adhésion,"
+    },
+    {
+      "style": "Normal",
+      "text": "rappel de cotisation,"
+    },
+    {
+      "style": "Normal",
+      "text": "notification de mise en paiement d’une prestation,"
+    },
+    {
+      "style": "Normal",
+      "text": "envoi automatique de l’avis annuel."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "CAHIER DES CHARGES TECHNIQUE"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Technologies et architecture"
+    },
+    {
+      "style": "Normal",
+      "text": "Technologie de développement :"
+    },
+    {
+      "style": "Normal",
+      "text": "WebDev (dernière version stable)."
+    },
+    {
+      "style": "Normal",
+      "text": "WLangage (WL) pour implémenter les formules actuarielles."
+    },
+    {
+      "style": "Normal",
+      "text": "Base de données :"
+    },
+    {
+      "style": "Normal",
+      "text": "HFSQL Client/Serveur, centralisée, sécurisée."
+    },
+    {
+      "style": "Normal",
+      "text": "Conception relationnelle pour gérer adhérents, bénéficiaires, cotisations, prestations, comptes épargne santé et reporting."
+    },
+    {
+      "style": "Normal",
+      "text": "Architecture applicative :"
+    },
+    {
+      "style": "Normal",
+      "text": "Application web centralisée, responsive."
+    },
+    {
+      "style": "Normal",
+      "text": "Accès via navigateur (poste de bureau, tablette, smartphone)."
+    },
+    {
+      "style": "Normal",
+      "text": "Hébergement sur serveur MADGI (LAN/Internet selon choix d’infrastructure)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Migration des règles de calcul"
+    },
+    {
+      "style": "Normal",
+      "text": "Audit VBA → Procédures WL : toutes les formules issues du fichier Excel seront réécrites en WLangage."
+    },
+    {
+      "style": "Normal",
+      "text": "Aucune interopérabilité prévue avec Excel :"
+    },
+    {
+      "style": "Normal",
+      "text": "Les calculs seront réalisés exclusivement dans le moteur WL."
+    },
+    {
+      "style": "Normal",
+      "text": "Excel ne sera utilisé que pour des exports de reporting."
+    },
+    {
+      "style": "Normal",
+      "text": "Vérification de conformité : phase de tests croisés (résultats Excel existants vs WebDev)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Modèle de données (HFSQL)"
+    },
+    {
+      "style": "Normal",
+      "text": "Tables principales :"
+    },
+    {
+      "style": "Normal",
+      "text": "Adhérents (données personnelles, matricule, statut, grade, localité, direction, etc.)."
+    },
+    {
+      "style": "Normal",
+      "text": "Bénéficiaires (nom, lien, % répartition)."
+    },
+    {
+      "style": "Normal",
+      "text": "Cotisations (trimestrielles/unique, montants, dates de valeur)."
+    },
+    {
+      "style": "Normal",
+      "text": "Prestations (retraite, décès, invalidité, rentes versées)."
+    },
+    {
+      "style": "Normal",
+      "text": "Comptes individuels ESR (capital acquis, provision mathématique, valeur de rachat)."
+    },
+    {
+      "style": "Normal",
+      "text": "Paramètres techniques (taux, frais, tables de mortalité)."
+    },
+    {
+      "style": "Normal",
+      "text": "Utilisateurs & rôles (profils et droits)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Sécurité"
+    },
+    {
+      "style": "Normal",
+      "text": "Authentification : identifiant + mot de passe (avec options futures OTP/SMS/email)."
+    },
+    {
+      "style": "Normal",
+      "text": "Gestion des droits : accès restreint par profil (adhérent, gestionnaire, administrateur)."
+    },
+    {
+      "style": "Normal",
+      "text": "Chiffrement :"
+    },
+    {
+      "style": "Normal",
+      "text": "des données sensibles en base (HFSQL supporte le cryptage natif),"
+    },
+    {
+      "style": "Normal",
+      "text": "des communications (HTTPS obligatoire)."
+    },
+    {
+      "style": "Normal",
+      "text": "Sauvegarde & PRA :"
+    },
+    {
+      "style": "Normal",
+      "text": "sauvegardes automatiques planifiées,"
+    },
+    {
+      "style": "Normal",
+      "text": "plan de reprise d’activité pour continuité de service."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Reporting et interopérabilité"
+    },
+    {
+      "style": "Normal",
+      "text": "Exports :"
+    },
+    {
+      "style": "Normal",
+      "text": "Excel (rapports, relevés individuels)."
+    },
+    {
+      "style": "Normal",
+      "text": "PDF (avis annuels, états réglementaires, bulletins d’adhésion)."
+    },
+    {
+      "style": "Normal",
+      "text": "Imports :"
+    },
+    {
+      "style": "Normal",
+      "text": "Import unique des données historiques Excel vers HFSQL (migration initiale)."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Déploiement"
+    },
+    {
+      "style": "Normal",
+      "text": "Serveur central MADGI (choix LAN interne ou hébergement Internet sécurisé)."
+    },
+    {
+      "style": "Normal",
+      "text": "Utilisation 24/7 via navigateur (aucune installation locale requise)."
+    },
+    {
+      "style": "Normal",
+      "text": "Responsive design : compatible PC, tablette, smartphone."
+    },
+    {
+      "style": "Normal",
+      "text": "Maintenance évolutive : possibilité d’ajouter modules (ex. notifications SMS, gestion placements) dans des versions ultérieures."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "ROADMAP DE MISE EN ŒUVRE"
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 1 – Audit & cadrage (Semaines 1)"
+    },
+    {
+      "style": "Normal",
+      "text": "🎯 Objectif : recenser les règles métier et verrouiller les choix structurants."
+    },
+    {
+      "style": "Normal",
+      "text": "Inventaire complet du fichier Excel/VBA (cotisations, provisions, capitaux décès)."
+    },
+    {
+      "style": "Normal",
+      "text": "Analyse de la note technique et des conditions générales."
+    },
+    {
+      "style": "Normal",
+      "text": "Décision sur le modèle de couverture : 95 %/5 % (notice) ou 100 % (conditions)."
+    },
+    {
+      "style": "Normal",
+      "text": "Définition du périmètre de données historiques à migrer."
+    },
+    {
+      "style": "Normal",
+      "text": "📌 Livrable : rapport d’audit + arbitrages validés."
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 2 – Conception (Semaines 2–3)"
+    },
+    {
+      "style": "Normal",
+      "text": "🎯 Objectif : poser les bases techniques et fonctionnelles."
+    },
+    {
+      "style": "Normal",
+      "text": "Modèle de données HFSQL."
+    },
+    {
+      "style": "Normal",
+      "text": "Spécifications du moteur actuariel en WLangage."
+    },
+    {
+      "style": "Normal",
+      "text": "Maquettes écrans (adhésion, cotisations, comptes, prestations, reporting)."
+    },
+    {
+      "style": "Normal",
+      "text": "📌 Livrable : dossier de conception validé (MCD, spécs WL, maquettes)."
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 3 – Développement (Semaines 4–5)"
+    },
+    {
+      "style": "Normal",
+      "text": "🎯 Objectif : construire les modules WebDev."
+    },
+    {
+      "style": "Normal",
+      "text": "Implémentation du moteur de calcul (WL)."
+    },
+    {
+      "style": "Normal",
+      "text": "Développement des modules : adhérents, cotisations, prestations, comptes, reporting."
+    },
+    {
+      "style": "Normal",
+      "text": "Gestion des profils et sécurité."
+    },
+    {
+      "style": "Normal",
+      "text": "📌 Livrable : version alpha fonctionnelle."
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 4 – Migration des données (Semaines 6, en parallèle)"
+    },
+    {
+      "style": "Normal",
+      "text": "🎯 Objectif : intégrer l’historique dans HFSQL."
+    },
+    {
+      "style": "Normal",
+      "text": "Extraction et nettoyage des fichiers Excel existants."
+    },
+    {
+      "style": "Normal",
+      "text": "Mapping et import dans les tables HFSQL."
+    },
+    {
+      "style": "Normal",
+      "text": "Contrôles d’intégrité (clés, doublons, cohérence)."
+    },
+    {
+      "style": "Normal",
+      "text": "📌 Livrable : base HFSQL peuplée + rapport de migration."
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 5 – Tests croisés & validation (Semaines 7)"
+    },
+    {
+      "style": "Normal",
+      "text": "🎯 Objectif : garantir la parité entre Excel et WebDev."
+    },
+    {
+      "style": "Normal",
+      "text": "Jeux de tests comparatifs (cotisations, provisions, capitaux décès, valeurs de rachat)."
+    },
+    {
+      "style": "Normal",
+      "text": "Vérification des cas particuliers (révisions, rallongement d’âge de retraite, décès)."
+    },
+    {
+      "style": "Normal",
+      "text": "Tolérance : écart ≤ 0,1 % par rapport aux résultats de référence."
+    },
+    {
+      "style": "Normal",
+      "text": "📌 Livrable : PV de tests et corrections validées par l’actuariat."
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 6 – Déploiement & formation (Semaines 8)"
+    },
+    {
+      "style": "Normal",
+      "text": "🎯 Objectif : mise en production et prise en main par les équipes."
+    },
+    {
+      "style": "Normal",
+      "text": "Installation sur serveur central sécurisé (LAN/Internet)."
+    },
+    {
+      "style": "Normal",
+      "text": "Mise en production et supervision."
+    },
+    {
+      "style": "Normal",
+      "text": "Formation des gestionnaires et administrateurs."
+    },
+    {
+      "style": "Normal",
+      "text": "Communication aux adhérents (nouvel outil + avis annuels automatisés)."
+    },
+    {
+      "style": "Normal",
+      "text": "📌 Livrables : guides utilisateurs/admin, plan de sauvegarde, rapport de mise en service."
+    },
+    {
+      "style": "Normal",
+      "text": "ORGANISATION ADMINISTRATIVE ET FINANCIERE DU PROJET"
+    },
+    {
+      "style": "Normal",
+      "text": "EPARGNE SANTE RETRAITE – MADGI"
+    },
+    {
+      "style": "Normal",
+      "text": "SERVICE DE GESTION DE MADGI ESR"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Personnel cible :"
+    },
+    {
+      "style": "Normal",
+      "text": "Pour la gestion du produit MADGI Epargne Santé Retraite, la MADGI aura besoin des profils suivant :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "PERSONNEL RESIDENT"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Cinq (5) agents permanents, à savoir :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Un Ingénieur en Assurance Vie, qui est un agent technique spécialisé en gestion de produits d’assurance vie et en Finances ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Un Assistant de gestion, qui est un technicien supérieur, spécialisé en assurance et qui maîtrise l’outil informatique, c’est-à-dire ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Trois commerciaux spécialisés dans la promotion et la commercialisation des produits d’assurance-vie."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "CONSULTANCE"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Deux (2) consultants, à savoir :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Un Actuaire spécialisé en assurance-vie"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Un Analyste financier spécialisé en marché financier"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "FINANCES ET COMPTABILITE"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La gestion comptable et financière sera confiée au Département Finances et Comptabilité."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "MISSIONS DU SERVICE"
+    },
+    {
+      "style": "Normal",
+      "text": "Ce service a pour mission de :"
+    },
+    {
+      "style": "Normal",
+      "text": "Concevoir et gérer les produits d’assurance-vie ;"
+    },
+    {
+      "style": "Normal",
+      "text": "S’assurer de l’équilibre financier du produit ;"
+    },
+    {
+      "style": "Normal",
+      "text": "S’assurer du degré de satisfaction des adhérents et des bénéficiaires des différents produits vie."
+    },
+    {
+      "style": "Normal",
+      "text": "Missions du Chef de service"
+    },
+    {
+      "style": "Normal",
+      "text": "- Coordonner les activités du service ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Assurer la gestion quotidienne du produit ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Assurer la gestion des précomptes ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Faire des reportings à l’Administrateur général"
+    },
+    {
+      "style": "Normal",
+      "text": "Missions de l’Assistant de gestion"
+    },
+    {
+      "style": "Normal",
+      "text": "- Assister le Chef de service"
+    },
+    {
+      "style": "Normal",
+      "text": "- Coordonner les activités des commerciaux"
+    },
+    {
+      "style": "Normal",
+      "text": "Missions des Commerciaux"
+    },
+    {
+      "style": "Normal",
+      "text": "- Gérer les campagnes de promotion et de commercialisation des produits d’assurance-vie ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Communiquer aux souscripteurs les montants des cotisations ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Gérer la relation client"
+    },
+    {
+      "style": "Normal",
+      "text": "Missions de l’actuaire"
+    },
+    {
+      "style": "Normal",
+      "text": "- Concevoir et améliorer tous les produits existants et futurs de la MADGI, qui peuvent être à long-terme (produits Vie) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Établir les notes techniques et les conditions générales des produits d’assurance-vie ;"
+    },
+    {
+      "style": "Normal",
+      "text": "- Collaborer avec le service informatique (ou des prestataires externes) pour la conception et le développement des « Progiciels Produits », qui sont des logiciels de gestion des produits d’assurance vie."
+    },
+    {
+      "style": "Normal",
+      "text": "- Calculer les provisions mathématiques"
+    },
+    {
+      "style": "Normal",
+      "text": "- Veiller à l’équilibre financier du produit"
+    },
+    {
+      "style": "Normal",
+      "text": "Missions de l’analyste financier"
+    },
+    {
+      "style": "Normal",
+      "text": "- Proposer une politique de placement en collaboration avec tous les acteurs de gestion  de la MADGI"
+    },
+    {
+      "style": "Normal",
+      "text": "- Elaborer les fiches techniques de placement"
+    },
+    {
+      "style": "Normal",
+      "text": "- Participer aux réunions du Comité d’investissement"
+    },
+    {
+      "style": "Normal",
+      "text": "CADRE ORGANISATIONNEL DE LA GESTION COMPTABLE ET FINANCIERE"
+    },
+    {
+      "style": "Normal",
+      "text": "REGLES PRUDENTIELLES ET OBLIGATIONS COMPTABLES APPLICABLES"
+    },
+    {
+      "style": "Normal",
+      "text": "Le produit EPARGNE SANTE RETRAITE - MADGI (ESR-MADGI) consiste à couvrir le risque maladie des agents ayant fait valoir leur droit à la retraite. Il s’agit donc d’un risque long, dont la gestion doit obéir à certaines règles prudentielles et obligations comptables :"
+    },
+    {
+      "style": "Normal",
+      "text": "Tenir une comptabilité d’engagement conformément au Plan Comptable des Mutuelles Sociales de l’UEMOA (PCMS) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Faire certifier les comptes par un commissaire aux comptes inscrit à l’ordre des experts comptables de Côte d’Ivoire et désigné par la commission de contrôle ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Mettre en place des systèmes d’information et de pilotage exhaustifs et fiables pour la production d’état financiers spécifique au risque long couvert ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Se doter d’un manuel de procédures et d’un dispositif de contrôle de gestion ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Réaliser tous les cinq (5) ans, à compter de la date de début de la gestion du risque long, une étude actuarielle afin d’apprécier sa pérennité et son équilibre financier dont le rapport sera déposé à l’AIRMS ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Observer le principe de cantonnement des patrimoines et de séparation des opérations entre les différents risques."
+    },
+    {
+      "style": "Normal",
+      "text": "ORGANISATION COMPTABLE ET FINANCIERE"
+    },
+    {
+      "style": "Normal",
+      "text": "L’organisation comptable et financière du projet ESR s’organise de la façon suivante :"
+    },
+    {
+      "style": "Normal",
+      "text": "Le département Finances et comptabilité assure la gestion comptable et financière"
+    },
+    {
+      "style": "Normal",
+      "text": "Mise en place d’une comptabilité intégrée des gestions des risques courts et des risques longs"
+    },
+    {
+      "style": "Normal",
+      "text": "Mise en place d’une comptabilité analytique pour observer le principe de cantonnement des patrimoines et de séparation des opérations entre les différents risques"
+    },
+    {
+      "style": "Normal",
+      "text": "Ouverture de comptes bancaires spécifiques"
+    },
+    {
+      "style": "Normal",
+      "text": "Mise en place d’une interface entre la plateforme et le logiciel de trésorerie pour une gestion optimale des flux et des placements"
+    },
+    {
+      "style": "Normal",
+      "text": "LA GESTION DES PRECOMPTES ET DES COTISATIONS"
+    },
+    {
+      "style": "Normal",
+      "text": "Les précomptes sont effectués par le service chargé de la gestion du projet ESR, en relation avec le département finances et comptabilité dans le système d’information dédié."
+    },
+    {
+      "style": "Normal",
+      "text": "Le fichier des précomptes est généré dans le système par le service gestionnaire du produit et est transmis au service chargé des précomptes du département Assurances et Prestations Sociales pour consolidation et transmission à la Direction Générale des Impôts."
+    },
+    {
+      "style": "Normal",
+      "text": "Il revient par la suite au département APS de transmettre le fichier consolidé retour de la DGI (les précomptes effectivement réalisés) au département Finances et Comptabilité pour l’élaboration de l’appel de fonds adressé au Directeur Général."
+    },
+    {
+      "style": "Normal",
+      "text": "Un rapprochement de l’état retour des précomptes avec l’état transmis est effectué par le service gestionnaire à l’effet de mettre à jour la base des précomptes dans le système d’information dédiée à la gestion de l’ESR."
+    },
+    {
+      "style": "Normal",
+      "text": "LA CONSTITUTION DE L’EPARGNE"
+    },
+    {
+      "style": "Normal",
+      "text": "Il est ouvert dans le système d’information un compte d’épargne au nom de chaque adhérent. Ledit compte est alimenté par les cotisations trimestrielles. Le montant de la cotisation est indiqué sur le bulletin individuel d’adhésion signé par les parties."
+    },
+    {
+      "style": "Normal",
+      "text": "Il est déterminé à la souscription du contrat, en fonction de l’âge de départ à la retraite de l’adhérent, de sa durée résiduelle d’activité et du montant de la cotisation de la couverture maladie de la MADGI."
+    },
+    {
+      "style": "Normal",
+      "text": "L’adhérent a la possibilité d’effectuer des paiements spontanés volontaires pour alimenter son compte et ainsi réduire le montant de sa cotisation trimestrielle."
+    },
+    {
+      "style": "Normal",
+      "text": "Les cotisations sont capitalisées au nom de chaque adhérent et ce à un taux d’intérêt technique garanti de 3,5%."
+    },
+    {
+      "style": "Normal",
+      "text": "Les fonds ainsi épargnés sont bloqués sur le compte jusqu’à l’âge de départ à la retraite de l’adhérent."
+    },
+    {
+      "style": "Normal",
+      "text": "Il convient d’indiquer qu’aucun rachat partiel n’est autorisé. Cependant, le rachat total n’est envisageable que durant la période de cotisation (la vie active) et sous condition de deux (2) années de cotisation. Dans ce cas, le montant remboursé est de 90% du montant capitalisé."
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de décès ou d’invalidité permanente totale avant la retraite, les bénéficiaires désignés perçoivent 95% du montant capitalisé."
+    },
+    {
+      "style": "Normal",
+      "text": "En de décès en cours de service de rente, les bénéficiaires désignés perçoivent 80% du capital constitutif de rente restant dû."
+    },
+    {
+      "style": "Normal",
+      "text": "GESTION DES PLACEMENTS"
+    },
+    {
+      "style": "Normal",
+      "text": "CONDITIONS DE GESTION ET MECANISMES DE CAPITALISATION DES RESSOURCES FINANCIERES"
+    },
+    {
+      "style": "Normal",
+      "text": "Le Département Finances et Comptabilité assume les prérogatives des placements des ressources financières de l’ESR-MADGI. Les investissements effectués doivent être conforme aux règles prudentielles, satisfaire aux conditions de sécurité, de rendement, de liquidité et de diversification."
+    },
+    {
+      "style": "Normal",
+      "text": "L’objectif des placements est d’optimiser la valeur des produits des placements tout en garantissant la bonne sécurité des passifs et des actifs afin de répondre aux obligations lorsqu’elles se présentent."
+    },
+    {
+      "style": "Normal",
+      "text": "CREATION ET COMPOSITION DU COMITE D’INVESTISSEMENT."
+    },
+    {
+      "style": "Normal",
+      "text": "Il est mis en place un comité par délibération du conseil d’administration composé de l’Administrateur général, du chef de département finances et comptabilité, du chef de services finances et trésorerie (secrétaire exécutif ou rapporteur du comité), du gestionnaire de l’ESR- MADGI et d’un expert indépendant spécialiste en marchés financiers."
+    },
+    {
+      "style": "Normal",
+      "text": "ATTRIBUTIONS DU COMITE"
+    },
+    {
+      "style": "Normal",
+      "text": "Le comité élabore le projet de politique de placement qui prend en compte la stratégie d’investissement. Le document de politique de placement est soumis au conseil d’administration pour adoption."
+    },
+    {
+      "style": "Normal",
+      "text": "Le Conseil d’Administration délègue son pouvoir en matière de délibération portant sur le choix des véhicules de placements ou d’investissement au comité d’investissement."
+    },
+    {
+      "style": "Normal",
+      "text": "Le document de politique de placement doit indiquer :"
+    },
+    {
+      "style": "Normal",
+      "text": "La description de la répartition des responsabilités et des compétences nécessaires en matière de placement ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Les principes d’investissement et les objectifs poursuivis ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Les catégories autorisées d’investissement ainsi que ceux qui ne le sont pas ;"
+    },
+    {
+      "style": "Normal",
+      "text": "La description des techniques d’investissement, le contrôle et de suivi ;"
+    },
+    {
+      "style": "Normal",
+      "text": "La répartition stratégique du portefeuille de placements."
+    },
+    {
+      "style": "Normal",
+      "text": "Le Conseil d’Administration donne en début d’exercice, des orientations en matière d’investissement par délibération au comité d’investissement."
+    },
+    {
+      "style": "Normal",
+      "text": "Pour chaque investissement, le comité procède à l’élaboration d’une fiche technique du produit de placement dans laquelle les caractéristiques du produit sont clairement définies."
+    },
+    {
+      "style": "Normal",
+      "text": "Les décisions du comité d’investissement sont exécutées par le service finances et trésorerie du département finances et comptabilité."
+    },
+    {
+      "style": "Normal",
+      "text": "Le comité adopte le budget de trésorerie annuel ainsi que les plans de trésorerie trimestriels"
+    },
+    {
+      "style": "Normal",
+      "text": "Le comité statue ensuite sur l’état d’exécution du budget de trésorerie annuel ainsi que sur l’état d’exécution des plans de trésorerie trimestriels du produit ESR-MADGI."
+    },
+    {
+      "style": "Normal",
+      "text": "PLAN DE COMMUNICATION EPARGNE SANTE RETRAITE"
+    },
+    {
+      "style": "Normal",
+      "text": "OBJECTIFS DE LA COMMUNICATION"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Informer les membres de la mutuelle sur le projet « Épargne Santé Retraite »;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Créer l’adhésion autour du projet en s’appuyant sur les mutuelles locales et les associations ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Sensibiliser les agents sur les avantages à court, moyen et long terme ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Accompagner la mise en œuvre opérationnelle du projet par une communication efficace et continue."
+    },
+    {
+      "style": "Normal",
+      "text": "CIBLE"
+    },
+    {
+      "style": "Normal",
+      "text": "Principal :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Agents des impôts"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Personnel MADGI"
+    },
+    {
+      "style": "Normal",
+      "text": "Secondaire :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Coordonnateurs"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Syndicats/ Amicales de corporation"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Administration Générale MADGI"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Partenaires (banques, assurances, prestataires de santé)"
+    },
+    {
+      "style": "Normal",
+      "text": "AXES STRATEGIQUES"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Communication participative : Impliquer activement l’ensemble des acteurs dans la diffusion des messages."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Communication de proximité : S'appuyer sur les canaux internes et les responsables régionaux."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Communication digitale et institutionnelle : Pour une large diffusion et une bonne image du projet."
+    },
+    {
+      "style": "Normal",
+      "text": "PHASES DE COMMUNICATION"
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 1 : Pré-lancement (1 mois)"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif : Informer et préparer les acteurs internes."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Actions :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Rencontre entre les responsables de la MADGI et la Direction Générale ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Réunions d’information avec les 8 syndicats (individuellement) ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Rencontre d’information avec les amicales et associations ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Séances de travail avec les coordonnateurs ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Communication au CODIR DGI ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Élaboration de supports : dépliant explicatif, FAQ, infographies ;"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Création d’un slogan et d’un logo pour le projet."
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 2 : Lancement officiel (1 semaine)"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif : Créer un événement médiatisé pour marquer le lancement."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Actions :"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Organisation d’un événement officiel avec les médias, et partenaires"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Discours PCA /DG ; AG MADGI"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Diffusion d’une vidéo explicative du projet"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Adhésion symbolique du DG, ensuite le CODIR séance tenante ou lors du prochain CODIR"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Lancement d’une campagne de sensibilisation interne (emailing, WhatsApp, intranet, SMS)"
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 3 : Communication de suivi et d’adhésion (3 à 6 mois)"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif : Maintenir l’intérêt, accompagner l’adhésion et répondre aux préoccupations."
+    },
+    {
+      "style": "Normal",
+      "text": "Actions :"
+    },
+    {
+      "style": "Normal",
+      "text": "Campagne sur les réseaux sociaux (Facebook, WhatsApp pro, etc.)"
+    },
+    {
+      "style": "Normal",
+      "text": "Tournée d'information dans les directions régionales"
+    },
+    {
+      "style": "Normal",
+      "text": "Témoignages d’agents convaincus (vidéos, témoignages écrits)"
+    },
+    {
+      "style": "Normal",
+      "text": "Mise en place d’un CALL CENTER ou d’une équipe de 3 agents pour répondre aux questions, préoccupations et recueillir les suggestions"
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 4 : Suivi, Évaluation"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif : Mesurer l’impact de la communication et améliorer si nécessaire."
+    },
+    {
+      "style": "Normal",
+      "text": "Actions :"
+    },
+    {
+      "style": "Normal",
+      "text": "Sondages de satisfaction"
+    },
+    {
+      "style": "Normal",
+      "text": "Bilan de la communication"
+    },
+    {
+      "style": "Normal",
+      "text": "Ajustements du plan de communication"
+    },
+    {
+      "style": "Normal",
+      "text": "CANAUX DE COMMUNICATION"
+    },
+    {
+      "style": "Normal",
+      "text": "ROLE DES SYNDICATS ET ASSOCIATIONS"
+    },
+    {
+      "style": "Normal",
+      "text": "Facilitateurs d’adhésion au projet"
+    },
+    {
+      "style": "Normal",
+      "text": "Référents pour remonter les préoccupations"
+    },
+    {
+      "style": "Normal",
+      "text": "INDICATEURS DE PERFORMANCE (KPI)"
+    },
+    {
+      "style": "Normal",
+      "text": "Taux de couverture de la communication (Mutualistes par coordination, amicales et syndicats) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Taux d’adhésion au projet ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Nombre d’interactions sur les canaux digitaux ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Retours positifs ou réclamations."
+    },
+    {
+      "style": "Normal",
+      "text": "Roadmap de la Campagne (démarrage novembre)"
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 1 : Pré-lancement"
+    },
+    {
+      "style": "Normal",
+      "text": "Période : Novembre 2025 (1 mois)"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif : informer et préparer les acteurs internes."
+    },
+    {
+      "style": "Normal",
+      "text": "Semaine 1 : Rencontre MADGI – DG + communication au CODIR"
+    },
+    {
+      "style": "Normal",
+      "text": "Semaine 2 : Réunions avec les coordonnateurs (43)"
+    },
+    {
+      "style": "Normal",
+      "text": "Semaine 3 : Rencontres amicales et associations + séances avec les syndicats (08)"
+    },
+    {
+      "style": "Normal",
+      "text": "Semaine 4 : Élaboration supports (dépliants, FAQ, infographies) + validation slogan/logo"
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 2 : Lancement officiel"
+    },
+    {
+      "style": "Normal",
+      "text": "Période : Décembre 2025 (Semaine 1)"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif : événement médiatisé pour marquer le lancement."
+    },
+    {
+      "style": "Normal",
+      "text": "Organisation de l’événement officiel avec médias et partenaires ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Discours PCA / DG Impôts ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Diffusion de la vidéo explicative ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Adhésion symbolique DG Impôts puis CODIR ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Lancement de la campagne interne (WhatsApp, emailing, intranet, sms, site web)."
+    },
+    {
+      "style": "Normal",
+      "text": "NB : Intégration du programme et budget de la mission"
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 3 : Communication de suivi et d’adhésion"
+    },
+    {
+      "style": "Normal",
+      "text": "Période : Décembre 2025 – Mai 2026 (6 mois)"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif : maintenir l’intérêt, accompagner l’adhésion et répondre aux préoccupations."
+    },
+    {
+      "style": "Normal",
+      "text": "Décembre 2025 – Janvier 2026 : Campagnes réseaux sociaux (WhatsApp pro, Facebook, intranet, sms, site web) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Février – Avril 2026 : Tournée d’information dans les directions centrales et régionales, cabinet du DG, inspection générale des services fiscaux etc ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Février – Mai 2026 : Collecte et diffusion de témoignages (vidéos, écrits) ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Janvier 2026 : Mise en place du CALL CENTER ou équipe dédiée."
+    },
+    {
+      "style": "Normal",
+      "text": "Phase 4 : Suivi et Évaluation"
+    },
+    {
+      "style": "Normal",
+      "text": "Période : Novembre – Juillet 2026 (9 mois)"
+    },
+    {
+      "style": "Normal",
+      "text": "Objectif :"
+    },
+    {
+      "style": "Normal",
+      "text": "Assurer le suivi des activités"
+    },
+    {
+      "style": "Normal",
+      "text": "Mesurer l’impact et ajuster si nécessaire le plan de communication."
+    },
+    {
+      "style": "Normal",
+      "text": "Novembre 2025 - juillet 2026 : réunion mensuelle de suivi ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Juin 2026 : Sondages de satisfaction auprès des agents ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Juin – Juillet 2026 : Bilan de communication ;"
+    },
+    {
+      "style": "Normal",
+      "text": "Juillet 2026 : Ajustement du plan de communication."
+    },
+    {
+      "style": "Normal",
+      "text": "Vue Globale (par mois)"
+    },
+    {
+      "style": "Normal",
+      "text": "Novembre 2025 → Phase 1 : Pré-lancement"
+    },
+    {
+      "style": "Normal",
+      "text": "Décembre 2025 (S1) → Phase 2 : Lancement officiel"
+    },
+    {
+      "style": "Normal",
+      "text": "Décembre 2025 – Mai 2026 → Phase 3 : Suivi & adhésion"
+    },
+    {
+      "style": "Normal",
+      "text": "Novembre 2025 – Juillet 2026 → Phase 4 : Évaluation & ajustement"
+    },
+    {
+      "style": "Normal",
+      "text": "CONCLUSION"
+    },
+    {
+      "style": "Normal",
+      "text": "L’assurance Epargne Santé Retraite est un produit qui vient renforcer le dispositif de prestations fournies par la MADGI et la conforte dans son rôle de vecteur de la politique sociale de la Direction générale des Impôts."
+    },
+    {
+      "style": "Normal",
+      "text": "MADGI Epargne Santé Retraite traduit aussi l’attachement de la Mutuelle à tous les membres participants énumérés dans ses statuts et règlement intérieur, en prenant en compte leurs spécificités."
+    },
+    {
+      "style": "Normal",
+      "text": "C’est le lieu de remercier le Conseil d’Administration pour son encadrement, l’Administrateur général pour sa supervision et l’AMATCI pour son appui technique, qui ont permis à l’Equipe Projet de produire les travaux consignés dans le rapport ci-dessus."
+    },
+    {
+      "style": "Normal",
+      "text": "Adolphe de Chesnel, polygraphe, historien et encyclopédiste français nous enseigne que : « Dans le monde, on prend les choses pour ce qu’elles se donnent ; dans la retraite, on les apprécie pour ce qu’elles valent. », et la santé en est une."
+    }
+  ],
+  "tables": [
+    [
+      [
+        "Introduction …………………………………………………………………………………",
+        "3"
+      ],
+      [
+        "Cahier des charges de l’assurance ESR-MADGI ……………………………………..",
+        "4-13"
+      ],
+      [
+        "Conditions générales du contrat …………………………………………………………",
+        "14-19"
+      ],
+      [
+        "Bulletin individuel d’adhésion …………………………………………………………….",
+        "20-21"
+      ],
+      [
+        "Spécimen de carte ………………………………………………………………………...",
+        "22"
+      ],
+      [
+        "Cahier des charges du logiciel métier ESR-MADGI (technique et fonctionnel) …….",
+        "23-31"
+      ],
+      [
+        "Organisation administrative et financière du projet …………………………………….",
+        "32-37"
+      ],
+      [
+        "Plan de communication …………………………………………………………………...",
+        "38-42"
+      ],
+      [
+        "Conclusion ………………………………………………………………………………….",
+        "43"
+      ],
+      [
+        "Annexes …………………………………………………………………………………….\nChronogramme d’exécution du projet ESR-MADGI\nBudget prévisionnel ESR-MADGI 2025-2026",
+        "44"
+      ]
+    ],
+    [
+      [
+        "N°",
+        "LES ACTES NON GARANTIS PAR L’ASSURANCE"
+      ],
+      [
+        "01",
+        "Les ordonnances délivrées par des infirmiers, des médecins spécialistes et auxiliaires de médecins non reconnus par l’ordre des Médecins et/ou l’Etat ; la médecine naturelle et par les plantes."
+      ],
+      [
+        "03",
+        "Les maladies et accidents professionnelles et de façon générale les actes relevant de la médecine du travail."
+      ],
+      [
+        "04",
+        "Les accidents et maladies occasionnées par la guerre civile, guerre étrangère, par l'explosion d'un engin ou partie d'engin destiné à exploser par suite de transmutation du noyau d'atome."
+      ],
+      [
+        "05",
+        "Les actes relevant de la médecine préventive : vaccination, bilan de santé, dépistage…"
+      ],
+      [
+        "06",
+        "Les soins d’intervention ayant pour but de remédier à toutes anomalies, infirmités et malformations constitutionnelles (malformation cardiaque et urogénitale, bec de lièvre, maladies congénitales, mongolisme, etc…) ;"
+      ],
+      [
+        "08",
+        "Les interventions et les bilans liés à la grossesse"
+      ],
+      [
+        "09",
+        "Les traitements d’accompagnement de la ménopause"
+      ],
+      [
+        "11",
+        "Les frais de recherche et de traitement de la stérilité, de l’hypofertilité (radio, laboratoire, pharmacie…)"
+      ],
+      [
+        "12",
+        "Les cures thermales et les séjours en raison de convalescence ou de repos"
+      ],
+      [
+        "13",
+        "La mésothérapie et la balnéothérapie"
+      ],
+      [
+        "14",
+        "Les massages, la gymnastique correctrice (séquelle d’arthrose, scoliose) la gymnastique pré et post natale, la rééducation périnéale et urogynécologique, l’acupuncture, la physiothérapie"
+      ],
+      [
+        "15",
+        "La kinésithérapie respiratoire consécutive à des affections non garanties par le contrat."
+      ],
+      [
+        "16",
+        "Les frais de grossesse et d’accouchement des enfants des adhérents"
+      ],
+      [
+        "17",
+        "Les frais exposés par les enfants des adhérents de plus de 21 ans / 26 ans"
+      ],
+      [
+        "18",
+        "Les soins dispensés par les pédicures, les chiropracteurs, les acupuncteurs"
+      ],
+      [
+        "19",
+        "Les circoncisions"
+      ],
+      [
+        "20",
+        "Les accidents et maladies occasionnés intentionnellement (tentative de suicide ou d’autolyse…)"
+      ],
+      [
+        "21",
+        "Les accidents et maladies occasionnés par l’ivresse"
+      ],
+      [
+        "22",
+        "Les accidents et maladies occasionnés de la pratique de sports dits dangereux (boxe et sports de combats, plongée sous-marine, parachutisme)"
+      ],
+      [
+        "23",
+        "Les accidents et maladies occasionnés par la participation à une rixe ou une émeute."
+      ]
+    ],
+    [
+      [
+        "N°",
+        "LES ACTES NON GARANTIS PAR L’ASSURANCE (suite et fin)"
+      ],
+      [
+        "17",
+        "Les bilans psychologiques et les traitements par la psychanalyse et la psychothérapie."
+      ],
+      [
+        "18",
+        "Les bilans orthoptiques consécutifs à une affection congénitale"
+      ],
+      [
+        "19",
+        "Les check-up et bilans de santé périodiques, systématiques ou de routine"
+      ],
+      [
+        "20",
+        "Les bilans et traitements orthophoniques, sauf lorsqu’ils sont consécutifs à une maladie ou un accident qui rentre dans le champ des garanties du contrat"
+      ],
+      [
+        "21",
+        "La rééducation et le bilan orthophonique chez les enfants (trouble du langage, retard psycho moteur)"
+      ],
+      [
+        "22",
+        "Les examens de dépistage systématique, les soins prophylactiques, les frais de traitements et de soins préventifs"
+      ],
+      [
+        "23",
+        "Les bilans et visites prénuptiaux"
+      ],
+      [
+        "24",
+        "Les tests d’allergologie et les traitements de désensibilisation"
+      ],
+      [
+        "25",
+        "L’orthodontie pour les enfants après 12 ans"
+      ],
+      [
+        "26",
+        "Les traitements ayant un but esthétique ou de rajeunissement, sauf s'ils sont consécutifs à un accident couvert par le contrat d'assurance maladie des retraités ainsi que les traitements contre la cellulite et l'obésité"
+      ],
+      [
+        "27",
+        "Les blanchiments des dents"
+      ],
+      [
+        "28",
+        "Les détartrages des dents"
+      ],
+      [
+        "29",
+        "L’hystérosalpingographie"
+      ]
+    ],
+    [
+      [
+        "N°",
+        "LES PRODUITS PHARMACEUTIQUES NON GARANTIS PAR L’ASSURANCE"
+      ],
+      [
+        "17",
+        "Les traitements hormonaux d’insuffisance lutéale, d’inducteur d’ovulation (TRIPTORELINE, CLOMIFENE, DANAZOL, etc)"
+      ],
+      [
+        "18",
+        "Les déparasitants dans le cadre de déparasitages périodiques, systématiques ou de routine"
+      ],
+      [
+        "19",
+        "Les laxatifs"
+      ],
+      [
+        "20",
+        "Les antiseptiques locaux (BETADINE, CYTEAL, et produits similaires) les antiparasitaires externes"
+      ],
+      [
+        "21",
+        "Les produits homéopathiques et phytothérapiques"
+      ],
+      [
+        "22",
+        "Les produits et médicaments amaigrissants, diététiques, produits amincissants, les modérateurs d’appétit, les produits de régime alimentaire, les eaux minérales, les produits diététiques de tous les âges (lait nutritionnel, aliments pour bébés) et les produits similaires ou dérivés sous quelque forme que ce soit"
+      ],
+      [
+        "23",
+        "Tous produits de comptoir qui sont délivrés sans prescription médicale et tous produits de parapharmacie"
+      ],
+      [
+        "24",
+        "Les produits d’hygiène de maison"
+      ],
+      [
+        "25",
+        "Les produits d’entretien des appareils prothétiques"
+      ],
+      [
+        "26",
+        "Les lotions capillaires et tous produits de traitement du cuir chevelu et de la pilosité"
+      ],
+      [
+        "27",
+        "Les savons médicaux ou non, produits de beauté, d’hygiène corporelle et tous produits à usage cosmétique"
+      ],
+      [
+        "28",
+        "Les orthèses de toute nature, cannes anglaises, béquilles, chaussures et/ou semelles orthopédiques, genouillères et bandage en général (Velpeau, Nynex, etc…)"
+      ],
+      [
+        "29",
+        "Les produits d’hygiène buccodentaire, de bains de bouche, de gargarisme, les apports fluorés, les brosses à dents"
+      ],
+      [
+        "30",
+        "Les élixirs, les pastilles et tablettes et de façon plus générale les confiseries médicamenteuses"
+      ],
+      [
+        "31",
+        "Les antirétroviraux"
+      ],
+      [
+        "32",
+        "Le matériel d’ostéosynthèse"
+      ],
+      [
+        "33",
+        "Les implants, orthèse, canne, béquilles"
+      ]
+    ],
+    [
+      [
+        "N°",
+        "LES PRODUITS PHARMACEUTIQUES NON GARANTIS PAR L’ASSURANCE"
+      ],
+      [
+        "01",
+        "Les réactifs et tests sous toutes leurs formes"
+      ],
+      [
+        "02",
+        "Les fortifiants et vitamines sauf en cas de pathologies asthéniantes telles que les états grippaux, le paludisme, la fièvre typhoïde, l’empathie virale, etc"
+      ],
+      [
+        "03",
+        "Les médicaments tels que : la nivaquine, la quinine, l’aspirine, et les produits similaires, sauf s’ils sont prescrits à titre curatif et en liaison directe avec la nature de l’affection"
+      ],
+      [
+        "04",
+        "Les vaccins et les sérums"
+      ],
+      [
+        "05",
+        "Les modérateurs d’appétit, les produits diététiques et les produits similaires ou dérivés sous quelque forme que ce soit"
+      ],
+      [
+        "06",
+        "Les produits de nutrition orale et entérale"
+      ],
+      [
+        "07",
+        "Les produits d’hygiène"
+      ],
+      [
+        "08",
+        "Les médicaments de la lactation"
+      ],
+      [
+        "09",
+        "Les aiguilles, seringues, perfuseurs, coton (les consommables)"
+      ],
+      [
+        "10",
+        "Les topiques à activité tropique ou protectrice, les produits d’hygiène corporelle, les savons antiallergiques ou gynécologiques, les antiacnéiques et anti-séborrhéiques, les antisudoraux, les antialopéciques, les produits à usage cosmétique"
+      ],
+      [
+        "11",
+        "Les produits de traitement des troubles de la pigmentation et la photo protectrice ;"
+      ],
+      [
+        "12",
+        "Les contraceptifs sous toutes leurs formes"
+      ],
+      [
+        "13",
+        "Les tests de grossesse vendus en pharmacie"
+      ],
+      [
+        "14",
+        "Les objets à usage médical courant tels que le thermomètre, seringue, vessie, sonde, inhalateur, bande, coton, bac et poire à lavement, etc"
+      ],
+      [
+        "15",
+        "Les produits pharmaceutiques à usage familial tels que l’alcool, l’eau oxygénée, l’éther, le mercurochrome, le sparadrap ;"
+      ],
+      [
+        "16",
+        "Les antidépresseurs, les anxiolytiques, les somnifères, les hypnotiques, les anorexigènes, les orexigènes"
+      ]
+    ],
+    [
+      [
+        "N°",
+        "NOM & PRENOMS",
+        "LIEN",
+        "CONTACTS",
+        "PART"
+      ],
+      [
+        "01",
+        "",
+        "",
+        "",
+        ""
+      ],
+      [
+        "02",
+        "",
+        "",
+        "",
+        ""
+      ],
+      [
+        "03",
+        "",
+        "",
+        "",
+        ""
+      ],
+      [
+        "04",
+        "",
+        "",
+        "",
+        ""
+      ],
+      [
+        "05",
+        "",
+        "",
+        "",
+        ""
+      ]
+    ],
+    [
+      [
+        "N°",
+        "TYPE DE CANAL",
+        "MOYENS UTILISES"
+      ],
+      [
+        "01",
+        "Interne",
+        "Réunions, notes de service, emails, WhatsApp, Intranet, SMS"
+      ],
+      [
+        "02",
+        "Syndical ou Associatif",
+        "Réunions avec délégués, relais d’information par syndicats et associations"
+      ],
+      [
+        "03",
+        "Evénementiel",
+        "Cérémonie de lancement, tournée nationale"
+      ],
+      [
+        "04",
+        "Digital",
+        "Réseaux sociaux, site web MADGI"
+      ],
+      [
+        "05",
+        "Print",
+        "Affiches, flyers, brochures"
+      ]
+    ]
+  ]
+}

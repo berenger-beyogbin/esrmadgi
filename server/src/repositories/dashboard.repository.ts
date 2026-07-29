@@ -30,6 +30,7 @@ export interface DashboardPrestationRow {
   statut_prestation?: string | null;
   date_demande?: string | null;
   montant?: number | string | null;
+  montant_du?: number | string | null;
 }
 
 function applyMatriculeScope(query: any, scope?: DashboardScope): any {
@@ -77,7 +78,7 @@ export const dashboardRepository = {
       const supabase = getSupabaseServer();
       let query: any = supabase
         .from('v_prestations_details')
-        .select('nom, prenoms, matricule, type_prestation, statut_prestation, date_demande, montant');
+        .select('nom, prenoms, matricule, type_prestation, statut_prestation, date_demande, montant_du');
 
       query = applyMatriculeScope(query, scope);
 

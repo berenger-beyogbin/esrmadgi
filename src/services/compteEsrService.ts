@@ -1,4 +1,4 @@
-import { apiGet } from '../lib/apiClient';
+import { apiDownloadBlob, apiGet } from '../lib/apiClient';
 import { VCompteEsrDetails } from '../types';
 
 type ApiResponse<T> = { data: T; error: string | null };
@@ -36,5 +36,15 @@ export const compteEsrService = {
 
     if (error) return { data: null, error: new Error(error) };
     return { data: data?.data ? normalizeCompte(data.data) : null, error: toError(data?.error) };
+  },
+
+  async telechargerAvisAnnuel(
+    adherentId: string,
+    annee: number,
+  ): Promise<{ data: Blob | null; error: Error | null }> {
+    const { data, error } = await apiDownloadBlob(
+      `/api/comptes-esr/adherent/${encodeURIComponent(adherentId)}/avis-annuel.pdf?annee=${annee}`,
+    );
+    return { data, error: error ? new Error(error) : null };
   },
 };

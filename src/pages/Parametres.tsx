@@ -14,6 +14,18 @@ interface ParametresProps {
 
 type SubTab = 'ESR_GENERAL' | 'GRADES' | 'VERSIONS' | 'REPARTITIONS' | 'MORTALITE' | 'REFERENTIELS_ADMIN';
 
+const percentageParameterCodes = new Set([
+  'TAUX_GAR',
+  'FRAIS_RENTE',
+  'TAUX_RACHAT',
+  'FRAIS_GESTION_RACHAT',
+  'TAUX_DECES_AVANT_RETRAITE',
+  'TAUX_INVALIDITE_AVANT_RETRAITE',
+  'TAUX_COUVERTURE_RETRAITE',
+  'TAUX_REMBOURSEMENT_SOINS',
+  'TAUX_DECES_PENDANT_RENTE',
+]);
+
 export default function Parametres({ currentUser }: ParametresProps) {
   const canAdmin = currentUser.role === 'ADMINISTRATEUR' || currentUser.role === 'SUPERADMIN';
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('ESR_GENERAL');
@@ -146,6 +158,13 @@ export default function Parametres({ currentUser }: ParametresProps) {
     setIsSavingPG(true);
     setPgError(null);
     try {
+      const current = parametresGeneraux.find((item) => item.id_parametre_generaux === id);
+      if (current?.code && percentageParameterCodes.has(current.code)) {
+        const numericValue = Number(pgEditForm.valeur.replace(',', '.'));
+        if (!Number.isFinite(numericValue) || numericValue < 0 || numericValue > 100) {
+          throw new Error('Le taux doit être compris entre 0 et 100.');
+        }
+      }
       const { error } = await parametresGenerauxService.updateParametreGeneral(id, {
         valeur: pgEditForm.valeur || null,
         libelle: pgEditForm.libelle,
@@ -515,7 +534,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                           </td>
                           <td className="py-3 px-4">
                             <input
-                              type="text"
+                              type={pg.code && percentageParameterCodes.has(pg.code) ? 'number' : 'text'}
+                              min={pg.code && percentageParameterCodes.has(pg.code) ? 0 : undefined}
+                              max={pg.code && percentageParameterCodes.has(pg.code) ? 100 : undefined}
+                              step={pg.code && percentageParameterCodes.has(pg.code) ? 0.01 : undefined}
                               value={pgEditForm.valeur}
                               onChange={(e) => setPgEditForm({ ...pgEditForm, valeur: e.target.value })}
                               className="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400"
@@ -576,7 +598,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                         <>
                           <td className="py-3 px-4 font-bold font-mono text-indigo-700 uppercase">{pg.code ?? <span className="text-slate-300 italic">—</span>}</td>
                           <td className="py-3 px-4 font-semibold text-slate-700">{pg.libelle}</td>
-                          <td className="py-3 px-4 font-extrabold font-mono text-slate-800">{pg.valeur ?? <span className="text-slate-300 italic">—</span>}</td>
+                          <td className="py-3 px-4 font-extrabold font-mono text-slate-800">
+                            {pg.valeur ?? <span className="text-slate-300 italic">—</span>}
+                            {pg.valeur != null && pg.code && percentageParameterCodes.has(pg.code) ? ' %' : ''}
+                          </td>
                           <td className="py-3 px-4 text-slate-500">{pg.description ?? <span className="text-slate-300 italic">—</span>}</td>
                           <td className="py-3 px-4 text-center">
                             <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${

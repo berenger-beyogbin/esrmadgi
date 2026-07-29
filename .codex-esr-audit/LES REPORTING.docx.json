@@ -1,0 +1,155 @@
+{
+  "type": "docx",
+  "paragraphs": [
+    {
+      "style": "Normal",
+      "text": "LES REPORTING"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La liste des adhérents"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La liste des adhérents en activités"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La liste des adhérents en retraités"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La liste des adhérents en retraités par Statut"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La liste des rachats et résiliations"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La Liste des agents décédés"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "La liste de agents décédés dont les ayants droit ont reçu leurs capital décès"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Le Montant total des cotisations encaissées à une période donnée"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Le montant total du capital constitutif de rente par adhérents"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Le montant total du capital constitutif de rente restant dû par retraité"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Le montant total du capital décès ou invalidité par adhérent"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Avis annuel adressé à chaque adhérent avant le 30 juin (Cotisation garantie, cumul cotisation, valeur acquise, valeur rachat"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Le montant total des provisions globales, capitaux décès, flux de rentes"
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Etat des mouvements des flux (entrants/sortants)"
+    }
+  ],
+  "tables": [
+    [
+      [
+        "Matricule",
+        "Nom et Prénoms",
+        "Catégorie",
+        "Grade",
+        "Date d’Adhésion",
+        "Date de premier précompte",
+        "Prime Trimestrielle"
+      ],
+      [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    ],
+    [
+      [
+        "Matricule",
+        "Nom et Prénoms",
+        "Catégorie",
+        "Grade",
+        "Date d’Adhésion",
+        "Date de premier précompte",
+        "Prime Trimestrielle",
+        "Statut"
+      ],
+      [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "A jour ou pas à jour"
+      ]
+    ],
+    [
+      [
+        "Matricule",
+        "Nom et Prénoms",
+        "Catégorie",
+        "Grade",
+        "Date d’Adhésion",
+        "Date de premier précompte",
+        "Prime Trimestri-elle",
+        "Date de départ à la retraite"
+      ],
+      [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    ],
+    [
+      [
+        "Matricule",
+        "Nom et Prénoms",
+        "Catégorie",
+        "Grade",
+        "Date d’Adhésion",
+        "Prime Trimestrielle",
+        "Date de départ à la retraite",
+        "Montant restant du",
+        "Statut"
+      ],
+      [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "A JOUR OU PAS A JOUR"
+      ]
+    ]
+  ]
+}

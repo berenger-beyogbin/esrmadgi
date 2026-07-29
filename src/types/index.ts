@@ -219,6 +219,7 @@ export interface Paiement {
   origine_paiement: string;
   observation_dgi: string;
   date_valeur: string;
+  statut_workflow?: 'SAISI' | 'CONTROLE' | 'VALIDE' | 'REJETE' | 'ENCAISSE';
 }
 
 export interface RenreDetails {

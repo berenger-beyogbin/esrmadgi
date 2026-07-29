@@ -135,6 +135,18 @@ export const parametresRepository = {
     return updateRow('parametres_generaux', 'id_parametre_generaux', id, payload);
   },
 
+  async findParametreGeneralById(id: number): Promise<unknown | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('parametres_generaux')
+      .select('*')
+      .eq('id_parametre_generaux', id)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data ?? null;
+  },
+
   async findParametreGeneralByCode(code: string): Promise<unknown | null> {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase

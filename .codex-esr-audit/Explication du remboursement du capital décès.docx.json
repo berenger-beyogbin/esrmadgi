@@ -1,0 +1,42 @@
+{
+  "type": "docx",
+  "paragraphs": [
+    {
+      "style": "List Paragraph",
+      "text": "Dans les conditions générales à la page 17 du Rapport des travaux de l’équipe projet."
+    },
+    {
+      "style": "Normal",
+      "text": "Article 8 : Garantie en cas de décès ou d’invalidité permanente totale de l’adhérent durant la période de cotisation"
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de décès ou d’invalidité permanente totale de l’adhérent avant la retraite, il est payé aux bénéficiaires désignés ou aux ayants droit légaux, 95% de la valeur de son épargne à cette date."
+    },
+    {
+      "style": "Normal",
+      "text": "Cela signifie que la MADGI rembourse 95% de la PM constitué à cette date."
+    },
+    {
+      "style": "List Paragraph",
+      "text": "Dans la même page 17"
+    },
+    {
+      "style": "Normal",
+      "text": "Article 11 : Capital décès en cours de service de rente"
+    },
+    {
+      "style": "Normal",
+      "text": "En cas de décès de l’adhérent en cours de service de rente, il est reversé aux bénéficiaires désignés ou ayants droit légaux 80% du capital constitutif de rente restant dû."
+    },
+    {
+      "style": "Normal",
+      "text": "Le capital acquis pour les 65ans est 9 462 600 et pour les 60ans 10 515 400"
+    },
+    {
+      "style": "Normal",
+      "text": "Donc si l’agent retraité à 65ans décède à 66ans exactement le capital décès serai = ((9 462 600) –(150 000 * 4)) * 80% = (8 862 600) * 80% = 7 090 080 FCFA"
+    }
+  ],
+  "tables": []
+}

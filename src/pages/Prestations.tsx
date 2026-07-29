@@ -28,7 +28,6 @@ export default function Prestations({ currentUser }: PrestationsProps) {
     type_prestation: 'RETRAITE',
     statut_prestation: 'DOSSIER_OUVERT',
     date_demande: new Date().toISOString().split('T')[0],
-    montant: '',
   });
 
   // Tab 2: Rentes States
@@ -111,7 +110,7 @@ export default function Prestations({ currentUser }: PrestationsProps) {
 
   const handleCreateDossier = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.adherent_id || !formData.montant) {
+    if (!formData.adherent_id) {
       setErrorMsg('Veuillez renseigner tous les champs obligatoires.');
       return;
     }
@@ -124,13 +123,11 @@ export default function Prestations({ currentUser }: PrestationsProps) {
         type_prestation: formData.type_prestation,
         statut_prestation: formData.statut_prestation,
         date_demande: formData.date_demande,
-        montant: parseFloat(formData.montant),
       });
 
       if (error) throw error;
 
       setShowDossierForm(false);
-      setFormData(prev => ({ ...prev, montant: '' }));
       await loadPrestationTab();
     } catch (e: any) {
       console.error(e);
@@ -138,6 +135,39 @@ export default function Prestations({ currentUser }: PrestationsProps) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDownloadLiquidation = async (prestation: VPrestationDetails) => {
+    setErrorMsg(null);
+    const { data, error } = await prestationService.telechargerLiquidation(prestation.id);
+    if (error || !data) {
+      setErrorMsg(error?.message || 'Fiche de liquidation indisponible.');
+      return;
+    }
+    const url = URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `liquidation-${prestation.id}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleNextStatut = async (prestation: VPrestationDetails) => {
+    const suivant = prestation.statut_prestation === 'DOSSIER_OUVERT'
+      ? 'EN_CONTROLE'
+      : prestation.statut_prestation === 'EN_CONTROLE'
+        ? 'VALIDE'
+        : prestation.statut_prestation === 'VALIDE'
+          ? 'PAYE'
+          : null;
+    if (!suivant) return;
+    setErrorMsg(null);
+    const { error } = await prestationService.changerStatut(prestation.id, suivant);
+    if (error) {
+      setErrorMsg(error.message);
+      return;
+    }
+    await loadPrestationTab();
   };
 
   return (
@@ -270,18 +300,9 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                   />
                 </div>
 
-                {/* Montant */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase font-mono">Montant (FCFA)</label>
-                  <input
-                    type="number"
-                    name="montant"
-                    required
-                    value={formData.montant}
-                    onChange={handleInputChange}
-                    placeholder="Ex: 1250000"
-                    className="mt-1 block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-bold font-mono"
-                  />
+                <div className="sm:col-span-2 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs text-indigo-800">
+                  Le montant sera calculé automatiquement depuis les cotisations encaissées,
+                  le compte ESR et les paramètres applicables à la date de dépôt.
                 </div>
 
                 {/* Action buttons */}
@@ -327,6 +348,7 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                     <th className="py-3.5 px-4 text-center">Date demande</th>
                     <th className="py-3.5 px-4">Statut</th>
                     <th className="py-3.5 px-4 text-right">Montant</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
@@ -365,6 +387,28 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                       </td>
                       <td className="py-3.5 px-4 text-right font-extrabold font-mono text-slate-800">
                         {formatFCFA(p.montant)}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {!['PAYE', 'ANNULE'].includes(p.statut_prestation) && (
+                            <button
+                              onClick={() => handleNextStatut(p)}
+                              className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold"
+                            >
+                              {p.statut_prestation === 'DOSSIER_OUVERT'
+                                ? 'Mettre en contrôle'
+                                : p.statut_prestation === 'EN_CONTROLE'
+                                  ? 'Valider'
+                                  : 'Marquer payé'}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDownloadLiquidation(p)}
+                            className="px-2.5 py-1 bg-slate-800 text-white rounded-lg text-[10px] font-bold"
+                          >
+                            Liquidation PDF
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

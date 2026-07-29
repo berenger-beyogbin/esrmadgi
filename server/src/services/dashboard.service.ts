@@ -103,7 +103,7 @@ function mapPrestation(row: DashboardPrestationRow): DernierePrestation {
     adherent: fullName(row),
     type: row.type_prestation ?? '',
     statut: row.statut_prestation ?? '',
-    montant: toNumber(row.montant),
+    montant: toNumber(row.montant ?? row.montant_du),
   };
 }
 

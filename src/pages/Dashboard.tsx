@@ -3,6 +3,7 @@ import { getDashboardStats } from '../services/dashboardService';
 import { DashboardStats, DBUser } from '../types';
 import { Users, FileText, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
+import { exporterCimaC20 } from '../services/reportingService';
 
 interface DashboardProps {
   currentUser: DBUser;
@@ -12,6 +13,7 @@ export default function Dashboard({ currentUser }: DashboardProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isExportingCima, setIsExportingCima] = useState(false);
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -32,6 +34,18 @@ export default function Dashboard({ currentUser }: DashboardProps) {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  const handleExportCima = async () => {
+    setIsExportingCima(true);
+    setErrorMsg(null);
+    try {
+      await exporterCimaC20(new Date().getFullYear());
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Export CIMA impossible.');
+    } finally {
+      setIsExportingCima(false);
+    }
+  };
 
   // SVG chart — max dynamique basé sur les données réelles
   const chartDataMax = stats ? Math.max(stats.capitalAcquisTotal, stats.totalPm) : 0;
@@ -91,6 +105,16 @@ export default function Dashboard({ currentUser }: DashboardProps) {
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Actualiser</span>
         </button>
+        {currentUser.role !== 'ADHERENT' && (
+          <button
+            onClick={handleExportCima}
+            disabled={isExportingCima}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+          >
+            <FileText className="w-4 h-4" />
+            {isExportingCima ? 'Export...' : 'CIMA C-20 Excel'}
+          </button>
+        )}
       </div>
 
       {/* Header */}

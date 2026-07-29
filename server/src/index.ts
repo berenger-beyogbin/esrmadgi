@@ -20,6 +20,7 @@ import { comptesEsrRouter } from './routes/comptes-esr.routes';
 import { parametresRouter } from './routes/parametres.routes';
 import { authRouter } from './routes/auth.routes';
 import { utilisateursRouter } from './routes/utilisateurs.routes';
+import { reportingRouter } from './routes/reporting.routes';
 import { requireAuth, requireRoles } from './middleware/auth';
 
 validateEnv();
@@ -75,6 +76,7 @@ app.use('/api/audit', requireAuth, requireRoles('ADMINISTRATEUR'), auditRouter);
 app.use('/api/utilisateurs', requireAuth, requireRoles('ADMINISTRATEUR'), utilisateursRouter);
 app.use('/api/comptes-esr', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), comptesEsrRouter);
 app.use('/api/parametres', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), parametresRouter);
+app.use('/api/reporting', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), reportingRouter);
 
 app.use(errorHandler);
 

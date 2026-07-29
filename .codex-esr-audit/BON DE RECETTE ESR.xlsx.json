@@ -1,0 +1,157 @@
+{
+  "type": "xlsx",
+  "sheets": [
+    {
+      "name": "BON DE RECETTE",
+      "max_row": 49,
+      "max_column": 41,
+      "nonempty": [
+        {
+          "cell": "N2",
+          "value": "REPUBLIQUE DE CÔTE D’IVOIRE",
+          "computed": "REPUBLIQUE DE CÔTE D’IVOIRE",
+          "number_format": "General"
+        },
+        {
+          "cell": "N3",
+          "value": "Union – Discipline – Travail",
+          "computed": "Union – Discipline – Travail",
+          "number_format": "General"
+        },
+        {
+          "cell": "A5",
+          "value": "-------°°------",
+          "computed": "-------°°------",
+          "number_format": "General"
+        },
+        {
+          "cell": "A6",
+          "value": "DIRECTION EXECUTIVE",
+          "computed": "DIRECTION EXECUTIVE",
+          "number_format": "General"
+        },
+        {
+          "cell": "A7",
+          "value": "-----------",
+          "computed": "-----------",
+          "number_format": "General"
+        },
+        {
+          "cell": "A8",
+          "value": "SERVICE EPARGNE SANTE RETRAITE",
+          "computed": "SERVICE EPARGNE SANTE RETRAITE",
+          "number_format": "General"
+        },
+        {
+          "cell": "A9",
+          "value": "-----------",
+          "computed": "-----------",
+          "number_format": "General"
+        },
+        {
+          "cell": "G11",
+          "value": "RECU DE VERSEMENT",
+          "computed": "RECU DE VERSEMENT",
+          "number_format": "General"
+        },
+        {
+          "cell": "N11",
+          "value": "N°………..",
+          "computed": "N°………..",
+          "number_format": "General"
+        },
+        {
+          "cell": "B14",
+          "value": "Nom et Prénoms:",
+          "computed": "Nom et Prénoms:",
+          "number_format": "General"
+        },
+        {
+          "cell": "F14",
+          "value": "",
+          "computed": "",
+          "number_format": "General"
+        },
+        {
+          "cell": "N14",
+          "value": "Matricule:",
+          "computed": "Matricule:",
+          "number_format": "General"
+        },
+        {
+          "cell": "Q15",
+          "value": "",
+          "computed": "",
+          "number_format": "General"
+        },
+        {
+          "cell": "B16",
+          "value": "Montant en chiffres:",
+          "computed": "Montant en chiffres:",
+          "number_format": "General"
+        },
+        {
+          "cell": "B18",
+          "value": "Montant en lettres:",
+          "computed": "Montant en lettres:",
+          "number_format": "General"
+        },
+        {
+          "cell": "B20",
+          "value": "Date du versement :",
+          "computed": "Date du versement :",
+          "number_format": "General"
+        },
+        {
+          "cell": "B22",
+          "value": "Nature de la recette :",
+          "computed": "Nature de la recette :",
+          "number_format": "General"
+        },
+        {
+          "cell": "B24",
+          "value": "Période de couverture :",
+          "computed": "Période de couverture :",
+          "number_format": "General"
+        },
+        {
+          "cell": "B26",
+          "value": "Espèces:",
+          "computed": "Espèces:",
+          "number_format": "General"
+        },
+        {
+          "cell": "B28",
+          "value": "Chèque:",
+          "computed": "Chèque:",
+          "number_format": "General"
+        },
+        {
+          "cell": "F28",
+          "value": "N° Chèque",
+          "computed": "N° Chèque",
+          "number_format": "General"
+        },
+        {
+          "cell": "I28",
+          "value": "Banque payeur :",
+          "computed": "Banque payeur :",
+          "number_format": "General"
+        },
+        {
+          "cell": "B32",
+          "value": "NB : Pour tout paiement par chèque, la validation sera effective après encaissement",
+          "computed": "NB : Pour tout paiement par chèque, la validation sera effective après encaissement",
+          "number_format": "General"
+        },
+        {
+          "cell": "N37",
+          "value": "LE SERVICE ESR",
+          "computed": "LE SERVICE ESR",
+          "number_format": "General"
+        }
+      ],
+      "formulas": []
+    }
+  ]
+}

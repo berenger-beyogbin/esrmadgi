@@ -1,0 +1,204 @@
+{
+  "type": "xlsx",
+  "sheets": [
+    {
+      "name": "FICHE DE RACHAT TOTAL",
+      "max_row": 8,
+      "max_column": 13,
+      "nonempty": [
+        {
+          "cell": "C3",
+          "value": "FEUILLE DE CALCUL RESILIATION OU RACHAT TOTAL \"ESR-MADGI\"",
+          "computed": "FEUILLE DE CALCUL RESILIATION OU RACHAT TOTAL \"ESR-MADGI\"",
+          "number_format": "General"
+        },
+        {
+          "cell": "B7",
+          "value": "Matricule",
+          "computed": "Matricule",
+          "number_format": "General"
+        },
+        {
+          "cell": "C7",
+          "value": "Date d'adhésion (PRIME 1)",
+          "computed": "Date d'adhésion (PRIME 1)",
+          "number_format": "General"
+        },
+        {
+          "cell": "D7",
+          "value": "Date de la demande de résiliation",
+          "computed": "Date de la demande de résiliation",
+          "number_format": "General"
+        },
+        {
+          "cell": "E7",
+          "value": "Cotisation Trimestrielle",
+          "computed": "Cotisation Trimestrielle",
+          "number_format": "General"
+        },
+        {
+          "cell": "F7",
+          "value": "Durée courue en trimestre",
+          "computed": "Durée courue en trimestre",
+          "number_format": "General"
+        },
+        {
+          "cell": "G7",
+          "value": "Prov Math Commerciale",
+          "computed": "Prov Math Commerciale",
+          "number_format": "General"
+        },
+        {
+          "cell": "H7",
+          "value": "Prov de Charges de gestion",
+          "computed": "Prov de Charges de gestion",
+          "number_format": "General"
+        },
+        {
+          "cell": "I7",
+          "value": "Pénalité de résiliation (5%)",
+          "computed": "Pénalité de résiliation (5%)",
+          "number_format": "General"
+        },
+        {
+          "cell": "J7",
+          "value": "Montant à reverser a l'adhérent( e )",
+          "computed": "Montant à reverser a l'adhérent( e )",
+          "number_format": "General"
+        },
+        {
+          "cell": "M7",
+          "value": "",
+          "computed": "",
+          "number_format": "General"
+        }
+      ],
+      "formulas": []
+    },
+    {
+      "name": "ETAT DES RACHATS",
+      "max_row": 17,
+      "max_column": 13,
+      "nonempty": [
+        {
+          "cell": "C3",
+          "value": "ETAT PERIODIQUE DE RESILIATION OU RACHAT TOTAL \"ESR-MADGI\"",
+          "computed": "ETAT PERIODIQUE DE RESILIATION OU RACHAT TOTAL \"ESR-MADGI\"",
+          "number_format": "General"
+        },
+        {
+          "cell": "B7",
+          "value": "Matricule",
+          "computed": "Matricule",
+          "number_format": "General"
+        },
+        {
+          "cell": "C7",
+          "value": "Date d'adhésion (PRIME 1)",
+          "computed": "Date d'adhésion (PRIME 1)",
+          "number_format": "General"
+        },
+        {
+          "cell": "D7",
+          "value": "Date de la demande de résiliation",
+          "computed": "Date de la demande de résiliation",
+          "number_format": "General"
+        },
+        {
+          "cell": "E7",
+          "value": "Cotisation Trimestrielle",
+          "computed": "Cotisation Trimestrielle",
+          "number_format": "General"
+        },
+        {
+          "cell": "F7",
+          "value": "Durée courue en trimestre",
+          "computed": "Durée courue en trimestre",
+          "number_format": "General"
+        },
+        {
+          "cell": "G7",
+          "value": "Prov Math Commerciale",
+          "computed": "Prov Math Commerciale",
+          "number_format": "General"
+        },
+        {
+          "cell": "H7",
+          "value": "Prov de Charges de gestion",
+          "computed": "Prov de Charges de gestion",
+          "number_format": "General"
+        },
+        {
+          "cell": "I7",
+          "value": "Pénalité de résiliation (5%)",
+          "computed": "Pénalité de résiliation (5%)",
+          "number_format": "General"
+        },
+        {
+          "cell": "J7",
+          "value": "Montant à reverser a l'adhérent( e )",
+          "computed": "Montant à reverser a l'adhérent( e )",
+          "number_format": "General"
+        },
+        {
+          "cell": "M7",
+          "value": "",
+          "computed": "",
+          "number_format": "General"
+        },
+        {
+          "cell": "D12",
+          "value": "TOTAL",
+          "computed": "TOTAL",
+          "number_format": "General"
+        },
+        {
+          "cell": "G12",
+          "value": "=SUM(G8:G11)",
+          "computed": "0",
+          "number_format": "#,##0\\ \\F\\C\\F\\A"
+        },
+        {
+          "cell": "H12",
+          "value": "=SUM(H8:H11)",
+          "computed": "0",
+          "number_format": "#,##0\\ \\F\\C\\F\\A"
+        },
+        {
+          "cell": "I12",
+          "value": "=SUM(I8:I11)",
+          "computed": "0",
+          "number_format": "#,##0\\ \\F\\C\\F\\A"
+        },
+        {
+          "cell": "J12",
+          "value": "=SUM(J8:J11)",
+          "computed": "0",
+          "number_format": "#,##0\\ \\F\\C\\F\\A"
+        }
+      ],
+      "formulas": [
+        {
+          "cell": "G12",
+          "formula": "=SUM(G8:G11)",
+          "computed": "0"
+        },
+        {
+          "cell": "H12",
+          "formula": "=SUM(H8:H11)",
+          "computed": "0"
+        },
+        {
+          "cell": "I12",
+          "formula": "=SUM(I8:I11)",
+          "computed": "0"
+        },
+        {
+          "cell": "J12",
+          "formula": "=SUM(J8:J11)",
+          "computed": "0"
+        }
+      ]
+    }
+  ]
+}

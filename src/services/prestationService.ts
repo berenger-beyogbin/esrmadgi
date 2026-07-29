@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '../lib/apiClient';
+import { apiDownloadBlob, apiGet, apiPatch, apiPost } from '../lib/apiClient';
 import { RenreDetails, RenteVersement, VPrestationDetails } from '../types';
 
 type ApiResponse<T> = { data: T; error: string | null };
@@ -36,7 +36,7 @@ export const prestationService = {
     type_prestation: string;
     statut_prestation: string;
     date_demande: string;
-    montant: number;
+    montant?: number;
     details_observation?: string;
   }): Promise<{ data: unknown | null; error: Error | null }> {
     const { data, error } = await apiPost<ApiResponse<unknown>>('/api/prestations', {
@@ -44,7 +44,6 @@ export const prestationService = {
       type_prestation: prestationData.type_prestation,
       statut_prestation: prestationData.statut_prestation || 'DOSSIER_OUVERT',
       date_demande: prestationData.date_demande,
-      montant: Number(prestationData.montant) || 0,
     });
 
     if (error) return { data: null, error: new Error(error) };
@@ -65,5 +64,23 @@ export const prestationService = {
 
     if (error) return { data: [], error: new Error(error) };
     return { data: data?.data ?? [], error: toError(data?.error) };
+  },
+
+  async telechargerLiquidation(id: string): Promise<{ data: Blob | null; error: Error | null }> {
+    const { data, error } = await apiDownloadBlob(`/api/prestations/${encodeURIComponent(id)}/liquidation.pdf`);
+    return { data, error: error ? new Error(error) : null };
+  },
+
+  async changerStatut(
+    id: string,
+    statut: 'EN_CONTROLE' | 'VALIDE' | 'PAYE' | 'ANNULE',
+    observation = '',
+  ): Promise<{ data: unknown | null; error: Error | null }> {
+    const { data, error } = await apiPatch<ApiResponse<unknown>>(
+      `/api/prestations/${encodeURIComponent(id)}/statut`,
+      { statut, observation },
+    );
+    if (error) return { data: null, error: new Error(error) };
+    return { data: data?.data ?? null, error: toError(data?.error) };
   },
 };

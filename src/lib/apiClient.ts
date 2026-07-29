@@ -124,6 +124,27 @@ export async function apiPut<T = unknown>(
   }
 }
 
+export async function apiPatch<T = unknown>(
+  path: string,
+  body: unknown,
+): Promise<{ data: T | null; error: string | null }> {
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method: 'PATCH',
+      headers: await buildHeaders(),
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      notifyIfSessionExpired(res.status);
+      return { data: null, error: readApiError(json) };
+    }
+    return { data: json as T, error: null };
+  } catch (e: unknown) {
+    return { data: null, error: toFrenchErrorMessage(e) };
+  }
+}
+
 export async function apiDelete<T = unknown>(
   path: string,
 ): Promise<{ data: T | null; error: string | null }> {
@@ -148,5 +169,35 @@ export async function apiDelete<T = unknown>(
   }
 }
 
-export const apiClient = { get: apiGet, post: apiPost, put: apiPut, delete: apiDelete };
+export async function apiDownloadBlob(
+  path: string,
+): Promise<{ data: Blob | null; error: string | null }> {
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      headers: await buildHeaders(),
+    });
+    if (!res.ok) {
+      notifyIfSessionExpired(res.status);
+      let message = 'Impossible de télécharger le document.';
+      try {
+        message = readApiError(await res.json());
+      } catch {
+        // La réponse peut être binaire ou vide.
+      }
+      return { data: null, error: message };
+    }
+    return { data: await res.blob(), error: null };
+  } catch (e: unknown) {
+    return { data: null, error: toFrenchErrorMessage(e) };
+  }
+}
+
+export const apiClient = {
+  get: apiGet,
+  post: apiPost,
+  put: apiPut,
+  patch: apiPatch,
+  delete: apiDelete,
+  download: apiDownloadBlob,
+};
 

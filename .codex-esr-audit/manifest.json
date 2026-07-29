@@ -1,0 +1,80 @@
+[
+  {
+    "file": "BON DE RECETTE ESR.xlsx",
+    "size": 35459,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\BON DE RECETTE ESR.xlsx.json"
+  },
+  {
+    "file": "Capital décès Agent en activité.xlsx",
+    "size": 20009,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\Capital décès Agent en activité.xlsx.json"
+  },
+  {
+    "file": "COMPTE_RENDU REUNION_ESR_ (2).docx",
+    "size": 22370,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\COMPTE_RENDU REUNION_ESR_ (2).docx.json"
+  },
+  {
+    "file": "Explication du remboursement du capital décès.docx",
+    "size": 15777,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\Explication du remboursement du capital décès.docx.json"
+  },
+  {
+    "file": "LES REPORTING.docx",
+    "size": 27095,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\LES REPORTING.docx.json"
+  },
+  {
+    "file": "MODULE COTISATION EPARGNE SANTE RETRAITE MADGI 2.xlsm",
+    "size": 40794,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\MODULE COTISATION EPARGNE SANTE RETRAITE MADGI 2.xlsm.json"
+  },
+  {
+    "file": "NOTE TECHNIQUE MADGI EPARGNE SANTE RETRAITE.pdf",
+    "size": 250842,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\NOTE TECHNIQUE MADGI EPARGNE SANTE RETRAITE.pdf.json"
+  },
+  {
+    "file": "PM MADGI-ESR exemple.xlsx",
+    "size": 100340,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\PM MADGI-ESR exemple.xlsx.json"
+  },
+  {
+    "file": "Precompte ESR-MADGI.xlsx",
+    "size": 9321,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\Precompte ESR-MADGI.xlsx.json"
+  },
+  {
+    "file": "RACHAT TOTAL ESR.xlsx",
+    "size": 20577,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\RACHAT TOTAL ESR.xlsx.json"
+  },
+  {
+    "file": "RACHAT TOTAL.xlsx",
+    "size": 20559,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\RACHAT TOTAL.xlsx.json"
+  },
+  {
+    "file": "RAPPORT DES TRAVAUX DE L'EQUIPE PROJET - DEF.doc",
+    "size": 5699072,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\RAPPORT DES TRAVAUX DE L'EQUIPE PROJET - DEF.doc.json"
+  },
+  {
+    "file": "SIMULATION D'ADHESION.docx",
+    "size": 29437,
+    "status": "ok",
+    "extraction": "C:\\PROJETS\\madgi-esr\\.codex-esr-audit\\SIMULATION D'ADHESION.docx.json"
+  }
+]

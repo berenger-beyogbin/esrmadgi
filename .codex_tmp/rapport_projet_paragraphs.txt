@@ -1,0 +1,687 @@
+﻿1	Normal	SOMMAIRE
+2	Normal	INTRODUCTION
+3	Normal	La Mutuelle des Agents de la Direction Générale des Impôts (MADGI) est une Mutuelle sociale qui a pour objet, à titre principal, la prévention des risques sociaux liés à la personne et la réparation de leurs conséquences. A titre accessoire, elle exerce toute activité ayant pour objet l’amélioration des conditions de vie et d’épanouissement de ses membres.
+4	Normal	Selon les dispositions du cahier des charges de la MADGI, les membres admis à faire valoir leurs droits à la retraite ont la faculté de conserver la couverture maladie, à condition de s’acquitter de la totalité de la prime annuelle requise. Dans la pratique, la mise en œuvre de cette disposition du cahier des charges s’avère difficile dans la mesure où le mutualiste retraité se retrouve en face d’une réduction drastique de ses revenus.
+5	Normal	Afin d’en trouver des solutions, les dirigeants de la MADGI ont entamé des réflexions pour la mise en place d’un système de couverture adapté à la situation des retraités, avec un coût supportable sans mettre à mal sa solvabilité globale.
+6	Normal	Pour ce fait, ils ont diligenté une étude actuarielle pour la réalisation dudit projet.
+7	Normal	A la suite de la validation de cette étude, une Equipe-Projet a été mise en place au sein de l’Administration générale de la MADGI, avec pour missions, sous la supervision de l’Administrateur général de :
+8	Normal	- Finaliser les aspects techniques du projet
+9	Normal	- Elaborer le cahier des charges, et le suivi de la conception et de l’implémentation du logiciel métier
+10	Normal	- Définir l’organisation administrative et financière du projet
+11	Normal	- Mettre en place un plan de déploiement du projet
+12	Normal	- Elaborer un plan de communication relatif au projet.
+13	Normal	Le présent rapport regroupe donc les livrables issus des travaux effectués par une équipe de onze (11) personnes, sous la conduite d’un Chef de Projet.
+14	List Paragraph	DISPOSITIONS DU CAHIER DES CHARGES
+15	Normal	A.1. CONDITIONS D’ACCES AUX SOINS
+16	List Paragraph	Bénéficiaire
+17	Normal	Sont désignés "bénéficiaire", l’adhérent et ses ayants droit.
+18	List Paragraph	Ayants droit
+19	Normal	Le terme "ayants-droit" désigne :
+20	List Paragraph	L’époux ou l’épouse légal (e), à défaut, le conjoint ou la conjointe déclaré (e) ;
+21	List Paragraph	L’enfant légitime âgé de moins de 21 ans ;
+22	List Paragraph	L’enfant né hors mariage, âgé de moins de 21 ans ;
+23	List Paragraph	L’enfant légitime ou né hors mariage âgé de plus de 21 ans jusqu’à 26 ans révolus, poursuivant ses études ou mis en apprentissage dans un établissement ou un centre de formation agréé par l’Etat.
+24	List Paragraph	Nombre de personnes pris en charge
+25	Normal	L’assurance santé des retraités de la MADGI couvre six (06) personnes. A savoir :
+26	List Paragraph	L’adhérent (e),
+27	List Paragraph	L’époux ou l’épouse légal (e), à défaut, le conjoint ou la conjointe déclaré (e)
+28	Normal	Quatre (04) enfants de moins de 21 ans ou âgés de 26 ans révolus, à condition de poursuivre ses études ou d’être mis en apprentissage dans un établissement ou un centre de formation agréé par l’Etat.
+29	Normal	Toutefois, l’adhérent peut déclarer un ou plusieurs enfant (s) supplémentaires, moyennant le paiement d’une surprime par enfant.
+30	Normal	NB : Les ayants-droit pris en compte sont ceux connus du fichier de l’adhérent au moment de son départ à la retraite. Les nouvelles incorporations ne sont pas admises.
+31	List Paragraph	Taux de couverture
+32	Normal	La MADGI offre à ses adhérents un taux couverture santé unique de 80%.
+33	List Paragraph	Retrait de l’assurance santé des retraités
+34	Normal	Le retrait automatique de l’assurance santé
+35	Normal	Il se produit :
+36	List Paragraph	Pour les bénéficiaires en cas de décès de l’adhérent ;
+37	List Paragraph	Pour les enfants, à l’âge de 21 ans révolus. Cependant ces derniers peuvent être maintenus dans l’assurance santé des retraités s’ils poursuivent des études ou suivent un apprentissage dans un établissement ou un centre de formation agréé par l’Etat ;
+38	List Paragraph	Pour les enfants après l’âge de 26 ans révolus ;
+39	List Paragraph	Pour les enfants ayant contracté une grossesse. Et ce, peu importe l’issue de celle-ci.
+40	Normal	Le retrait à la demande de l’adhérent
+41	Normal	Les ayants-droit peuvent être retirés de la couverture maladie des retraités à tout moment à la demande de l’adhérent.
+42	List Paragraph	Conditions de prise en charge
+43	Normal	Ne peuvent bénéficier des prestations de l’assurance santé des retraités que les retraités à jour de leurs cotisations.
+44	List Paragraph	Lieu et délai de confection de la carte d’assurance maladie des retraités
+45	Normal	La carte d’assurance maladie des retraités est établie au Département en charge de l’Assurance Maladie de la MADGI. Le délai de production des cartes est de 07 jours ouvrés à compter de la date de dépôt des dossiers.
+46	Normal	NB : L’utilisation de la carte est strictement limitée aux besoins personnels de son titulaire.
+47	List Paragraph	Duplicata de la carte d’assurance maladie des retraités
+48	Normal	En cas de perte ou de détérioration de la carte d’assurance Epargne Santé Retraite MADGI, (ESR), l’intéressé(e) peut se faire établir un duplicata. Pour ce faire, il ou elle devra fournir les éléments suivants :
+49	Normal	- un certificat de perte délivré par un Commissariat de police ;
+50	Normal	- une somme de 5000 F CFA.
+51	Normal	Le duplicata est établi et délivré sur place.
+52	Normal	A.2 COTISATION DE LA PRIME D’ASSURANCE SANTE
+53	List Paragraph	Montant de la prime d’assurance santé des retraités
+54	Normal	La cotisation de la prime d’assurance maladie des retraités de la DGI est unique pour toutes les catégories professionnelles, et s’élève trimestriellement à 150 000 F CFA, et payé par le service de gestion de l’ESR-MADGI.
+55	Normal	Pour tout enfant supplémentaire connu du fichier au départ à la retraite, une surprime trimestrielle de 65 000 F CFA par enfant devra être payée.
+56	Normal	NB : La cotisation de la prime d’assurance est susceptible de variations en fonction de l’inflation et de l’augmentation des dépenses de santé.
+57	List Paragraph	Périodicité des cotisations
+58	Normal	Les cotisations de la prime d’assurance santé des retraités sont payées trimestriellement par le service de gestion de l’ESR-MADGI.
+59	Normal	A.3. LES PRESTATIONS
+60	List Paragraph	Les parcours de soins
+61	Normal	Deux parcours de soins sont proposés aux assurés ESR MADGI. Et ce, en fonction de la localisation géographique des établissements de soins.
+62	Normal	On note ainsi : le parcours de soins dans la zone dite " ABIDJAN " et le parcours de soins de la zone dite " HORS ABIDJAN"
+63	Normal	1-1-Parcours de soins ZONE "ABIDJAN"
+64	Normal	On entend par ZONE "ABIDJAN", le territoire des dix communes d’Abidjan, à savoir :
+65	Normal	Cocody, Abobo, Yopougon, Adjamé, Plateau, Attécoubé, Treichville, Marcory, Koumassi, et Port-Bouët.
+66	Normal	Pour toute consultation et/ou hospitalisation dans une structure sanitaire située dans cette zone, le mutualiste devra obligatoirement se rendre à l’Hôtel Médical des Impôts KESSE-Feh (HMI-KF).
+67	Normal	Toutefois, l’obligation de passer par le HMI-KF avant de se rendre dans tout établissement de la zone "ABIDJAN" est dérogée dans les situations suivantes :
+68	List Paragraph	Cas de maladies pour les nourrissons de moins de 12 mois ;
+69	List Paragraph	Les complications cardio-respiratoires ;
+70	List Paragraph	Les urgences chirurgicales ;
+71	List Paragraph	Les crises vaso-occlusives ;
+72	List Paragraph	Les accidents de la voie publique ;
+73	List Paragraph	Les troubles de la conscience ;
+74	List Paragraph	En somme toutes les situations mettant en jeu le pronostic vital et/ou fonctionnel de l’assuré.
+75	Normal	Ainsi dans les situations sus évoquées les patients peuvent se rendre directement dans les établissements conventionnés situés dans la ZONE "ABIDJAN".
+76	Normal	En dehors des cas sus évoqués, toute admission dans un établissement de soins de la ZONE "ABIDJAN" pour des actes médicaux (consultation de médecine générale et/ou de spécialités offertes ou non par l’Hôtel Médical des Impôts KESSE-Feh (HMI-KF), hospitalisations programmées, requièrent l’accord préalable obligatoire d’un Médecin Conseil.
+77	Normal	NB : Les mutualistes qui souhaitent réaliser leurs prestations dans la ZONE "ABIDJAN" en dehors du cadre ci-dessus décrit, ont la possibilité de le faire en payant l’entièreté (sans la part la MADGI) du coût des prestations. Ils pourront secondairement faire une demande de remboursement des frais engagés. Ces remboursements se feront sur la base de 50 % des tarifs appliqués à l’HMI-KF et dans les limites prévues par les garanties et exclusions de la police d’assurance de la MADGI.
+78	Normal	1-2-Parcours de soins ZONE " HORS ABIDJAN"
+79	Normal	On entend par ZONE " HORS ABIDJAN" les localisations géographiques situées en dehors du territoire des dix communes d’Abidjan.
+80	Normal	Le recours aux structures sanitaires de cette zone est libre et n’est donc pas soumise à l’obligation de passer par l’HMI-KF
+81	List Paragraph	Réalisation des examens paracliniques
+82	Normal	La priorité est accordée à l’HMI-KF pour le lieu de réalisation des examens paracliniques et des consultations spécialistes qui peuvent se réaliser dans les établissements sanitaires situées dans la zone « ABIDJAN » étendue aux communes de Bingerville et Songon.
+83	Normal	En cas d’urgence mettant en jeu le pronostic vital et/ou fonctionnel, la priorité sera accordée au centre le plus proche.
+84	List Paragraph	Hospitalisations programmées
+85	Normal	Pour tous les cas d’hospitalisations programmées notamment chirurgicales, le patient devra obtenir une facture proforma de la structure d’accueil avant de bénéficier d’une prise en charge. Ladite facture pro-forma pourra être soumise pour validation par la structure sanitaire ou l’assuré sur la plateforme SIAPS.
+86	Normal	Le non-respect de cette disposition expose l’assuré au refus d’octroi d’une prise en charge de l’hospitalisation.
+87	List Paragraph	Plafond des chambres d’hospitalisations
+88	Normal	Le tarif de chambre applicable à la MADGI est plafonné à 30.000 frs TTC par jour.
+89	Normal	NB : Les accompagnants ne sont pas pris en compte.
+90	List Paragraph	Grossesse d’une enfant d’un (e) adhérent (e)
+91	Normal	Il sera procédé à la radiation définitive de la couverture de l’assurance santé, de tout enfant à charge (bénéficiaire) ayant contracté une grossesse. Et ce peu importe l’issue de la grossesse (fausse couche, accouchement, avortement provoqué).
+92	List Paragraph	Retrait d’un enfant supplémentaire
+93	Normal	Le retrait d’un enfant supplémentaire n’est pris en compte qu’à la fin de chaque trimestre.
+94	List Paragraph	Renouvellement de verres pharmaceutiques
+95	Normal	Le renouvellement de verres pharmaceutiques et/ou de monture ne peut intervenir qu’à l’expiration de deux (2) années révolues.
+96	List Paragraph	Prise en charge de l’IRM
+97	Normal	L’Imagerie par Résonnance Magnétique (IRM) est prise en charge par la MADGI selon le taux de couverture de l’assuré, avec un montant plafond. Le plafond est fixé à 100.000 FCFA.
+98	List Paragraph	Prise en charge des prothèses dentaires
+99	Normal	Les prothèses dentaires sont prises en charge dans le cadre d’un remboursement direct après une entente préalable avec le médecin conseil.
+100	Normal	Le plafond par an est fixé à 100.000 FCFA pour les assurés.
+101	List Paragraph	les remboursements directs
+102	Normal	En cas de non utilisation de la carte d’assurance maladie des retraités pour les soins médicaux, l’assuré peut se faire rembourser les frais engagés. Les remboursements se font sur la base du cahier de charges (garanties et exclusions) selon les dispositions suivantes :
+103	List Paragraph	Remboursements à 80% des frais engagés
+104	Normal	Sont concernées :
+105	List Paragraph	Les prestations réalisées dans les centres de santé publics ;
+106	List Paragraph	Les prestations réalisées avec l’accord préalable des médecins conseils dans les centres de santé conventionnées ou non.
+107	List Paragraph	Remboursements à 50%
+108	Normal	Sont concernées :
+109	List Paragraph	Les prestations en rapport avec des spécialités existantes ou non à l’HMI-KF mais réalisées dans les centres conventionnés.
+110	List Paragraph	Les consultations de pédiatrie et gynécologie, réalisées en dehors comme à l’intérieur du réseau de soins hors HMI-KF.
+111	Normal	NB : Le dépôt des dossiers de demande de remboursement se fait dans un délai de 3 mois maximum à compter de la date d’obtention de la facture. Passé ce délai, les remboursements ne sont plus acceptés.
+112	List Paragraph	Remboursement direct de soins à l’étranger
+113	Normal	La couverture de soins de l’assurance maladie des retraités est circonscrite géographiquement au territoire national.
+114	Normal	Par conséquent, tous les soins effectués à l’étranger ne sont pas remboursables.
+115	List Paragraph	Remboursement en cas de recours à une assurance complémentaire
+116	Normal	Le remboursement à 100% du ticket modérateur est accordé à l’adhérent lorsque celui-ci fait usage d’une autre assurance maladie dans la limite du cahier de charges de la MADGI.
+117	Normal	Par exemple, lorsqu’un (e) assuré (e) utilise les bons de médicaments MUGEFCI, les 30% (ticket modérateur) à sa charge lui sont remboursés à 100% par la MADGI dans la limite du cahier de charges.
+118	List Paragraph	Sortie contre avis médical et refus de soins
+119	Normal	Tout assuré qui décide de sortir contre avis médical ou qui refuse les soins à lui proposé sans un motif jugée valable ne pourra pas bénéficier de prise en charge pour les complications découlant du refus de soins.
+120	Normal	B. LES GARANTIES
+121	Normal	De façon générale, sont pris en charge par l’assurance maladie des retraités de la MADGI :
+122	Normal	- Les consultations de médecine générale et de spécialités ;
+123	Normal	- Les hospitalisations médicales ou chirurgicales ;
+124	Normal	- les frais de radiologie, d'analyses médicales et d’explorations fonctionnelles ;
+125	Normal	- les frais de médicaments sur ordonnance ;
+126	Normal	- Les soins dentaires ;
+127	Normal	- Les frais d’optiques ;
+128	Normal	- la Kinésithérapie et les actes de rééducation.
+129	Normal	La mise en œuvre des groupes d’actes pris en charge ci-dessus évoqué, obéit à des règles que sont "l’entente préalable " et les "exclusions "
+130	Normal	B.1. ENTENTE PRÉALABLE
+131	Normal	Il s’agit de l’accord donné, avant l'exécution de l'acte ou du traitement, par le Médecin Conseil de la MADGI pour sa prise en charge.
+132	Normal	Le tableau ci-dessous donne la liste des actes soumis à entente préalable (Liste non exhaustive).
+133	List Paragraph	Les produits pharmaceutiques
+134	Normal	Les produits pharmaceutiques ci-après désignés ne sont pas pris en charge quel que soit la qualité de leurs prescripteurs. Ce sont :
+135	Normal	CONDITIONS GENERALES DU CONTRAT :
+136	Normal	« EPARGNE SANTE RETRAITE – MADGI » (ESR-MADGI)
+137	Normal	TITRE I : DISPOSITIONS GÉNÉRALES
+138	Normal	Article 1 : Définitions
+139	Normal	Pour l’application de l’ensemble des dispositions du présent contrat, il faut entendre par :
+140	Normal	Adhérent : La personne sur laquelle repose le contrat, qui signe et s’engage à payer les cotisations ;
+141	Normal	Bénéficiaire : La personne en faveur de qui est stipulé le versement de la valeur du compte en cas de survenance des divers événements garantis par le contrat ; Ce sont les ayants droit légaux ou toute personne désignée dans le bulletin individuel d’adhésion
+142	Normal	Cotisation : la somme que doit verser l’adhérent à la MADGI en contrepartie de la garantie ;
+143	Normal	Ayants droit : Ce sont les bénéficiaires de la couverture ESR. Il s’agit des ayants droit connus du fichier de l’assurance maladie de la MADGI au moment du départ à la retraite.
+144	Normal	Résiliation : cessation des garanties du contrat de plein droit ou à l’initiative de l’une des parties.
+145	Normal	Les identités de l’adhérent et des bénéficiaires sont précisées dans la Fiche d’Adhésion édictant les Conditions Particulières du contrat.
+146	Normal	Article 2 : Documents contractuels
+147	Normal	Le contrat « ESR-MADGI » est défini par :
+148	Normal	les présentes Conditions Générales, qui constituent son cadre juridique ;
+149	Normal	le Bulletin Individuel d’Adhésion (BIA) édictant les Conditions Particulières, qui traduisent les aspects personnels ;
+150	Normal	les Avenants qui constatent les modifications qui interviennent en cours de vie du contrat.
+151	Normal	Il est régi par les Statuts et Règlement intérieur de la MADGI, ainsi que toutes autres lois et règlements en vigueur en Côte d’Ivoire, applicables aux mutuelles sociales.
+152	Normal	TITRE II : CONSTITUTION DU CONTRAT
+153	Normal	Article 3 : Objet du contrat
+154	Normal	« ESR-MADGI » est un contrat individuel d’assurance sur la vie qui a pour objet le paiement, après une période de différée, d’une rente viagère permettant de couvrir la cotisation santé de l’adhérent, en cas de vie au terme du différé.
+155	Normal	A la retraite de l’adhérent (fin du différé), la MADGI paie pour son compte, par prélèvement sur son épargne constituée, 100% de la cotisation pour sa couverture maladie dans les conditions définies par le règlement intérieur et le cahier de charges de ESR-MADGI, tant qu’il demeure en vie.
+156	Normal	Article 4 : Adhésion et effet
+157	Normal	L’adhésion au contrat Epargne Santé Retraite est facultative et ouverte à tout membre de la MADGI.
+158	Normal	Peuvent souscrire au contrat « ESR-MADGI », tout agent, fonctionnaire ou contractuel en activité à la Direction Générale des Impôts ou à la Mutuelle des Agents de la Direction générale des Impôts.
+159	Normal	Pour adhérer au contrat « ESR-MADGI », l’agent doit remplir et signer un Bulletin Individuel d’Adhésion (BIA).
+160	Normal	Le contrat prend effet le premier jour du mois civil suivant la fin du trimestre d’adhésion, après le précompte de la première cotisation, à condition que l’adhérent soit vivant à ce  moment.
+161	Normal	Article 5 : Durée du contrat
+162	Normal	Le contrat est établi pour une durée de différé correspondant à la durée résiduelle d’activité de l’adhérent au moment de la souscription.
+163	Normal	A la fin du différé (au départ à la retraite de l’adhérent), la rente, correspondant au montant de la cotisation de la couverture maladie ESR MADGI en vigueur, est servie jusqu’au décès de l’adhérent.
+164	Normal	Article 6 : Durée de cotisation
+165	Normal	La durée de paiement des cotisations du contrat est égale à la durée résiduelle d’activité.
+166	Normal	Pour un agent qui passe à un grade supérieur entraînant le rallongement de sa durée d’activité, la cotisation est recalculée en fonction de la nouvelle durée résiduelle d’activité.
+167	Normal	TITRE III : GARANTIES
+168	Normal	Article 7 : Prestations garanties
+169	Normal	A la retraite de l’adhérent, la MADGI prend en charge, tant qu’il est en vie, sa couverture maladie et celle de ses ayants droit.
+170	Normal	Par ayants droit, il faut entendre :
+171	Normal	L’époux ou l’épouse légal(e), à défaut, le conjoint ou la conjointe déclaré(e) ;
+172	Normal	Les enfants légitimes ou nés hors mariage et légalement reconnus ou adoptés, âgés de moins de 21 ans ;
+173	Normal	Les enfants légitimes ou nés hors mariage et légalement reconnus ou adoptés, âgés de moins de 21 ans révolus à 26 ans, poursuivant leurs études ou mis en apprentissage dans un établissement ou un centre de formation agréé par l’Etat.
+174	Normal	Le nombre d’enfants à prendre en charge est de quatre (04). Toutefois, il sera exigé le paiement d’une prime complémentaire par enfant supplémentaire déclaré.
+175	Normal	En cas de décès de l’adhérent en cours de service de la rente, il est reversé aux bénéficiaires désignés 80% du capital constitutif de rente restant dû.
+176	Normal	Article 8 : Garantie en cas de décès ou d’invalidité permanente totale de l’adhérent durant la période de cotisation
+177	Normal	En cas de décès ou d’invalidité permanente totale de l’adhérent avant la retraite, il est payé aux bénéficiaires désignés ou aux ayants droit légaux, 95% de la valeur de son épargne à cette date.
+178	Normal	Article 9 : Montant de la prestation
+179	Normal	Le montant de la rente garantie, correspondant à la cotisation MADGI, est fixé par les règlements mutualistes de la MADGI en vigueur au moment du départ à la retraite de l’adhérent.
+180	Normal	Article 10 : Chargement de gestion et taux d’intérêt technique
+181	Normal	Pour le contrat « ESR-MADGI », il est appliqué un chargement de gestion sur rente de 5%.
+182	Normal	Le taux d’intérêt technique est fixé à 3,5%.
+183	Normal	Article 11 : Capital décès en cours de service de rente
+184	Normal	En cas de décès de l’adhérent en cours de service de rente, il est reversé aux bénéficiaires désignés ou ayants droit légaux 80% du capital constitutif de rente restant dû.
+185	Normal	TITRE IV : VIE DU CONTRAT
+186	Normal	Article 12 : Montant de la cotisation
+187	Normal	Le montant de la cotisation périodique est indiqué dans la Fiche d’Adhésion signée par les parties. Elle est déterminée à la souscription en fonction de l’âge de départ à la retraite de l’adhérent, de la durée résiduelle d’activité, du taux de couverture choisi et du montant de la cotisation MADGI en vigueur au jour de la souscription.
+188	Normal	En cas de modification à la hausse de la cotisation « ESR-MADGI », pendant la période de paiement des cotisations, la cotisation du contrat « ESR-MADGI », est réajustée en fonction du nouveau montant à garantir par « ESR-MADGI ».
+189	Normal	Si l'Adhérent ne consent pas à l’augmentation éventuelle de la cotisation qui en résulte, le contrat est résilié de plein droit dans les conditions définies à l’article 10 des présentes conditions générales.
+190	Normal	Article 13 : Périodicité et mode de paiement de la cotisation
+191	Normal	Les cotisations sont payables trimestriellement par prélèvement automatique à la source sur les ristournes trimestrielles.
+192	Normal	La signature du Bulletin Individuel d’Adhésion (BIA) emporte autorisation à « ESR-MADGI », pour effectuer ce prélèvement
+193	Normal	Les paiements spontanés sont également admis.
+194	Normal	Article 14 : Résiliation du contrat - Rachats
+195	Normal	Rachat partiel
+196	Normal	Ce contrat ne prévoit pas de rachat partiel.
+197	Normal	Rachat total
+198	Normal	Le rachat total n’est possible que pendant la période de paiement des primes. Et ne peut intervenir qu’après deux (02) ans minimums de cotisation.
+199	Normal	En cas de rachat total une pénalité de 5% sera ajoutée aux frais de gestion estimés à 5%.
+200	Normal	Aucun rachat n’est possible en cours de service de rente.
+201	Normal	Résiliation
+202	Normal	L’adhérent peut en toute liberté, pendant la période de cotisation, mettre fin au contrat en contrepartie de l’annulation de tous les engagements de « ESR-MADGI », et le reversement de la valeur de rachat.
+203	Normal	En cas de rachat total ou de résiliation, il est appliqué une pénalité fixée à 5% de la valeur de rachat qui est égale au capital acquis.
+204	Normal	Article 15 : Règlement de la valeur du compte en cas d’invalidité permanente totale de
+205	Normal	l’adhérent
+206	Normal	Est considéré comme Invalidité Permanente Totale, l’état qui rend l’adhérent inapte à tout travail, définitivement incapable de se livrer à la moindre activité susceptible de lui procurer un revenu et l’oblige à recourir à une tierce personne pour effectuer les actes ordinaires de la vie.
+207	Normal	En cas d’invalidité médicalement constatée avant la retraite, le capital acquis est payé à l’adhérent.
+208	Normal	Formalités
+209	Normal	Dès que l’adhérent (ou toute personne intéressée au contrat) a eu connaissance d’un accident ou d’une maladie susceptible d’engager « ESR-MADGI », il doit en faire la déclaration dans les meilleurs délais.
+210	Normal	Modalités de paiement
+211	Normal	Article 16 : Compte épargne santé
+212	Normal	« ESR-MADGI » paie au terme d’un délai de quinze (15) jours ouvrés suivant la date de l’établissement de la preuve de l’Invalidité Permanente Totale.
+213	Normal	« ESR-MADGI », tient pour chaque adhérent un compte individuel où figure le montant du capital épargne santé.
+214	Normal	Le compte de l’adhérent est alimenté par la somme des cotisations prélevées, capitalisées
+215	Normal	au taux d’intérêt technique équivalent.
+216	Normal	La date de valeur est fixée au 1er jour du mois suivant la fin du trimestre de prélèvement de la cotisation.
+217	Normal	Article 17 : Règlement de la valeur du compte en cas de décès de l’adhérent
+218	Normal	La valeur du compte est reversée aux bénéficiaires désignés dans un délai de quinze (15) jours ouvrés, à compter du dépôt de la totalité des pièces suivantes :
+219	Normal	Le courrier de déclaration du sinistre à « ESR-MADGI » ;
+220	Normal	L’acte de décès ;
+221	Normal	Les actes de naissance des bénéficiaires ;
+222	Normal	Les certificats d’administration légale des bénéficiaires mineurs.
+223	Normal	------------------**-----------------
+224	Normal	BULLETIN INDIVIDUEL D’ADHESION
+225	Normal	EPARGNE SANTE RETRAITE MADGI			BULLETIN INDIVIDUEL D’ADHESION
+226	Normal	ADHERENT (E) :					MATRICULE : /________________________/
+227	Normal	Nom & Prénoms : …………………….…………………………………………………………………………..
+228	Normal	Né(e) le : /_____/_____/_________/ Lieu de naissance : ………………………..…………………….……
+229	Normal	Sexe : Masculin   		Féminin
+230	Normal	Situation matrimoniale : Mairé(e) 		divorcé(e)		veuf(ve) 	    concubinage
+231	Normal	Emploi : …………………………………………………………………………..…….. Grade : ………………
+232	Normal	Fonction : …………………………………………………………………………………..………………….…..
+233	Normal	Direction : ………………………………………………………………………………………………………….
+234	Normal	Adresse postale : ………………………… Adresse géographique : …………………..……………….……
+235	Normal	Contact(s) : ………………………………….………………………… E-mail : ……………………………….
+236	Normal	BÉNÉFICIAIRES
+237	Normal	CARACTERISTIQUES DE LA GARANTIE
+238	Normal	Date d’effet : /______/______/_________/
+239	Normal	MONTANT COTISATION :
+240	Normal	Cotisation maladie garantie :                             Cotisation épargne santé retraite :
+241	Normal	Je déclare avoir pris connaissance et accepter les Conditions Générales du contrat « ESR-MADGI » , annexé au présent Bulletin d’adhésion individuel, et autorise la Mutuelle des Agents de la Direction Générale des Impôts (MADGI), à percevoir mes cotisations par précompte sur mes émoluments trimestriels.
+242	Normal	Les cotisations d’un montant de …………………………….…………………. / trimestre, seront perçues du /______/______/_________/ au /______/______/__________/ pour un taux de couverture à 80%.
+243	Normal	J’ai été informé que si je passe à un grade supérieur entrainant le rallongement de ma durée d’activité, la cotisation sera recalculée en fonction de la nouvelle durée résiduelle d’activité.
+244	Normal	NB : L’Adhérent(e) est tenu(e) d’informer la MADGI, par courrier de toutes modifications intervenues dans ses déclarations.
+245	Normal	Fait à Abidjan, le ……………………….
+246	Normal	L’ADHERENT (E) 		POUR LA MADGI,
+247	Normal	(Signature, précédée de la mention
+248	Normal	«Lu et approuvé »)
+249	Normal	L’Administrateur Général
+250	Normal	SPECIMEN DE CARTE ESR MADGI
+251	Normal	CAHIER DES CHARGES
+252	Normal	DU LOGICIEL METIER
+253	Normal	ESR-MADGI
+254	Normal	(TECHNIQUE ET FONCTIONNEL)
+255	List Paragraph	RÉSUMÉ EXÉCUTIF
+256	List Paragraph	Contexte & enjeu
+257	Normal	La MADGI souhaite mettre en place un logiciel web de gestion intégré pour le produit Épargne Santé Retraite (ESR). Aujourd’hui, les calculs (cotisations, provisions, capitaux décès, valeurs de rachat) s’appuient sur un fichier Excel/VBA. Cette organisation limite l’industrialisation, la traçabilité et la conformité prudentielle pour un risque long (sortie en rente viagère). L’objectif est de migrer vers une solution WebDev robuste, centralisée et auditable, adossée à une base HFSQL Client/Serveur.
+258	List Paragraph	Objectif du projet logiciel
+259	Normal	Concevoir, développer et déployer une application 100 % web permettant :
+260	Normal	l’adhésion et la gestion des comptes individuels ESR ;
+261	Normal	le calcul automatique des cotisations (trimestrielles/unique), provisions et capitaux décès selon les paramètres techniques (taux garanti, frais de gestion, table de mortalité) ;
+262	Normal	le pilotage des prestations (retraite, invalidité, décès) et des rentes viagères ;
+263	Normal	la production d’états individuels et agrégés (reporting réglementaire et interne).
+264	List Paragraph	Périmètre fonctionnel (vue d’ensemble)
+265	Normal	Gestion des adhérents & bénéficiaires (bulletin d’adhésion numérique).
+266	Normal	Calcul & gestion des cotisations (automatisation des règles actuarielles issues du VBA).
+267	Normal	Prestations : retraite (rente), invalidité, décès (règlements & délais).
+268	Normal	Comptes individuels : capital acquis, provision mathématique, valeur de rachat.
+269	Normal	Reporting : situations individuelles, provisions techniques, états annuels.
+270	Normal	Administration : profils (adhérent, gestionnaire, administrateur), paramétrage.
+271	Normal	Communication (optionnel) : notifications email/SMS.
+272	List Paragraph	Périmètre technique (vue d’ensemble)
+273	Normal	Technologie : WebDev (dernière version stable).
+274	Normal	Base de données : HFSQL Client/Serveur (sécurisée, centralisée).
+275	Normal	Migration : traduction des règles VBA → procédures WLangage (WL) ; import des historiques Excel ; export Excel/PDF pour les rapports.
+276	Normal	Sécurité : authentification, gestion des droits, chiffrement, sauvegardes & PRA.
+277	Normal	Déploiement : application responsive, accessible via navigateur (poste & mobile).
+278	List Paragraph	Bénéfices clés attendus
+279	Normal	Fiabilité des calculs (référentiel unique, tests de non-régression vs Excel).
+280	Normal	Traçabilité & auditabilité (journalisation des paramètres et versions).
+281	Normal	Conformité (cantonnement risques longs, comptabilité d’engagement, audits).
+282	Normal	Productivité (réduction des manipulations Excel, délais de règlement maîtrisés).
+283	Normal	Qualité de service (avis annuels automatiques, vision 360° des adhérents).
+284	List Paragraph	Livrables majeurs
+285	Normal	Application WebDev ESR opérationnelle + schéma HFSQL.
+286	Normal	Moteur actuariel WL (cotisations, PM, capitaux décès, rentes).
+287	Normal	Connecteurs : import historiques Excel ; exports Excel/PDF.
+288	Normal	Jeux de tests & référentiel de validation (parité Excel ↔ WebDev).
+289	Normal	Documentation : technique, admin, procédures métier, guide utilisateur.
+290	Normal	Dossier de déploiement & sécurité (sauvegardes, PRA).
+291	Normal	Plan de formation des gestionnaires.
+292	List Paragraph	Hypothèses & décisions clés à arbitrer
+293	Normal	Modèle de prise en charge à la retraite : 80 % - impact direct sur les formules, interfaces et documents (à paramétrer)
+294	Normal	Paramètres techniques : taux minimum garanti (3,5 %), frais sur rente (5 %), table de mortalité (CIMA F) - confirmés comme paramétrables.
+295	Normal	Calendrier de valeur : capitalisation trimestrielle avec date de valeur en début de période.
+296	Normal	Architecture : hébergement (LAN/Internet), exigences de disponibilité et sauvegardes.
+297	List Paragraph	Parties prenantes
+298	Normal	Direction MADGI (sponsor, arbitrages).
+299	Normal	Actuariat/Finance (règles métier, validation des calculs).
+300	Normal	Équipe de gestion (exploitation quotidienne, reporting).
+301	Normal	DSI / Prestataire WebDev (réalisation technique, sécurité).
+302	Normal	Communication
+303	Normal	Adhérents (portail de consultation).
+304	List Paragraph	Indicateurs de succès (KPI)
+305	Normal	Exactitude des calculs vs table de référence Excel : écart ≤ 0,1 %.
+306	Normal	Délai moyen de règlement événements (invalidité/décès) : ≤ 15 jours ouvrés.
+307	Normal	Disponibilité applicative : ≥ 99,5 %.
+308	Normal	Temps de génération d’un avis individuel : ≤ 5 s.
+309	Normal	Taux d’adoption (adhérents/gestionnaires) à 2 mois : ≥ 80 %.
+310	List Paragraph	Macro-planning (jalons)
+311	Normal	Audit & extraction des règles (VBA + docs)
+312	Normal	Conception (données HFSQL + UX écrans)
+313	Normal	Développement (modules + moteur WL)
+314	Normal	Migration (données historiques)
+315	Normal	Tests croisés (Excel ↔ WebDev)
+316	Normal	Déploiement & formation
+317	List Paragraph	PRÉSENTATION DU PROJET
+318	List Paragraph	Contexte institutionnel
+319	Normal	La Mutuelle des Agents de la Direction Générale des Impôts (MADGI) a pour mission principale la prévention et la couverture des risques sociaux liés à la personne de ses membres, actifs et retraités.
+320	Normal	Un problème majeur a été identifié : au moment de la retraite, les membres doivent continuer à payer la totalité de leur prime santé. Or, leurs revenus diminuent fortement, rendant la couverture difficilement soutenable.
+321	Normal	Pour répondre à ce défi, la MADGI a lancé la conception d’un produit spécifique : Épargne Santé Retraite (ESR).
+322	List Paragraph	Problématique
+323	Normal	Les retraités souhaitent maintenir leur couverture maladie ;
+324	Normal	Le financement intégral par l’adhérent entraîne un risque de non-couverture ;
+325	Normal	Les outils actuels (Excel/VBA) ne permettent ni une gestion centralisée et sécurisée, ni une traçabilité réglementaire (règles UEMOA sur les risques longs, cantonnement des fonds, comptabilité d’engagement).
+326	List Paragraph	Objectifs du projet logiciel
+327	Normal	Automatiser les calculs actuarielles (cotisations, provisions, capitaux décès, valeur de rachat) ;
+328	Normal	Centraliser les données adhérents et bénéficiaires dans une base HFSQL Client / Serveur ;
+329	Normal	Fiabiliser le suivi des prestations (rentes viagères, décès, invalidité) ;
+330	Normal	Produire des états de reporting conformes aux obligations réglementaires (comptabilité d’engagement, études actuarielles quinquennales) ;
+331	Normal	Améliorer la transparence pour les adhérents (avis annuel automatisé).
+332	List Paragraph	Portée fonctionnelle du logiciel (vue macro)
+333	Normal	Adhésion & gestion des adhérents : bulletin numérique, suivi des bénéficiaires ;
+334	Normal	Gestion des cotisations : calcul automatique selon l’âge, durée d’activité, cotisation santé, paramètres techniques (3,5 % taux garanti, 5 % frais, table CIMA F) ;
+335	Normal	Prestations : retraite (rente viagère), décès, invalidité ;
+336	Normal	Comptes individuels : capital acquis, provisions, valeur de rachat ;
+337	Normal	Reporting : états individuels, provisions techniques globales, reporting réglementaire ;
+338	Normal	Administration multi-profils : adhérent, gestionnaire, administrateur.
+339	List Paragraph	Hors-périmètre
+340	Normal	La gestion opérationnelle des placements financiers (bien que le logiciel puisse générer les flux de trésorerie nécessaires au suivi prudentiel) ;
+341	Normal	La gestion médicale des remboursements de soins (reste couverte par le système santé existant) ;
+342	Normal	La communication SMS/email (en option, intégrable si l’infrastructure MADGI le permet).
+343	List Paragraph	Contraintes & hypothèses
+344	Normal	Contraintes réglementaires : respect du règlement UEMOA 003/2022 sur la gestion des risques longs (cantonnement, provisions techniques, audit).
+345	Normal	Contraintes techniques :
+346	Normal	Utilisation exclusive de WebDev pour le développement.
+347	Normal	Base de données HFSQL centralisée.
+348	Normal	Application responsive, utilisable sur PC et smartphone.
+349	Normal	Hypothèses clés :
+350	Normal	Confirmation du modèle de prise en charge : 80 % prise en charge (conditions générales).
+351	Normal	Les paramètres techniques (taux garanti, frais, tables) doivent être configurables dans l’application.
+352	List Paragraph	CAHIER DES CHARGES FONCTIONNEL
+353	List Paragraph	Gestion des adhérents
+354	Normal	Enregistrement d’un adhérent : matricule, état civil, emploi/fonction, grade, situation matrimoniale, contacts, email.
+355	Normal	Gestion des bénéficiaires : ajout/suppression/modification des ayants droit désignés (conjoint, enfants, héritiers légaux).
+356	Normal	Bulletin d’adhésion numérique : formulaire électronique reprenant les champs du bulletin papier.
+357	Normal	Mise à jour des données : changement de grade, évolution situation familiale, modifications bénéficiaires.
+358	Normal	Historisation : traçabilité de toutes les modifications.
+359	List Paragraph	Gestion des cotisations
+360	Normal	Calcul automatique de la cotisation en fonction de :
+361	Normal	âge à la souscription,
+362	Normal	durée résiduelle d’activité (n),
+363	Normal	cotisation annuelle maladie en vigueur (R),
+364	Normal	taux technique (3,5 %),
+365	Normal	frais de gestion sur rente (5 %),
+366	Normal	table de mortalité CIMA F.
+367	Normal	Modes de cotisation :
+368	Normal	périodique (trimestrielle, par défaut),
+369	Normal	unique (au départ à la retraite ou à la souscription).
+370	Normal	Réajustements :
+371	Normal	si modification du montant R par la MADGI,
+372	Normal	si rallongement de l’âge de départ à la retraite (grade ou loi).
+373	Normal	Historique des paiements : suivi des cotisations prélevées, dates de valeur trimestrielles.
+374	Normal	Résiliation/Rachat : application automatique de la pénalité de 5 % du capital acquis.
+375	List Paragraph	Suivi des prestations
+376	Normal	Retraite : calcul et mise en paiement de la rente viagère couvrant la cotisation santé (95 % ou 100 % selon décision).
+377	Normal	Invalidité : liquidation du capital acquis si invalidité permanente totale médicalement constatée.
+378	Normal	Décès :
+379	Normal	avant la retraite → versement de la valeur total du compte aux bénéficiaires,
+380	Normal	en cours de rente → versement de 80 % du capital constitutif de rente restant dû.
+381	Normal	Délais de règlement : intégration d’un workflow garantissant le paiement sous 15 jours ouvrés après réception des pièces justificatives.
+382	Normal	Dossiers sinistres : interface gestionnaire pour valider et suivre les paiements.
+383	List Paragraph	Comptes individuels épargne santé
+384	Normal	Capital acquis : cumuls des cotisations versées et capitalisées.
+385	Normal	Provision mathématique (PM) : calculée à chaque trimestre selon la formule actuarielle.
+386	Normal	Valeur de rachat : capital acquis – pénalité 5 % en cas de sortie anticipée.
+387	Normal	Consultation en ligne : interface adhérente pour consulter son compte épargne santé.
+388	List Paragraph	Reporting et états financiers
+389	Normal	Situations individuelles : génération d’un avis annuel adressé à chaque adhérent avant le 30 juin (cotisation garantie, cumul cotisations, valeur acquise, valeur de rachat).
+390	Normal	États techniques : provisions globales, capitaux décès, flux de rentes.
+391	Normal	États réglementaires : conformes aux règles UEMOA (comptabilité d’engagement, bilan cantonné).
+392	Normal	Exports : Excel, PDF pour diffusion.
+393	List Paragraph	Administration multi-profils
+394	Normal	Profils définis :
+395	Normal	Adhérent : accès limité à son compte, relevés, avis annuel.
+396	Normal	Gestionnaire : gestion des adhésions, cotisations, prestations, reporting.
+397	Normal	Administrateur : paramétrage des taux, frais, tables de mortalité, gestion des utilisateurs.
+398	Normal	Gestion des droits : accès différencié selon profil.
+399	Normal	Audit & journalisation : traçabilité des opérations sensibles (calculs, règlements).
+400	List Paragraph	Communication (optionnel)
+401	Normal	Notifications email/SMS :
+402	Normal	confirmation d’adhésion,
+403	Normal	rappel de cotisation,
+404	Normal	notification de mise en paiement d’une prestation,
+405	Normal	envoi automatique de l’avis annuel.
+406	List Paragraph	CAHIER DES CHARGES TECHNIQUE
+407	List Paragraph	Technologies et architecture
+408	Normal	Technologie de développement :
+409	Normal	WebDev (dernière version stable).
+410	Normal	WLangage (WL) pour implémenter les formules actuarielles.
+411	Normal	Base de données :
+412	Normal	HFSQL Client/Serveur, centralisée, sécurisée.
+413	Normal	Conception relationnelle pour gérer adhérents, bénéficiaires, cotisations, prestations, comptes épargne santé et reporting.
+414	Normal	Architecture applicative :
+415	Normal	Application web centralisée, responsive.
+416	Normal	Accès via navigateur (poste de bureau, tablette, smartphone).
+417	Normal	Hébergement sur serveur MADGI (LAN/Internet selon choix d’infrastructure).
+418	List Paragraph	Migration des règles de calcul
+419	Normal	Audit VBA → Procédures WL : toutes les formules issues du fichier Excel seront réécrites en WLangage.
+420	Normal	Aucune interopérabilité prévue avec Excel :
+421	Normal	Les calculs seront réalisés exclusivement dans le moteur WL.
+422	Normal	Excel ne sera utilisé que pour des exports de reporting.
+423	Normal	Vérification de conformité : phase de tests croisés (résultats Excel existants vs WebDev).
+424	List Paragraph	Modèle de données (HFSQL)
+425	Normal	Tables principales :
+426	Normal	Adhérents (données personnelles, matricule, statut, grade, localité, direction, etc.).
+427	Normal	Bénéficiaires (nom, lien, % répartition).
+428	Normal	Cotisations (trimestrielles/unique, montants, dates de valeur).
+429	Normal	Prestations (retraite, décès, invalidité, rentes versées).
+430	Normal	Comptes individuels ESR (capital acquis, provision mathématique, valeur de rachat).
+431	Normal	Paramètres techniques (taux, frais, tables de mortalité).
+432	Normal	Utilisateurs & rôles (profils et droits).
+433	List Paragraph	Sécurité
+434	Normal	Authentification : identifiant + mot de passe (avec options futures OTP/SMS/email).
+435	Normal	Gestion des droits : accès restreint par profil (adhérent, gestionnaire, administrateur).
+436	Normal	Chiffrement :
+437	Normal	des données sensibles en base (HFSQL supporte le cryptage natif),
+438	Normal	des communications (HTTPS obligatoire).
+439	Normal	Sauvegarde & PRA :
+440	Normal	sauvegardes automatiques planifiées,
+441	Normal	plan de reprise d’activité pour continuité de service.
+442	List Paragraph	Reporting et interopérabilité
+443	Normal	Exports :
+444	Normal	Excel (rapports, relevés individuels).
+445	Normal	PDF (avis annuels, états réglementaires, bulletins d’adhésion).
+446	Normal	Imports :
+447	Normal	Import unique des données historiques Excel vers HFSQL (migration initiale).
+448	List Paragraph	Déploiement
+449	Normal	Serveur central MADGI (choix LAN interne ou hébergement Internet sécurisé).
+450	Normal	Utilisation 24/7 via navigateur (aucune installation locale requise).
+451	Normal	Responsive design : compatible PC, tablette, smartphone.
+452	Normal	Maintenance évolutive : possibilité d’ajouter modules (ex. notifications SMS, gestion placements) dans des versions ultérieures.
+453	List Paragraph	ROADMAP DE MISE EN ŒUVRE
+454	Normal	Phase 1 – Audit & cadrage (Semaines 1)
+455	Normal	🎯 Objectif : recenser les règles métier et verrouiller les choix structurants.
+456	Normal	Inventaire complet du fichier Excel/VBA (cotisations, provisions, capitaux décès).
+457	Normal	Analyse de la note technique et des conditions générales.
+458	Normal	Décision sur le modèle de couverture : 95 %/5 % (notice) ou 100 % (conditions).
+459	Normal	Définition du périmètre de données historiques à migrer.
+460	Normal	📌 Livrable : rapport d’audit + arbitrages validés.
+461	Normal	Phase 2 – Conception (Semaines 2–3)
+462	Normal	🎯 Objectif : poser les bases techniques et fonctionnelles.
+463	Normal	Modèle de données HFSQL.
+464	Normal	Spécifications du moteur actuariel en WLangage.
+465	Normal	Maquettes écrans (adhésion, cotisations, comptes, prestations, reporting).
+466	Normal	📌 Livrable : dossier de conception validé (MCD, spécs WL, maquettes).
+467	Normal	Phase 3 – Développement (Semaines 4–5)
+468	Normal	🎯 Objectif : construire les modules WebDev.
+469	Normal	Implémentation du moteur de calcul (WL).
+470	Normal	Développement des modules : adhérents, cotisations, prestations, comptes, reporting.
+471	Normal	Gestion des profils et sécurité.
+472	Normal	📌 Livrable : version alpha fonctionnelle.
+473	Normal	Phase 4 – Migration des données (Semaines 6, en parallèle)
+474	Normal	🎯 Objectif : intégrer l’historique dans HFSQL.
+475	Normal	Extraction et nettoyage des fichiers Excel existants.
+476	Normal	Mapping et import dans les tables HFSQL.
+477	Normal	Contrôles d’intégrité (clés, doublons, cohérence).
+478	Normal	📌 Livrable : base HFSQL peuplée + rapport de migration.
+479	Normal	Phase 5 – Tests croisés & validation (Semaines 7)
+480	Normal	🎯 Objectif : garantir la parité entre Excel et WebDev.
+481	Normal	Jeux de tests comparatifs (cotisations, provisions, capitaux décès, valeurs de rachat).
+482	Normal	Vérification des cas particuliers (révisions, rallongement d’âge de retraite, décès).
+483	Normal	Tolérance : écart ≤ 0,1 % par rapport aux résultats de référence.
+484	Normal	📌 Livrable : PV de tests et corrections validées par l’actuariat.
+485	Normal	Phase 6 – Déploiement & formation (Semaines 8)
+486	Normal	🎯 Objectif : mise en production et prise en main par les équipes.
+487	Normal	Installation sur serveur central sécurisé (LAN/Internet).
+488	Normal	Mise en production et supervision.
+489	Normal	Formation des gestionnaires et administrateurs.
+490	Normal	Communication aux adhérents (nouvel outil + avis annuels automatisés).
+491	Normal	📌 Livrables : guides utilisateurs/admin, plan de sauvegarde, rapport de mise en service.
+492	Normal	ORGANISATION ADMINISTRATIVE ET FINANCIERE DU PROJET
+493	Normal	EPARGNE SANTE RETRAITE – MADGI
+494	Normal	SERVICE DE GESTION DE MADGI ESR
+495	List Paragraph	Personnel cible :
+496	Normal	Pour la gestion du produit MADGI Epargne Santé Retraite, la MADGI aura besoin des profils suivant :
+497	List Paragraph	PERSONNEL RESIDENT
+498	List Paragraph	Cinq (5) agents permanents, à savoir :
+499	List Paragraph	Un Ingénieur en Assurance Vie, qui est un agent technique spécialisé en gestion de produits d’assurance vie et en Finances ;
+500	List Paragraph	Un Assistant de gestion, qui est un technicien supérieur, spécialisé en assurance et qui maîtrise l’outil informatique, c’est-à-dire ;
+501	List Paragraph	Trois commerciaux spécialisés dans la promotion et la commercialisation des produits d’assurance-vie.
+502	List Paragraph	CONSULTANCE
+503	List Paragraph	Deux (2) consultants, à savoir :
+504	List Paragraph	Un Actuaire spécialisé en assurance-vie
+505	List Paragraph	Un Analyste financier spécialisé en marché financier
+506	List Paragraph	FINANCES ET COMPTABILITE
+507	List Paragraph	La gestion comptable et financière sera confiée au Département Finances et Comptabilité.
+508	List Paragraph	MISSIONS DU SERVICE
+509	Normal	Ce service a pour mission de :
+510	Normal	Concevoir et gérer les produits d’assurance-vie ;
+511	Normal	S’assurer de l’équilibre financier du produit ;
+512	Normal	S’assurer du degré de satisfaction des adhérents et des bénéficiaires des différents produits vie.
+513	Normal	Missions du Chef de service
+514	Normal	- Coordonner les activités du service ;
+515	Normal	- Assurer la gestion quotidienne du produit ;
+516	Normal	- Assurer la gestion des précomptes ;
+517	Normal	- Faire des reportings à l’Administrateur général
+518	Normal	Missions de l’Assistant de gestion
+519	Normal	- Assister le Chef de service
+520	Normal	- Coordonner les activités des commerciaux
+521	Normal	Missions des Commerciaux
+522	Normal	- Gérer les campagnes de promotion et de commercialisation des produits d’assurance-vie ;
+523	Normal	- Communiquer aux souscripteurs les montants des cotisations ;
+524	Normal	- Gérer la relation client
+525	Normal	Missions de l’actuaire
+526	Normal	- Concevoir et améliorer tous les produits existants et futurs de la MADGI, qui peuvent être à long-terme (produits Vie) ;
+527	Normal	- Établir les notes techniques et les conditions générales des produits d’assurance-vie ;
+528	Normal	- Collaborer avec le service informatique (ou des prestataires externes) pour la conception et le développement des « Progiciels Produits », qui sont des logiciels de gestion des produits d’assurance vie.
+529	Normal	- Calculer les provisions mathématiques
+530	Normal	- Veiller à l’équilibre financier du produit
+531	Normal	Missions de l’analyste financier
+532	Normal	- Proposer une politique de placement en collaboration avec tous les acteurs de gestion  de la MADGI
+533	Normal	- Elaborer les fiches techniques de placement
+534	Normal	- Participer aux réunions du Comité d’investissement
+535	Normal	CADRE ORGANISATIONNEL DE LA GESTION COMPTABLE ET FINANCIERE
+536	Normal	REGLES PRUDENTIELLES ET OBLIGATIONS COMPTABLES APPLICABLES
+537	Normal	Le produit EPARGNE SANTE RETRAITE - MADGI (ESR-MADGI) consiste à couvrir le risque maladie des agents ayant fait valoir leur droit à la retraite. Il s’agit donc d’un risque long, dont la gestion doit obéir à certaines règles prudentielles et obligations comptables :
+538	Normal	Tenir une comptabilité d’engagement conformément au Plan Comptable des Mutuelles Sociales de l’UEMOA (PCMS) ;
+539	Normal	Faire certifier les comptes par un commissaire aux comptes inscrit à l’ordre des experts comptables de Côte d’Ivoire et désigné par la commission de contrôle ;
+540	Normal	Mettre en place des systèmes d’information et de pilotage exhaustifs et fiables pour la production d’état financiers spécifique au risque long couvert ;
+541	Normal	Se doter d’un manuel de procédures et d’un dispositif de contrôle de gestion ;
+542	Normal	Réaliser tous les cinq (5) ans, à compter de la date de début de la gestion du risque long, une étude actuarielle afin d’apprécier sa pérennité et son équilibre financier dont le rapport sera déposé à l’AIRMS ;
+543	Normal	Observer le principe de cantonnement des patrimoines et de séparation des opérations entre les différents risques.
+544	Normal	ORGANISATION COMPTABLE ET FINANCIERE
+545	Normal	L’organisation comptable et financière du projet ESR s’organise de la façon suivante :
+546	Normal	Le département Finances et comptabilité assure la gestion comptable et financière
+547	Normal	Mise en place d’une comptabilité intégrée des gestions des risques courts et des risques longs
+548	Normal	Mise en place d’une comptabilité analytique pour observer le principe de cantonnement des patrimoines et de séparation des opérations entre les différents risques
+549	Normal	Ouverture de comptes bancaires spécifiques
+550	Normal	Mise en place d’une interface entre la plateforme et le logiciel de trésorerie pour une gestion optimale des flux et des placements
+551	Normal	LA GESTION DES PRECOMPTES ET DES COTISATIONS
+552	Normal	Les précomptes sont effectués par le service chargé de la gestion du projet ESR, en relation avec le département finances et comptabilité dans le système d’information dédié.
+553	Normal	Le fichier des précomptes est généré dans le système par le service gestionnaire du produit et est transmis au service chargé des précomptes du département Assurances et Prestations Sociales pour consolidation et transmission à la Direction Générale des Impôts.
+554	Normal	Il revient par la suite au département APS de transmettre le fichier consolidé retour de la DGI (les précomptes effectivement réalisés) au département Finances et Comptabilité pour l’élaboration de l’appel de fonds adressé au Directeur Général.
+555	Normal	Un rapprochement de l’état retour des précomptes avec l’état transmis est effectué par le service gestionnaire à l’effet de mettre à jour la base des précomptes dans le système d’information dédiée à la gestion de l’ESR.
+556	Normal	LA CONSTITUTION DE L’EPARGNE
+557	Normal	Il est ouvert dans le système d’information un compte d’épargne au nom de chaque adhérent. Ledit compte est alimenté par les cotisations trimestrielles. Le montant de la cotisation est indiqué sur le bulletin individuel d’adhésion signé par les parties.
+558	Normal	Il est déterminé à la souscription du contrat, en fonction de l’âge de départ à la retraite de l’adhérent, de sa durée résiduelle d’activité et du montant de la cotisation de la couverture maladie de la MADGI.
+559	Normal	L’adhérent a la possibilité d’effectuer des paiements spontanés volontaires pour alimenter son compte et ainsi réduire le montant de sa cotisation trimestrielle.
+560	Normal	Les cotisations sont capitalisées au nom de chaque adhérent et ce à un taux d’intérêt technique garanti de 3,5%.
+561	Normal	Les fonds ainsi épargnés sont bloqués sur le compte jusqu’à l’âge de départ à la retraite de l’adhérent.
+562	Normal	Il convient d’indiquer qu’aucun rachat partiel n’est autorisé. Cependant, le rachat total n’est envisageable que durant la période de cotisation (la vie active) et sous condition de deux (2) années de cotisation. Dans ce cas, le montant remboursé est de 90% du montant capitalisé.
+563	Normal	En cas de décès ou d’invalidité permanente totale avant la retraite, les bénéficiaires désignés perçoivent 95% du montant capitalisé.
+564	Normal	En de décès en cours de service de rente, les bénéficiaires désignés perçoivent 80% du capital constitutif de rente restant dû.
+565	Normal	GESTION DES PLACEMENTS
+566	Normal	CONDITIONS DE GESTION ET MECANISMES DE CAPITALISATION DES RESSOURCES FINANCIERES
+567	Normal	Le Département Finances et Comptabilité assume les prérogatives des placements des ressources financières de l’ESR-MADGI. Les investissements effectués doivent être conforme aux règles prudentielles, satisfaire aux conditions de sécurité, de rendement, de liquidité et de diversification.
+568	Normal	L’objectif des placements est d’optimiser la valeur des produits des placements tout en garantissant la bonne sécurité des passifs et des actifs afin de répondre aux obligations lorsqu’elles se présentent.
+569	Normal	CREATION ET COMPOSITION DU COMITE D’INVESTISSEMENT.
+570	Normal	Il est mis en place un comité par délibération du conseil d’administration composé de l’Administrateur général, du chef de département finances et comptabilité, du chef de services finances et trésorerie (secrétaire exécutif ou rapporteur du comité), du gestionnaire de l’ESR- MADGI et d’un expert indépendant spécialiste en marchés financiers.
+571	Normal	ATTRIBUTIONS DU COMITE
+572	Normal	Le comité élabore le projet de politique de placement qui prend en compte la stratégie d’investissement. Le document de politique de placement est soumis au conseil d’administration pour adoption.
+573	Normal	Le Conseil d’Administration délègue son pouvoir en matière de délibération portant sur le choix des véhicules de placements ou d’investissement au comité d’investissement.
+574	Normal	Le document de politique de placement doit indiquer :
+575	Normal	La description de la répartition des responsabilités et des compétences nécessaires en matière de placement ;
+576	Normal	Les principes d’investissement et les objectifs poursuivis ;
+577	Normal	Les catégories autorisées d’investissement ainsi que ceux qui ne le sont pas ;
+578	Normal	La description des techniques d’investissement, le contrôle et de suivi ;
+579	Normal	La répartition stratégique du portefeuille de placements.
+580	Normal	Le Conseil d’Administration donne en début d’exercice, des orientations en matière d’investissement par délibération au comité d’investissement.
+581	Normal	Pour chaque investissement, le comité procède à l’élaboration d’une fiche technique du produit de placement dans laquelle les caractéristiques du produit sont clairement définies.
+582	Normal	Les décisions du comité d’investissement sont exécutées par le service finances et trésorerie du département finances et comptabilité.
+583	Normal	Le comité adopte le budget de trésorerie annuel ainsi que les plans de trésorerie trimestriels
+584	Normal	Le comité statue ensuite sur l’état d’exécution du budget de trésorerie annuel ainsi que sur l’état d’exécution des plans de trésorerie trimestriels du produit ESR-MADGI.
+585	Normal	PLAN DE COMMUNICATION EPARGNE SANTE RETRAITE
+586	Normal	OBJECTIFS DE LA COMMUNICATION
+587	List Paragraph	Informer les membres de la mutuelle sur le projet « Épargne Santé Retraite »;
+588	List Paragraph	Créer l’adhésion autour du projet en s’appuyant sur les mutuelles locales et les associations ;
+589	List Paragraph	Sensibiliser les agents sur les avantages à court, moyen et long terme ;
+590	List Paragraph	Accompagner la mise en œuvre opérationnelle du projet par une communication efficace et continue.
+591	Normal	CIBLE
+592	Normal	Principal :
+593	List Paragraph	Agents des impôts
+594	List Paragraph	Personnel MADGI
+595	Normal	Secondaire :
+596	List Paragraph	Coordonnateurs
+597	List Paragraph	Syndicats/ Amicales de corporation
+598	List Paragraph	Administration Générale MADGI
+599	List Paragraph	Partenaires (banques, assurances, prestataires de santé)
+600	Normal	AXES STRATEGIQUES
+601	List Paragraph	Communication participative : Impliquer activement l’ensemble des acteurs dans la diffusion des messages.
+602	List Paragraph	Communication de proximité : S'appuyer sur les canaux internes et les responsables régionaux.
+603	List Paragraph	Communication digitale et institutionnelle : Pour une large diffusion et une bonne image du projet.
+604	Normal	PHASES DE COMMUNICATION
+605	Normal	Phase 1 : Pré-lancement (1 mois)
+606	Normal	Objectif : Informer et préparer les acteurs internes.
+607	List Paragraph	Actions :
+608	List Paragraph	Rencontre entre les responsables de la MADGI et la Direction Générale ;
+609	List Paragraph	Réunions d’information avec les 8 syndicats (individuellement) ;
+610	List Paragraph	Rencontre d’information avec les amicales et associations ;
+611	List Paragraph	Séances de travail avec les coordonnateurs ;
+612	List Paragraph	Communication au CODIR DGI ;
+613	List Paragraph	Élaboration de supports : dépliant explicatif, FAQ, infographies ;
+614	List Paragraph	Création d’un slogan et d’un logo pour le projet.
+615	Normal	Phase 2 : Lancement officiel (1 semaine)
+616	Normal	Objectif : Créer un événement médiatisé pour marquer le lancement.
+617	List Paragraph	Actions :
+618	List Paragraph	Organisation d’un événement officiel avec les médias, et partenaires
+619	List Paragraph	Discours PCA /DG ; AG MADGI
+620	List Paragraph	Diffusion d’une vidéo explicative du projet
+621	List Paragraph	Adhésion symbolique du DG, ensuite le CODIR séance tenante ou lors du prochain CODIR
+622	List Paragraph	Lancement d’une campagne de sensibilisation interne (emailing, WhatsApp, intranet, SMS)
+623	Normal	Phase 3 : Communication de suivi et d’adhésion (3 à 6 mois)
+624	Normal	Objectif : Maintenir l’intérêt, accompagner l’adhésion et répondre aux préoccupations.
+625	Normal	Actions :
+626	Normal	Campagne sur les réseaux sociaux (Facebook, WhatsApp pro, etc.)
+627	Normal	Tournée d'information dans les directions régionales
+628	Normal	Témoignages d’agents convaincus (vidéos, témoignages écrits)
+629	Normal	Mise en place d’un CALL CENTER ou d’une équipe de 3 agents pour répondre aux questions, préoccupations et recueillir les suggestions
+630	Normal	Phase 4 : Suivi, Évaluation
+631	Normal	Objectif : Mesurer l’impact de la communication et améliorer si nécessaire.
+632	Normal	Actions :
+633	Normal	Sondages de satisfaction
+634	Normal	Bilan de la communication
+635	Normal	Ajustements du plan de communication
+636	Normal	CANAUX DE COMMUNICATION
+637	Normal	ROLE DES SYNDICATS ET ASSOCIATIONS
+638	Normal	Facilitateurs d’adhésion au projet
+639	Normal	Référents pour remonter les préoccupations
+640	Normal	INDICATEURS DE PERFORMANCE (KPI)
+641	Normal	Taux de couverture de la communication (Mutualistes par coordination, amicales et syndicats) ;
+642	Normal	Taux d’adhésion au projet ;
+643	Normal	Nombre d’interactions sur les canaux digitaux ;
+644	Normal	Retours positifs ou réclamations.
+645	Normal	Roadmap de la Campagne (démarrage novembre)
+646	Normal	Phase 1 : Pré-lancement
+647	Normal	Période : Novembre 2025 (1 mois)
+648	Normal	Objectif : informer et préparer les acteurs internes.
+649	Normal	Semaine 1 : Rencontre MADGI – DG + communication au CODIR
+650	Normal	Semaine 2 : Réunions avec les coordonnateurs (43)
+651	Normal	Semaine 3 : Rencontres amicales et associations + séances avec les syndicats (08)
+652	Normal	Semaine 4 : Élaboration supports (dépliants, FAQ, infographies) + validation slogan/logo
+653	Normal	Phase 2 : Lancement officiel
+654	Normal	Période : Décembre 2025 (Semaine 1)
+655	Normal	Objectif : événement médiatisé pour marquer le lancement.
+656	Normal	Organisation de l’événement officiel avec médias et partenaires ;
+657	Normal	Discours PCA / DG Impôts ;
+658	Normal	Diffusion de la vidéo explicative ;
+659	Normal	Adhésion symbolique DG Impôts puis CODIR ;
+660	Normal	Lancement de la campagne interne (WhatsApp, emailing, intranet, sms, site web).
+661	Normal	NB : Intégration du programme et budget de la mission
+662	Normal	Phase 3 : Communication de suivi et d’adhésion
+663	Normal	Période : Décembre 2025 – Mai 2026 (6 mois)
+664	Normal	Objectif : maintenir l’intérêt, accompagner l’adhésion et répondre aux préoccupations.
+665	Normal	Décembre 2025 – Janvier 2026 : Campagnes réseaux sociaux (WhatsApp pro, Facebook, intranet, sms, site web) ;
+666	Normal	Février – Avril 2026 : Tournée d’information dans les directions centrales et régionales, cabinet du DG, inspection générale des services fiscaux etc ;
+667	Normal	Février – Mai 2026 : Collecte et diffusion de témoignages (vidéos, écrits) ;
+668	Normal	Janvier 2026 : Mise en place du CALL CENTER ou équipe dédiée.
+669	Normal	Phase 4 : Suivi et Évaluation
+670	Normal	Période : Novembre – Juillet 2026 (9 mois)
+671	Normal	Objectif :
+672	Normal	Assurer le suivi des activités
+673	Normal	Mesurer l’impact et ajuster si nécessaire le plan de communication.
+674	Normal	Novembre 2025 - juillet 2026 : réunion mensuelle de suivi ;
+675	Normal	Juin 2026 : Sondages de satisfaction auprès des agents ;
+676	Normal	Juin – Juillet 2026 : Bilan de communication ;
+677	Normal	Juillet 2026 : Ajustement du plan de communication.
+678	Normal	Vue Globale (par mois)
+679	Normal	Novembre 2025 → Phase 1 : Pré-lancement
+680	Normal	Décembre 2025 (S1) → Phase 2 : Lancement officiel
+681	Normal	Décembre 2025 – Mai 2026 → Phase 3 : Suivi & adhésion
+682	Normal	Novembre 2025 – Juillet 2026 → Phase 4 : Évaluation & ajustement
+683	Normal	CONCLUSION
+684	Normal	L’assurance Epargne Santé Retraite est un produit qui vient renforcer le dispositif de prestations fournies par la MADGI et la conforte dans son rôle de vecteur de la politique sociale de la Direction générale des Impôts.
+685	Normal	MADGI Epargne Santé Retraite traduit aussi l’attachement de la Mutuelle à tous les membres participants énumérés dans ses statuts et règlement intérieur, en prenant en compte leurs spécificités.
+686	Normal	C’est le lieu de remercier le Conseil d’Administration pour son encadrement, l’Administrateur général pour sa supervision et l’AMATCI pour son appui technique, qui ont permis à l’Equipe Projet de produire les travaux consignés dans le rapport ci-dessus.
+687	Normal	Adolphe de Chesnel, polygraphe, historien et encyclopédiste français nous enseigne que : « Dans le monde, on prend les choses pour ce qu’elles se donnent ; dans la retraite, on les apprécie pour ce qu’elles valent. », et la santé en est une.

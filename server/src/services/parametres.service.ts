@@ -1,4 +1,33 @@
+import { AppError } from '../middleware/errorHandler';
 import { ReferenceKind, parametresRepository } from '../repositories/parametres.repository';
+
+const percentageParameterCodes = new Set([
+  'TAUX_GAR',
+  'FRAIS_RENTE',
+  'TAUX_RACHAT',
+  'FRAIS_GESTION_RACHAT',
+  'TAUX_DECES_AVANT_RETRAITE',
+  'TAUX_INVALIDITE_AVANT_RETRAITE',
+  'TAUX_COUVERTURE_RETRAITE',
+  'TAUX_REMBOURSEMENT_SOINS',
+  'TAUX_DECES_PENDANT_RENTE',
+]);
+
+function validateGeneralParameterValue(current: unknown, payload: Record<string, unknown>): void {
+  if (!Object.prototype.hasOwnProperty.call(payload, 'valeur')) return;
+
+  const code = String((current as { code?: unknown } | null)?.code ?? '');
+  if (!percentageParameterCodes.has(code)) return;
+
+  const rawValue = payload.valeur;
+  const numericValue = typeof rawValue === 'string'
+    ? Number(rawValue.replace(',', '.'))
+    : Number(rawValue);
+
+  if (!Number.isFinite(numericValue) || numericValue < 0 || numericValue > 100) {
+    throw new AppError(400, `Le parametre ${code} doit etre un pourcentage compris entre 0 et 100.`);
+  }
+}
 
 const fallbackVersions = [
   {
@@ -78,6 +107,11 @@ export const parametresService = {
   },
 
   async updateParametreGeneral(id: number, payload: Record<string, unknown>): Promise<unknown> {
+    const current = await parametresRepository.findParametreGeneralById(id);
+    if (!current) {
+      throw new AppError(404, 'Parametre general introuvable');
+    }
+    validateGeneralParameterValue(current, payload);
     return parametresRepository.updateParametreGeneral(id, withUpdatedAt(payload));
   },
 

@@ -15,6 +15,7 @@ export default function Paiements({ currentUser }: PaiementsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
 
   // Form State
   const [showForm, setShowForm] = useState(false);
@@ -96,6 +97,39 @@ export default function Paiements({ currentUser }: PaiementsProps) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleWorkflow = async (
+    paiement: Paiement,
+    statut: 'CONTROLE' | 'VALIDE' | 'REJETE' | 'ENCAISSE',
+  ) => {
+    if (statut === 'REJETE' && !window.confirm('Confirmer le rejet de ce paiement ?')) return;
+    setUpdatingPaymentId(paiement.id);
+    setErrorMsg(null);
+    try {
+      const { error } = await paiementService.changerStatut(paiement.id, statut);
+      if (error) throw error;
+      await loadData();
+    } catch (error: any) {
+      setErrorMsg(error?.message || 'Impossible de modifier le statut du paiement.');
+    } finally {
+      setUpdatingPaymentId(null);
+    }
+  };
+
+  const handleDownloadReceipt = async (paiement: Paiement) => {
+    setErrorMsg(null);
+    const { data, error } = await paiementService.telechargerRecu(paiement.id);
+    if (error || !data) {
+      setErrorMsg(error?.message || 'Reçu indisponible.');
+      return;
+    }
+    const url = URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `recu-paiement-${paiement.id}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -286,7 +320,9 @@ export default function Paiements({ currentUser }: PaiementsProps) {
                     <th className="py-3.5 px-4">Moyen</th>
                     <th className="py-3.5 px-4">Établissement / Référence</th>
                     <th className="py-3.5 px-4">Observation</th>
+                    <th className="py-3.5 px-4 text-center">Workflow</th>
                     <th className="py-3.5 px-4 text-right">Montant payé</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -315,8 +351,66 @@ export default function Paiements({ currentUser }: PaiementsProps) {
                       <td className="py-4 px-4 text-slate-500 truncate max-w-xxs" title={p.observation_dgi}>
                         {p.observation_dgi || '-'}
                       </td>
+                      <td className="py-4 px-4 text-center">
+                        <span className={`px-2 py-1 rounded-full text-[9px] font-bold ${
+                          p.statut_workflow === 'ENCAISSE' ? 'bg-emerald-100 text-emerald-800'
+                          : p.statut_workflow === 'REJETE' ? 'bg-rose-100 text-rose-700'
+                          : p.statut_workflow === 'VALIDE' ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {p.statut_workflow || 'SAISI'}
+                        </span>
+                      </td>
                       <td className="py-4 px-4 text-right font-extrabold font-mono text-emerald-700 text-xs">
                         {formatFCFA(p.montant_paiement)}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex justify-end gap-1">
+                          {(p.statut_workflow || 'SAISI') === 'SAISI' && (
+                            <button
+                              disabled={updatingPaymentId === p.id}
+                              onClick={() => handleWorkflow(p, 'CONTROLE')}
+                              className="px-2 py-1 bg-amber-600 text-white rounded text-[9px] font-bold"
+                            >
+                              Contrôler
+                            </button>
+                          )}
+                          {p.statut_workflow === 'CONTROLE' && (
+                            <button
+                              disabled={updatingPaymentId === p.id}
+                              onClick={() => handleWorkflow(p, 'VALIDE')}
+                              className="px-2 py-1 bg-blue-600 text-white rounded text-[9px] font-bold"
+                            >
+                              Valider
+                            </button>
+                          )}
+                          {p.statut_workflow === 'VALIDE' && (
+                            <button
+                              disabled={updatingPaymentId === p.id}
+                              onClick={() => handleWorkflow(p, 'ENCAISSE')}
+                              className="px-2 py-1 bg-emerald-600 text-white rounded text-[9px] font-bold"
+                            >
+                              Encaisser
+                            </button>
+                          )}
+                          {p.statut_workflow === 'ENCAISSE' && (
+                            <button
+                              onClick={() => handleDownloadReceipt(p)}
+                              className="px-2 py-1 bg-slate-800 text-white rounded text-[9px] font-bold"
+                            >
+                              Reçu PDF
+                            </button>
+                          )}
+                          {!['REJETE', 'ENCAISSE'].includes(p.statut_workflow || 'SAISI') && (
+                            <button
+                              disabled={updatingPaymentId === p.id}
+                              onClick={() => handleWorkflow(p, 'REJETE')}
+                              className="px-2 py-1 border border-rose-200 text-rose-700 rounded text-[9px] font-bold"
+                            >
+                              Rejeter
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

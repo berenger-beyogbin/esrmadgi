@@ -16,8 +16,8 @@ export const paiementsRepository = {
     const { data, error } = await supabase
       .from('paiements')
       .select(`
-        id,
-        adherent_id,
+        id_paiement,
+        id_adherent,
         date_paiement,
         montant_paiement,
         moyen,
@@ -35,8 +35,8 @@ export const paiementsRepository = {
     if (error) throw new Error(error.message);
 
     return (data ?? []).map((p: any) => ({
-      id: p.id,
-      adherent_id: p.adherent_id,
+      id: p.id_paiement,
+      adherent_id: p.id_adherent,
       matricule: p.adherents?.matricule || 'Inconnu',
       nom_adherent: p.adherents?.nom || 'Inconnu',
       prenoms_adherent: p.adherents?.prenoms || 'Inconnu',
@@ -51,13 +51,29 @@ export const paiementsRepository = {
 
   async createPaiement(payload: PaiementPayload): Promise<unknown> {
     const supabase = getSupabaseServer();
+    const { adherent_id, ...reste } = payload;
     const { data, error } = await supabase
       .from('paiements')
-      .insert([payload])
+      .insert([{ ...reste, id_adherent: Number(adherent_id) }])
       .select()
       .single();
 
     if (error) throw new Error(error.message);
-    return data;
+    return {
+      ...data,
+      id: data.id_paiement,
+      adherent_id: data.id_adherent,
+    };
+  },
+
+  async findById(id: string): Promise<any | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('paiements')
+      .select('*')
+      .eq('id_paiement', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? { ...data, id: data.id_paiement, adherent_id: data.id_adherent } : null;
   },
 };

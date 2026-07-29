@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { CellValue, Worksheet } from 'exceljs';
 import { cotisationService } from '../services/cotisationService';
+import type { RetourDgiResult } from '../services/cotisationService';
 import { VPrecompteDetails, DBUser, GeneratePrecomptesResult } from '../types';
 import { FileSpreadsheet, Download, RefreshCw, AlertCircle, FileCheck, Loader2, Play, Upload } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
@@ -16,7 +17,25 @@ const STATUT_STYLES: Record<string, string> = {
   ENCAISSE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   PARTIEL:  'bg-amber-50 text-amber-700 border-amber-200',
   REJETE:   'bg-rose-50 text-rose-700 border-rose-200',
+  ECART: 'bg-amber-50 text-amber-700 border-amber-200',
+  NON_PRECOMPTE: 'bg-rose-50 text-rose-700 border-rose-200',
 };
+
+function normalizedRecord(record: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [
+      key.trim().toUpperCase().replace(/[\s-]+/g, '_'),
+      value,
+    ]),
+  );
+}
+
+function firstValue(record: Record<string, unknown>, keys: string[]): unknown {
+  for (const key of keys) {
+    if (record[key] !== undefined && record[key] !== '') return record[key];
+  }
+  return undefined;
+}
 
 function excelCellToValue(value: CellValue): unknown {
   if (value == null) return '';
@@ -82,6 +101,12 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const retourFileInputRef = useRef<HTMLInputElement>(null);
+  const [periodeRetour, setPeriodeRetour] = useState('');
+  const [dateRetour, setDateRetour] = useState(new Date().toISOString().split('T')[0]);
+  const [isProcessingRetour, setIsProcessingRetour] = useState(false);
+  const [retourError, setRetourError] = useState<string | null>(null);
+  const [retourResult, setRetourResult] = useState<RetourDgiResult | null>(null);
 
   const canGenerate =
     currentUser.role === 'GESTIONNAIRE' ||
@@ -202,6 +227,63 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
     const periode = periodeCompta.trim().toUpperCase() || 'PERIODE';
     const buffer = await workbook.xlsx.writeBuffer();
     downloadWorkbook(buffer, `depart_compta_enrichi_${periode}.xlsx`);
+  };
+
+  const handleRetourDgiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const periode = periodeRetour.trim().toUpperCase();
+    if (!/^\d{4}T[1-4]$/.test(periode)) {
+      setRetourError('Veuillez saisir une période valide, par exemple 2026T2.');
+      if (retourFileInputRef.current) retourFileInputRef.current.value = '';
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      setRetourError('Le retour DGI doit être un fichier Excel .xlsx.');
+      if (retourFileInputRef.current) retourFileInputRef.current.value = '';
+      return;
+    }
+
+    setIsProcessingRetour(true);
+    setRetourError(null);
+    setRetourResult(null);
+    try {
+      const ExcelJS = await import('exceljs');
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(await file.arrayBuffer());
+      const worksheet = workbook.worksheets[0];
+      if (!worksheet) throw new Error('Le fichier ne contient aucune feuille.');
+
+      const lignes = worksheetToRows(worksheet).map(normalizedRecord).map((row) => {
+        const matricule = String(firstValue(row, [
+          'MADGI_MATRICULE', 'MATRICULE', 'MATRICULE_AGENT',
+        ]) ?? '').trim();
+        const rawMontant = firstValue(row, [
+          'MONTANT_RETOUR', 'MONTANT_PRECOMPTE', 'MONTANT_EFFECTIVEMENT_PRECOMPTE',
+          'MONTANT_ESR_PRECOMPTE', 'MADGI_ESR',
+        ]);
+        const montantRetour = Number(String(rawMontant ?? '0').replace(/\s/g, '').replace(',', '.'));
+        const motif = String(firstValue(row, ['MOTIF', 'OBSERVATION', 'COMMENTAIRE']) ?? '').trim();
+        return { matricule, montantRetour, motif };
+      }).filter((row) => row.matricule && Number.isFinite(row.montantRetour) && row.montantRetour >= 0);
+
+      if (lignes.length === 0) {
+        throw new Error('Aucune ligne exploitable. Colonnes attendues : MATRICULE et MONTANT_RETOUR.');
+      }
+      const { result, error } = await cotisationService.enregistrerRetourDgi({
+        periode,
+        dateRetour,
+        lignes,
+      });
+      if (error) throw error;
+      setRetourResult(result);
+      await fetchPrecomptes();
+    } catch (error: any) {
+      setRetourError(error?.message || 'Erreur pendant le traitement du retour DGI.');
+    } finally {
+      setIsProcessingRetour(false);
+      if (retourFileInputRef.current) retourFileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -335,6 +417,66 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
                 Exporter fichier départ enrichi
               </button>
             </>
+          )}
+        </div>
+      )}
+
+      {/* Filtre et actualisation */}
+      {canGenerate && (
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+          <div>
+            <p className="text-xs font-bold text-slate-600 uppercase tracking-wide font-mono">
+              Retour DGI - montants effectivement précomptés
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Colonnes reconnues : MATRICULE et MONTANT_RETOUR, avec MOTIF facultatif.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            <div>
+              <label className="block text-xs text-slate-600 uppercase mb-1 font-mono">Période</label>
+              <input
+                value={periodeRetour}
+                onChange={(e) => setPeriodeRetour(e.target.value.toUpperCase())}
+                placeholder="2026T2"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-600 uppercase mb-1 font-mono">Date du retour</label>
+              <input
+                type="date"
+                value={dateRetour}
+                onChange={(e) => setDateRetour(e.target.value)}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono"
+              />
+            </div>
+            <label className="flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 rounded-xl text-sm cursor-pointer hover:border-[#2b529f] hover:text-[#2b529f]">
+              {isProcessingRetour ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {isProcessingRetour ? 'Import en cours...' : 'Importer le retour DGI'}
+              <input
+                ref={retourFileInputRef}
+                type="file"
+                accept=".xlsx"
+                className="hidden"
+                disabled={isProcessingRetour}
+                onChange={handleRetourDgiFile}
+              />
+            </label>
+          </div>
+          {retourError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl">
+              {retourError}
+            </div>
+          )}
+          {retourResult && (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center text-xs">
+              <div><strong>{retourResult.total}</strong><br />Lignes</div>
+              <div><strong className="text-emerald-700">{retourResult.rapproches}</strong><br />Conformes</div>
+              <div><strong className="text-amber-700">{retourResult.ecarts}</strong><br />Écarts</div>
+              <div><strong className="text-rose-700">{retourResult.nonPrecomptes}</strong><br />Non-précomptés</div>
+              <div><strong>{retourResult.introuvables.length}</strong><br />Introuvables</div>
+            </div>
           )}
         </div>
       )}

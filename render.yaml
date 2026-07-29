@@ -30,8 +30,6 @@ services:
         sync: false
       - key: SMS_API_SERVICE_ID
         sync: false
-      - key: FIRST_LOGIN_FIXED_OTP
-        sync: false
       - key: FIRST_LOGIN_SMS_STANDBY
         sync: false
       - key: MYSQL_HOST

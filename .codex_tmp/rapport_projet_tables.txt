@@ -1,0 +1,101 @@
+﻿=== TABLE 1 ===
+Introduction ………………………………………………………………………………… | 3
+Cahier des charges de l’assurance ESR-MADGI …………………………………….. | 4-13
+Conditions générales du contrat ………………………………………………………… | 14-19
+Bulletin individuel d’adhésion ……………………………………………………………. | 20-21
+Spécimen de carte ………………………………………………………………………... | 22
+Cahier des charges du logiciel métier ESR-MADGI (technique et fonctionnel) ……. | 23-31
+Organisation administrative et financière du projet ……………………………………. | 32-37
+Plan de communication …………………………………………………………………... | 38-42
+Conclusion …………………………………………………………………………………. | 43
+Annexes …………………………………………………………………………………….
+Chronogramme d’exécution du projet ESR-MADGI
+Budget prévisionnel ESR-MADGI 2025-2026 | 44
+=== TABLE 2 ===
+N° | LES ACTES NON GARANTIS PAR L’ASSURANCE
+01 | Les ordonnances délivrées par des infirmiers, des médecins spécialistes et auxiliaires de médecins non reconnus par l’ordre des Médecins et/ou l’Etat ; la médecine naturelle et par les plantes.
+03 | Les maladies et accidents professionnelles et de façon générale les actes relevant de la médecine du travail.
+04 | Les accidents et maladies occasionnées par la guerre civile, guerre étrangère, par l'explosion d'un engin ou partie d'engin destiné à exploser par suite de transmutation du noyau d'atome.
+05 | Les actes relevant de la médecine préventive : vaccination, bilan de santé, dépistage…
+06 | Les soins d’intervention ayant pour but de remédier à toutes anomalies, infirmités et malformations constitutionnelles (malformation cardiaque et urogénitale, bec de lièvre, maladies congénitales, mongolisme, etc…) ;
+08 | Les interventions et les bilans liés à la grossesse
+09 | Les traitements d’accompagnement de la ménopause
+11 | Les frais de recherche et de traitement de la stérilité, de l’hypofertilité (radio, laboratoire, pharmacie…)
+12 | Les cures thermales et les séjours en raison de convalescence ou de repos
+13 | La mésothérapie et la balnéothérapie
+14 | Les massages, la gymnastique correctrice (séquelle d’arthrose, scoliose) la gymnastique pré et post natale, la rééducation périnéale et urogynécologique, l’acupuncture, la physiothérapie
+15 | La kinésithérapie respiratoire consécutive à des affections non garanties par le contrat.
+16 | Les frais de grossesse et d’accouchement des enfants des adhérents
+17 | Les frais exposés par les enfants des adhérents de plus de 21 ans / 26 ans
+18 | Les soins dispensés par les pédicures, les chiropracteurs, les acupuncteurs
+19 | Les circoncisions
+20 | Les accidents et maladies occasionnés intentionnellement (tentative de suicide ou d’autolyse…)
+21 | Les accidents et maladies occasionnés par l’ivresse
+22 | Les accidents et maladies occasionnés de la pratique de sports dits dangereux (boxe et sports de combats, plongée sous-marine, parachutisme)
+23 | Les accidents et maladies occasionnés par la participation à une rixe ou une émeute.
+=== TABLE 3 ===
+N° | LES ACTES NON GARANTIS PAR L’ASSURANCE (suite et fin)
+17 | Les bilans psychologiques et les traitements par la psychanalyse et la psychothérapie.
+18 | Les bilans orthoptiques consécutifs à une affection congénitale
+19 | Les check-up et bilans de santé périodiques, systématiques ou de routine
+20 | Les bilans et traitements orthophoniques, sauf lorsqu’ils sont consécutifs à une maladie ou un accident qui rentre dans le champ des garanties du contrat
+21 | La rééducation et le bilan orthophonique chez les enfants (trouble du langage, retard psycho moteur)
+22 | Les examens de dépistage systématique, les soins prophylactiques, les frais de traitements et de soins préventifs
+23 | Les bilans et visites prénuptiaux
+24 | Les tests d’allergologie et les traitements de désensibilisation
+25 | L’orthodontie pour les enfants après 12 ans
+26 | Les traitements ayant un but esthétique ou de rajeunissement, sauf s'ils sont consécutifs à un accident couvert par le contrat d'assurance maladie des retraités ainsi que les traitements contre la cellulite et l'obésité
+27 | Les blanchiments des dents
+28 | Les détartrages des dents
+29 | L’hystérosalpingographie
+=== TABLE 4 ===
+N° | LES PRODUITS PHARMACEUTIQUES NON GARANTIS PAR L’ASSURANCE
+17 | Les traitements hormonaux d’insuffisance lutéale, d’inducteur d’ovulation (TRIPTORELINE, CLOMIFENE, DANAZOL, etc)
+18 | Les déparasitants dans le cadre de déparasitages périodiques, systématiques ou de routine
+19 | Les laxatifs
+20 | Les antiseptiques locaux (BETADINE, CYTEAL, et produits similaires) les antiparasitaires externes
+21 | Les produits homéopathiques et phytothérapiques
+22 | Les produits et médicaments amaigrissants, diététiques, produits amincissants, les modérateurs d’appétit, les produits de régime alimentaire, les eaux minérales, les produits diététiques de tous les âges (lait nutritionnel, aliments pour bébés) et les produits similaires ou dérivés sous quelque forme que ce soit
+23 | Tous produits de comptoir qui sont délivrés sans prescription médicale et tous produits de parapharmacie
+24 | Les produits d’hygiène de maison
+25 | Les produits d’entretien des appareils prothétiques
+26 | Les lotions capillaires et tous produits de traitement du cuir chevelu et de la pilosité
+27 | Les savons médicaux ou non, produits de beauté, d’hygiène corporelle et tous produits à usage cosmétique
+28 | Les orthèses de toute nature, cannes anglaises, béquilles, chaussures et/ou semelles orthopédiques, genouillères et bandage en général (Velpeau, Nynex, etc…)
+29 | Les produits d’hygiène buccodentaire, de bains de bouche, de gargarisme, les apports fluorés, les brosses à dents
+30 | Les élixirs, les pastilles et tablettes et de façon plus générale les confiseries médicamenteuses
+31 | Les antirétroviraux
+32 | Le matériel d’ostéosynthèse
+33 | Les implants, orthèse, canne, béquilles
+=== TABLE 5 ===
+N° | LES PRODUITS PHARMACEUTIQUES NON GARANTIS PAR L’ASSURANCE
+01 | Les réactifs et tests sous toutes leurs formes
+02 | Les fortifiants et vitamines sauf en cas de pathologies asthéniantes telles que les états grippaux, le paludisme, la fièvre typhoïde, l’empathie virale, etc
+03 | Les médicaments tels que : la nivaquine, la quinine, l’aspirine, et les produits similaires, sauf s’ils sont prescrits à titre curatif et en liaison directe avec la nature de l’affection
+04 | Les vaccins et les sérums
+05 | Les modérateurs d’appétit, les produits diététiques et les produits similaires ou dérivés sous quelque forme que ce soit
+06 | Les produits de nutrition orale et entérale
+07 | Les produits d’hygiène
+08 | Les médicaments de la lactation
+09 | Les aiguilles, seringues, perfuseurs, coton (les consommables)
+10 | Les topiques à activité tropique ou protectrice, les produits d’hygiène corporelle, les savons antiallergiques ou gynécologiques, les antiacnéiques et anti-séborrhéiques, les antisudoraux, les antialopéciques, les produits à usage cosmétique
+11 | Les produits de traitement des troubles de la pigmentation et la photo protectrice ;
+12 | Les contraceptifs sous toutes leurs formes
+13 | Les tests de grossesse vendus en pharmacie
+14 | Les objets à usage médical courant tels que le thermomètre, seringue, vessie, sonde, inhalateur, bande, coton, bac et poire à lavement, etc
+15 | Les produits pharmaceutiques à usage familial tels que l’alcool, l’eau oxygénée, l’éther, le mercurochrome, le sparadrap ;
+16 | Les antidépresseurs, les anxiolytiques, les somnifères, les hypnotiques, les anorexigènes, les orexigènes
+=== TABLE 6 ===
+N° | NOM & PRENOMS | LIEN | CONTACTS | PART
+01 |  |  |  | 
+02 |  |  |  | 
+03 |  |  |  | 
+04 |  |  |  | 
+05 |  |  |  | 
+=== TABLE 7 ===
+N° | TYPE DE CANAL | MOYENS UTILISES
+01 | Interne | Réunions, notes de service, emails, WhatsApp, Intranet, SMS
+02 | Syndical ou Associatif | Réunions avec délégués, relais d’information par syndicats et associations
+03 | Evénementiel | Cérémonie de lancement, tournée nationale
+04 | Digital | Réseaux sociaux, site web MADGI
+05 | Print | Affiches, flyers, brochures

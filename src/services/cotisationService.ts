@@ -10,6 +10,16 @@ import {
 
 type ApiResponse<T> = { data: T; error: string | null };
 type GenerateResponse = { result: GeneratePrecomptesResult; error: string | null };
+export interface RetourDgiResult {
+  periode: string;
+  dateRetour: string;
+  total: number;
+  rapproches: number;
+  ecarts: number;
+  nonPrecomptes: number;
+  introuvables: string[];
+}
+type RetourDgiResponse = { result: RetourDgiResult; error: string | null };
 
 function toError(error: string | null | undefined): Error | null {
   return error ? new Error(error) : null;
@@ -131,5 +141,15 @@ export const cotisationService = {
       data: new Map(Object.entries(data?.data ?? {})),
       error: toError(data?.error),
     };
+  },
+
+  async enregistrerRetourDgi(payload: {
+    periode: string;
+    dateRetour: string;
+    lignes: Array<{ matricule: string; montantRetour: number; motif?: string }>;
+  }): Promise<{ result: RetourDgiResult | null; error: Error | null }> {
+    const { data, error } = await apiPost<RetourDgiResponse>('/api/precomptes/retour', payload);
+    if (error) return { result: null, error: new Error(error) };
+    return { result: data?.result ?? null, error: toError(data?.error) };
   },
 };

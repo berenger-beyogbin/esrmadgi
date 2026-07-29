@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { AppError } from '../middleware/errorHandler';
 import { prestationsService } from '../services/prestations.service';
+import { AuthenticatedUser } from '../types';
 
 const createPrestationSchema = z.object({
   adherent_id: z.string().trim().min(1, 'Adherent requis'),
@@ -10,8 +11,52 @@ const createPrestationSchema = z.object({
     .enum(['DOSSIER_OUVERT', 'EN_CONTROLE', 'VALIDE', 'PAYE', 'ANNULE'])
     .default('DOSSIER_OUVERT'),
   date_demande: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide. Format attendu : YYYY-MM-DD'),
-  montant: z.coerce.number().min(0),
+  montant: z.coerce.number().min(0).optional(),
 });
+
+const calculBaseSchema = z.object({
+  dateCalcul: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date de calcul invalide'),
+  adherentId: z.string().trim().min(1).optional(),
+});
+
+const calculPrestationSchema = z.discriminatedUnion('typeCalcul', [
+  calculBaseSchema.extend({
+    typeCalcul: z.literal('COTISATION_UNIQUE'),
+    renteAnnuelle: z.coerce.number().positive(),
+    ageRetraite: z.coerce.number().int().min(18).max(105),
+    nombreTrimestresAvantRetraite: z.coerce.number().int().min(0),
+  }),
+  calculBaseSchema.extend({
+    typeCalcul: z.literal('PROVISION'),
+    cotisationTrimestrielle: z.coerce.number().min(0),
+    nombreTrimestresCourus: z.coerce.number().int().min(0),
+  }),
+  calculBaseSchema.extend({
+    typeCalcul: z.literal('RACHAT'),
+    cotisationTrimestrielle: z.coerce.number().min(0),
+    nombreTrimestresCourus: z.coerce.number().int().min(0),
+    ancienneteAnnees: z.coerce.number().min(0),
+  }),
+  calculBaseSchema.extend({
+    typeCalcul: z.enum(['DECES_AVANT_RETRAITE', 'INVALIDITE_AVANT_RETRAITE']),
+    cotisationTrimestrielle: z.coerce.number().min(0),
+    nombreTrimestresCourus: z.coerce.number().int().min(0),
+  }),
+  calculBaseSchema.extend({
+    typeCalcul: z.literal('DECES_PENDANT_RENTE'),
+    capitalRestantDu: z.coerce.number().min(0),
+  }),
+]);
+
+const statutPrestationSchema = z.object({
+  statut: z.enum(['EN_CONTROLE', 'VALIDE', 'PAYE', 'ANNULE']),
+  observation: z.string().trim().max(500).default(''),
+});
+
+function requireUser(req: Request): AuthenticatedUser {
+  if (!req.user) throw new AppError(401, 'Authentification requise');
+  return req.user;
+}
 
 export const prestationsController = {
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -34,8 +79,21 @@ export const prestationsController = {
       if (!parsed.success) {
         throw new AppError(400, parsed.error.errors[0]?.message ?? 'Donnees invalides');
       }
-      const data = await prestationsService.createPrestation(parsed.data);
+      const data = await prestationsService.createPrestation(requireUser(req), parsed.data);
       res.status(201).json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async calculer(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsed = calculPrestationSchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw new AppError(400, parsed.error.errors[0]?.message ?? 'Donnees de calcul invalides');
+      }
+      const data = await prestationsService.calculerPrestation(requireUser(req), parsed.data);
+      res.json({ data, error: null });
     } catch (err) {
       next(err);
     }
@@ -57,6 +115,37 @@ export const prestationsController = {
         throw new AppError(400, 'ID rente requis');
       }
       const data = await prestationsService.getRenteVersements(renteId);
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async liquidation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = String(req.params.id ?? '').trim();
+      if (!id) throw new AppError(400, 'ID prestation requis');
+      const pdf = await prestationsService.genererLiquidation(id);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="liquidation-${id}.pdf"`);
+      res.send(Buffer.from(pdf));
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async changerStatut(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = String(req.params.id ?? '').trim();
+      if (!id) throw new AppError(400, 'ID prestation requis');
+      const parsed = statutPrestationSchema.safeParse(req.body);
+      if (!parsed.success) throw new AppError(400, parsed.error.errors[0]?.message ?? 'Statut invalide');
+      const data = await prestationsService.changerStatut(
+        requireUser(req),
+        id,
+        parsed.data.statut,
+        parsed.data.observation,
+      );
       res.json({ data, error: null });
     } catch (err) {
       next(err);

@@ -1,20 +1,45 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# MADGI ESR
 
-# Run and deploy your AI Studio app
+Application de gestion de l’Épargne Santé Retraite : adhésions, cotisations, précomptes DGI, comptes individuels, prestations, paiements, documents et reporting CIMA.
 
-This contains everything you need to run your app locally.
+## Démarrage local
 
-View your app in AI Studio: https://ai.studio/apps/fe1d712f-9c43-4771-a218-a5e85392f488
+Prérequis : Node.js 22 ou supérieur.
 
-## Run Locally
+```powershell
+npm ci
+Copy-Item .env.example .env.local
+npm run dev
+```
 
-**Prerequisites:**  Node.js
+Dans un second terminal :
 
+```powershell
+Set-Location server
+npm ci
+Copy-Item .env.example .env
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Le frontend utilise `VITE_API_BASE_URL`. L’API exige `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`.
+
+## Vérification
+
+```powershell
+npm run lint
+npm run build
+Set-Location server
+npm run lint
+npm test
+npm run build
+npm audit --omit=dev
+```
+
+## Sauvegarde
+
+```powershell
+npm run backup:data
+node scripts/verify-backup.mjs "tmp/backups/<dossier>"
+```
+
+Voir [Exploitation](docs/EXPLOITATION.md), [PRA](docs/PRA.md) et [Recette](docs/RECETTE.md).
