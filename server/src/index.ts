@@ -12,6 +12,7 @@ import { adherentsRouter } from './routes/adherents.routes';
 import { beneficiairesRouter } from './routes/beneficiaires.routes';
 import { cotisationsRouter } from './routes/cotisations.routes';
 import { precomptesRouter } from './routes/precomptes.routes';
+import { periodesRouter } from './routes/periodes-precompte.routes';
 import { prestationsRouter } from './routes/prestations.routes';
 import { paiementsRouter } from './routes/paiements.routes';
 import { dashboardRouter } from './routes/dashboard.routes';
@@ -21,6 +22,7 @@ import { parametresRouter } from './routes/parametres.routes';
 import { authRouter } from './routes/auth.routes';
 import { utilisateursRouter } from './routes/utilisateurs.routes';
 import { reportingRouter } from './routes/reporting.routes';
+import { rachatsRouter } from './routes/rachats.routes';
 import { requireAuth, requireRoles } from './middleware/auth';
 
 validateEnv();
@@ -69,7 +71,9 @@ app.use('/api/adherents', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 
 app.use('/api/beneficiaires', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), beneficiairesRouter);
 app.use('/api/cotisations', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), cotisationsRouter);
 app.use('/api/precomptes', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), precomptesRouter);
+app.use('/api/periodes', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), periodesRouter);
 app.use('/api/prestations', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), prestationsRouter);
+app.use('/api/rachats', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), rachatsRouter);
 app.use('/api/paiements', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), paiementsRouter);
 app.use('/api/dashboard', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), dashboardRouter);
 app.use('/api/audit', requireAuth, requireRoles('ADMINISTRATEUR'), auditRouter);

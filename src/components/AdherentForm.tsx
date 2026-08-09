@@ -4,7 +4,8 @@ import { adherentCalculationService, MortalitePoint, CalculCotisationTrimestriel
 import { parametreService } from '../services/parametreService';
 import { parametresGenerauxService } from '../services/parametresGenerauxService';
 import { Civilite, SituationMatrimoniale, Emploi, Grade, VAdherentComplet } from '../types';
-import { Save, ArrowLeft, Loader2, User, FileText, AlertTriangle, Calculator, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, User, FileText, AlertTriangle, Calculator, CheckCircle2, XCircle, Search, Printer } from 'lucide-react';
+import FicheSimulationAdhesion from './FicheSimulationAdhesion';
 import { formatDateFr, toIsoDate } from '../utils/formatters';
 import { toFrenchErrorMessage } from '../utils/errorMessages';
 
@@ -94,6 +95,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
   } | null>(null);
   const [calculParamsError, setCalculParamsError] = useState<string | null>(null);
   const [calculDetails, setCalculDetails] = useState<CalculCotisationTrimestrielleResult | null>(null);
+  const [showSimulationFiche, setShowSimulationFiche] = useState(false);
 
   type AgentSearchStatus = 'idle' | 'searching' | 'found' | 'not_found' | 'error';
   const [isSearchingAgent, setIsSearchingAgent] = useState(false);
@@ -1097,6 +1099,15 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         {/* ACTION BUTTONS */}
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button
+            id="btn-simulation-fiche"
+            type="button"
+            onClick={() => setShowSimulationFiche(true)}
+            className="flex items-center gap-2 px-5 py-2.5 border border-[#2b529f]/30 bg-blue-50 text-[#2b529f] rounded-xl hover:bg-blue-100 text-sm font-semibold transition mr-auto"
+          >
+            <Printer className="w-4 h-4" />
+            Simulation (aperçu à imprimer)
+          </button>
+          <button
             id="btn-cancel-form"
             type="button"
             onClick={onCancel}
@@ -1124,6 +1135,30 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           </button>
         </div>
       </form>
+
+      <FicheSimulationAdhesion
+        open={showSimulationFiche}
+        onClose={() => setShowSimulationFiche(false)}
+        data={{
+          matricule: formData.matricule,
+          civilite: formData.civilite,
+          nom: formData.nom,
+          prenoms: formData.prenoms,
+          date_naissance: formData.date_naissance,
+          situation_matrimoniale: formData.situation_matrimoniale,
+          telephone: formData.telephone,
+          email: formData.email,
+          emploi: formData.emploi,
+          grade: formData.grade,
+          age_retraite: formData.age_retraite,
+          date_retraite: formData.date_retraite,
+          date_precompte: formData.date_precompte,
+          date_effet: formData.date_effet,
+          nb_trimestre: formData.nb_trimestre,
+          cotisation_annuelle: formData.cotisation_annuelle,
+          cotisation_es: formData.cotisation_es,
+        }}
+      />
     </div>
   );
 }

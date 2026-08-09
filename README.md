@@ -9,17 +9,15 @@ Prérequis : Node.js 22 ou supérieur.
 ```powershell
 npm ci
 Copy-Item .env.example .env.local
-npm run dev
-```
-
-Dans un second terminal :
-
-```powershell
 Set-Location server
 npm ci
 Copy-Item .env.example .env
-npm run dev
+Set-Location ..
+npm run dev:all
 ```
+
+Cette commande lance ensemble le frontend sur `http://localhost:3000` et l'API
+sur `http://localhost:4000`. Utilisez `Ctrl+C` pour arreter les deux services.
 
 Le frontend utilise `VITE_API_BASE_URL`. L’API exige `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`.
 

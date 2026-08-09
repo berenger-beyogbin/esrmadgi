@@ -1,10 +1,15 @@
-export type PaiementWorkflowStatut = 'SAISI' | 'CONTROLE' | 'VALIDE' | 'REJETE' | 'ENCAISSE';
+export type PaiementWorkflowStatut =
+  | 'SAISI' | 'CONTROLE' | 'DEPOSE_BANQUE' | 'COMPENSE'
+  | 'VALIDE' | 'REJETE' | 'REJETE_BANQUE' | 'ENCAISSE';
 
 export const paiementTransitions: Readonly<Record<PaiementWorkflowStatut, readonly PaiementWorkflowStatut[]>> = {
   SAISI: ['CONTROLE', 'REJETE'],
-  CONTROLE: ['VALIDE', 'REJETE'],
+  CONTROLE: ['VALIDE', 'DEPOSE_BANQUE', 'REJETE'],
+  DEPOSE_BANQUE: ['COMPENSE', 'REJETE_BANQUE'],
+  COMPENSE: ['VALIDE', 'REJETE_BANQUE'],
   VALIDE: ['ENCAISSE', 'REJETE'],
   REJETE: [],
+  REJETE_BANQUE: [],
   ENCAISSE: [],
 };
 

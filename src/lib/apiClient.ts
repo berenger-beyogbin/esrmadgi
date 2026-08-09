@@ -17,9 +17,21 @@ function readApiError(json: unknown): string {
   return toFrenchErrorMessage(typeof err === 'string' ? err : 'Erreur de traitement du service.');
 }
 
-const BASE_URL =
-  ((import.meta as unknown as { env: Record<string, string> }).env.VITE_API_BASE_URL as string | undefined) ??
-  'http://localhost:4000';
+const viteEnv = (import.meta as unknown as {
+  env: Record<string, string | boolean | undefined>;
+}).env;
+
+// Ne jamais laisser un build de production appeler localhost : dans le
+// navigateur, localhost designe le poste de l'utilisateur, pas notre API.
+const configuredApiBaseUrl = String(viteEnv.VITE_API_BASE_URL ?? '').trim();
+const isLoopbackApiUrl = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/i.test(
+  configuredApiBaseUrl,
+);
+const usableConfiguredApiBaseUrl = viteEnv.PROD && isLoopbackApiUrl ? '' : configuredApiBaseUrl;
+const BASE_URL = (
+  usableConfiguredApiBaseUrl ||
+  (viteEnv.DEV ? 'http://localhost:4000' : 'https://madgi-esr-api.onrender.com')
+).replace(/\/+$/, '');
 
 async function buildHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };

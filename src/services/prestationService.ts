@@ -1,5 +1,5 @@
 import { apiDownloadBlob, apiGet, apiPatch, apiPost } from '../lib/apiClient';
-import { RenreDetails, RenteVersement, VPrestationDetails } from '../types';
+import { EcheanceAps, EcheanceApsStatut, RenreDetails, RenteVersement, VPrestationDetails } from '../types';
 
 type ApiResponse<T> = { data: T; error: string | null };
 
@@ -64,6 +64,43 @@ export const prestationService = {
 
     if (error) return { data: [], error: new Error(error) };
     return { data: data?.data ?? [], error: toError(data?.error) };
+  },
+
+  async getEcheances(filters?: { annee?: number; trimestre?: number; statut?: string }) {
+    const params = new URLSearchParams();
+    if (filters?.annee) params.set('annee', String(filters.annee));
+    if (filters?.trimestre) params.set('trimestre', String(filters.trimestre));
+    appendParam(params, 'statut', filters?.statut);
+    const qs = params.toString() ? `?${params}` : '';
+    const { data, error } = await apiGet<ApiResponse<EcheanceAps[]>>(`/api/prestations/echeances${qs}`);
+    if (error) return { data: [], error: new Error(error) };
+    return { data: data?.data ?? [], error: toError(data?.error) };
+  },
+
+  async genererEcheances(annee: number, trimestre: number) {
+    const { data, error } = await apiPost<ApiResponse<{ periode: string; eligibles: number; creees: number }>>(
+      '/api/prestations/echeances/generer', { annee, trimestre },
+    );
+    if (error) return { data: null, error: new Error(error) };
+    return { data: data?.data ?? null, error: toError(data?.error) };
+  },
+
+  async changerStatutEcheance(id: string, statut: Exclude<EcheanceApsStatut, 'GENEREE' | 'PAYEE'>, observation = '') {
+    const { data, error } = await apiPatch<ApiResponse<unknown>>(
+      `/api/prestations/echeances/${encodeURIComponent(id)}/statut`, { statut, observation },
+    );
+    if (error) return { data: null, error: new Error(error) };
+    return { data: data?.data ?? null, error: toError(data?.error) };
+  },
+
+  async payerEcheance(id: string, paiement: {
+    datePaiement: string; referencePaiement: string; modePaiement: 'VIREMENT' | 'CHEQUE'; pieceJustificative?: string;
+  }) {
+    const { data, error } = await apiPatch<ApiResponse<unknown>>(
+      `/api/prestations/echeances/${encodeURIComponent(id)}/paiement`, paiement,
+    );
+    if (error) return { data: null, error: new Error(error) };
+    return { data: data?.data ?? null, error: toError(data?.error) };
   },
 
   async telechargerLiquidation(id: string): Promise<{ data: Blob | null; error: Error | null }> {

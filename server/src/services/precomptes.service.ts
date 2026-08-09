@@ -1,15 +1,7 @@
-import { AppError } from '../middleware/errorHandler';
 import { precomptesRepository } from '../repositories/precomptes.repository';
 import { AuthenticatedUser } from '../types';
+import { assertPeriode } from '../utils/periode';
 import { auditService } from './audit.service';
-
-function assertPeriode(periode: string): string {
-  const normalized = periode.trim().toUpperCase();
-  if (!/^\d{4}T[1-4]$/.test(normalized)) {
-    throw new AppError(400, 'Format de periode invalide. Attendu : 2026T2');
-  }
-  return normalized;
-}
 
 export const precomptesService = {
   async getPrecomptes(filters?: { search?: string }): Promise<unknown[]> {
@@ -29,7 +21,7 @@ export const precomptesService = {
     input: {
       periode: string;
       dateRetour: string;
-      lignes: Array<{ matricule: string; montantRetour: number; motif?: string }>;
+      lignes: Array<{ matricule: string; montantRetour: number; dateRetour?: string; motif?: string }>;
     },
   ): Promise<unknown> {
     const periode = assertPeriode(input.periode);
@@ -70,7 +62,7 @@ export const precomptesService = {
         idPrecompte: Number(precompte.id_precompte),
         idCotisationDetail: Number(precompte.id_cotisation_detail),
         montantRetour,
-        dateRetour: input.dateRetour,
+        dateRetour: ligne.dateRetour ?? input.dateRetour,
         statutPrecompte,
         motif: ligne.motif ?? '',
       });
@@ -93,5 +85,19 @@ export const precomptesService = {
       details: JSON.stringify(resultat),
     });
     return resultat;
+  },
+
+  async reporterPrecompte(user: AuthenticatedUser, idPrecompte: number): Promise<void> {
+    const precompte = await precomptesRepository.findById(idPrecompte);
+    if (!precompte) {
+      throw new Error('Précompte introuvable.');
+    }
+    await precomptesRepository.reporterPrecompte(idPrecompte);
+    await auditService.logEvent(user, {
+      action: 'REPORTER_PRECOMPTE',
+      objetAudit: 'PRECOMPTE',
+      idObjet: String(idPrecompte),
+      details: JSON.stringify({ matricule: precompte.matricule, periode: precompte.periode }),
+    });
   },
 };

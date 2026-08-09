@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { CellValue, Worksheet } from 'exceljs';
 import { cotisationService } from '../services/cotisationService';
 import type { RetourDgiResult } from '../services/cotisationService';
-import { VPrecompteDetails, DBUser, GeneratePrecomptesResult } from '../types';
-import { FileSpreadsheet, Download, RefreshCw, AlertCircle, FileCheck, Loader2, Play, Upload } from 'lucide-react';
+import { adherentService } from '../services/adherentService';
+import { VPrecompteDetails, DBUser, GeneratePrecomptesResult, PeriodeMetier } from '../types';
+import { Download, FileCheck, Loader2, Play, Upload, X, CheckCircle2 } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
 
@@ -19,6 +20,8 @@ const STATUT_STYLES: Record<string, string> = {
   REJETE:   'bg-rose-50 text-rose-700 border-rose-200',
   ECART: 'bg-amber-50 text-amber-700 border-amber-200',
   NON_PRECOMPTE: 'bg-rose-50 text-rose-700 border-rose-200',
+  REPORTE: 'bg-slate-50 text-slate-600 border-slate-200',
+  REGULARISE: 'bg-violet-50 text-violet-700 border-violet-200',
 };
 
 function normalizedRecord(record: Record<string, unknown>): Record<string, unknown> {
@@ -33,6 +36,18 @@ function normalizedRecord(record: Record<string, unknown>): Record<string, unkno
 function firstValue(record: Record<string, unknown>, keys: string[]): unknown {
   for (const key of keys) {
     if (record[key] !== undefined && record[key] !== '') return record[key];
+  }
+  return undefined;
+}
+
+function parseDateToIso(value: unknown): string | undefined {
+  const raw = String(value ?? '').trim();
+  if (!raw) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (match) {
+    const [, day, month, year] = match;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
   return undefined;
 }
@@ -87,38 +102,55 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   const [precomptes, setPrecomptes] = useState<VPrecompteDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
 
   const [periodeGenerer, setPeriodeGenerer] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<GeneratePrecomptesResult | null>(null);
 
-  const [periodeCompta, setPeriodeCompta] = useState('');
-  const [enrichedRows, setEnrichedRows] = useState<Record<string, unknown>[]>([]);
-  const [enrichSummary, setEnrichSummary] = useState<{
-    lignes: number; rapproches: number; introuvables: number; totalMontant: number;
-  } | null>(null);
-  const [isProcessingFile, setIsProcessingFile] = useState(false);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [periodesOuvertes, setPeriodesOuvertes] = useState<PeriodeMetier[]>([]);
+  const [isLoadingPeriodes, setIsLoadingPeriodes] = useState(false);
+  const [isCloturant, setIsCloturant] = useState(false);
+  const [cloturerError, setCloturerError] = useState<string | null>(null);
+  const [dejaGenere, setDejaGenere] = useState(false);
+  const [isCheckingGenere, setIsCheckingGenere] = useState(false);
+
+  const [isExportingGenere, setIsExportingGenere] = useState(false);
+  const retourSectionRef = useRef<HTMLDivElement>(null);
+
   const retourFileInputRef = useRef<HTMLInputElement>(null);
-  const [periodeRetour, setPeriodeRetour] = useState('');
-  const [dateRetour, setDateRetour] = useState(new Date().toISOString().split('T')[0]);
+  const [dateRetour] = useState(new Date().toISOString().split('T')[0]);
   const [isProcessingRetour, setIsProcessingRetour] = useState(false);
   const [retourError, setRetourError] = useState<string | null>(null);
   const [retourResult, setRetourResult] = useState<RetourDgiResult | null>(null);
+  const [selectedRetourFile, setSelectedRetourFile] = useState<File | null>(null);
+
+  const [statutFilter, setStatutFilter] = useState('TOUS');
+
+  const [selectedRegularisation, setSelectedRegularisation] = useState<VPrecompteDetails | null>(null);
+  const [montantRegul, setMontantRegul] = useState('');
+  const [modeRegul, setModeRegul] = useState('VIREMENT');
+  const [dateRegul, setDateRegul] = useState(new Date().toISOString().split('T')[0]);
+  const [isSubmittingRegul, setIsSubmittingRegul] = useState(false);
+  const [regulError, setRegulError] = useState<string | null>(null);
 
   const canGenerate =
     currentUser.role === 'GESTIONNAIRE' ||
     currentUser.role === 'ADMINISTRATEUR' ||
     currentUser.role === 'SUPERADMIN';
+  const selectedPeriode = periodesOuvertes.find((item) => item.periode === periodeGenerer);
+  const isSelectedPeriodeCloturee = selectedPeriode?.statut === 'CLOTUREE';
+  const periodeStatusLabel = !selectedPeriode
+    ? 'Période'
+    : isSelectedPeriodeCloturee
+      ? 'Période (clôturée)'
+      : 'Période (non clôturée)';
 
   const fetchPrecomptes = async () => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
       const { data, error } = await cotisationService.getPrecomptes({
-        search: search.trim() || undefined,
+        search: periodeGenerer.trim() || undefined,
       });
       if (error) throw error;
       setPrecomptes(data || []);
@@ -132,16 +164,45 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
 
   useEffect(() => {
     fetchPrecomptes();
-  }, [search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodeGenerer]);
+
+  const fetchPeriodesOuvertes = async () => {
+    setIsLoadingPeriodes(true);
+    const { data, error } = await cotisationService.getPeriodesOuvertes();
+    setIsLoadingPeriodes(false);
+    if (error) {
+      setCloturerError(error.message);
+      return;
+    }
+    setPeriodesOuvertes(data);
+    setPeriodeGenerer((prev) => (data.some((p) => p.periode === prev) ? prev : data[0]?.periode ?? ''));
+  };
+
+  useEffect(() => {
+    if (canGenerate) fetchPeriodesOuvertes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canGenerate]);
+
+  useEffect(() => {
+    if (!periodeGenerer) {
+      setDejaGenere(false);
+      return;
+    }
+    let cancelled = false;
+    setIsCheckingGenere(true);
+    cotisationService.getPrecomptesMapByPeriode(periodeGenerer).then(({ data }) => {
+      if (cancelled) return;
+      setDejaGenere(data.size > 0);
+      setIsCheckingGenere(false);
+    });
+    return () => { cancelled = true; };
+  }, [periodeGenerer]);
 
   const handleGenerate = async () => {
     const periode = periodeGenerer.trim().toUpperCase();
     if (!periode) {
-      setErrorMsg('Veuillez saisir une période au format 2026T2.');
-      return;
-    }
-    if (!/^\d{4}T[1-4]$/.test(periode)) {
-      setErrorMsg('Format de période invalide. Attendu : 2026T2');
+      setErrorMsg('Veuillez sélectionner une période.');
       return;
     }
     setIsGenerating(true);
@@ -154,93 +215,104 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
       setErrorMsg(error.message || 'Erreur lors de la génération.');
     } else {
       fetchPrecomptes();
+      if (result.created > 0) setDejaGenere(true);
     }
+  };
+
+  const handleExportGenere = async () => {
+    const periode = periodeGenerer.trim().toUpperCase();
+    if (!periode) return;
+    setIsExportingGenere(true);
+    setErrorMsg(null);
+    try {
+      const { data, error } = await cotisationService.getPrecomptes({ search: periode });
+      if (error) throw error;
+      const lignes = (data || []).filter((p) => p.periode === periode);
+      if (lignes.length === 0) {
+        setErrorMsg(`Aucun précompte trouvé pour la période ${periode}.`);
+        return;
+      }
+      const { data: adherents, error: adherentsError } = await adherentService.getAdherents();
+      if (adherentsError) throw adherentsError;
+      const gradeParMatricule = new Map(
+        (adherents || []).map((a) => [a.matricule, a.grade_libelle || a.grade_code || '']),
+      );
+      const ExcelJS = await import('exceljs');
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Precomptes');
+      worksheet.columns = [
+        { header: "N° D'ORDRE", key: 'ordre', width: 10 },
+        { header: 'MADGI_MATRICULE', key: 'matricule', width: 16 },
+        { header: 'AGENT_NOM', key: 'agent_nom', width: 30 },
+        { header: 'CATEGORIE', key: 'categorie', width: 12 },
+        { header: 'PERIODE', key: 'periode', width: 10 },
+        { header: 'MADGI_ESR', key: 'madgi_esr', width: 16 },
+      ];
+      lignes.forEach((p, index) => worksheet.addRow({
+        ordre: index + 1,
+        matricule: p.matricule,
+        agent_nom: `${p.nom} ${p.prenoms}`,
+        categorie: gradeParMatricule.get(p.matricule) || '',
+        periode: p.periode,
+        madgi_esr: p.montant_depart,
+      }));
+      const buffer = await workbook.xlsx.writeBuffer();
+      downloadWorkbook(buffer, `precomptes_${periode}.xlsx`);
+    } catch (e: any) {
+      setErrorMsg(e?.message || "Erreur lors de l'export du fichier de précomptes.");
+    } finally {
+      setIsExportingGenere(false);
+    }
+  };
+
+  const handleAllerRetourPrecompte = () => {
+    retourSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleCloturerPeriode = async () => {
+    const periode = periodeGenerer.trim().toUpperCase();
+    if (!periode) return;
+    if (!window.confirm(`Clôturer définitivement la période ${periode} ? Aucun précompte ne pourra plus y être généré.`)) {
+      return;
+    }
+    setIsCloturant(true);
+    setCloturerError(null);
+    const { error } = await cotisationService.cloturerPeriode(periode);
+    setIsCloturant(false);
+    if (error) {
+      setCloturerError(error.message);
+      return;
+    }
+    await fetchPeriodesOuvertes();
   };
 
   const handleExport = () => {
     alert('Export au format XLS / Trésor public : fonctionnalité non active dans cette version.');
   };
 
-  const handleComptaFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSelectRetourFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.xlsx')) {
-      setFileError('Seuls les fichiers Excel .xlsx sont acceptes.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-    const periode = periodeCompta.trim().toUpperCase();
-    if (!periode || !/^\d{4}T[1-4]$/.test(periode)) {
-      setFileError("Veuillez d'abord saisir une période valide (ex : 2026T2).");
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-    setIsProcessingFile(true);
-    setFileError(null);
-    setEnrichSummary(null);
-    setEnrichedRows([]);
-    try {
-      const { data: precomptesMap, error: mapErr } = await cotisationService.getPrecomptesMapByPeriode(periode);
-      if (mapErr) throw mapErr;
-      const ExcelJS = await import('exceljs');
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(arrayBuffer);
-      const worksheet = workbook.worksheets[0];
-      if (!worksheet) throw new Error('Le fichier Excel ne contient aucune feuille.');
-      const rows = worksheetToRows(worksheet);
-      let rapproches = 0, introuvables = 0, totalMontant = 0;
-      const enriched = rows.map(row => {
-        const matricule = String((row as any)['MADGI_MATRICULE'] ?? '').trim();
-        const montant = precomptesMap.get(matricule);
-        if (matricule && montant !== undefined) {
-          rapproches++;
-          totalMontant += montant;
-          return { ...row, MONTANT_ESR_PRECOMPTE: montant };
-        }
-        introuvables++;
-        return { ...row, MONTANT_ESR_PRECOMPTE: '' };
-      });
-      setEnrichedRows(enriched);
-      setEnrichSummary({ lignes: rows.length, rapproches, introuvables, totalMontant });
-    } catch (e: any) {
-      setFileError(e?.message || 'Erreur lors du traitement du fichier.');
-    } finally {
-      setIsProcessingFile(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleExportEnrichi = async () => {
-    if (!enrichedRows.length) return;
-    const ExcelJS = await import('exceljs');
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Depart ESR');
-    const headers: string[] = Array.from(new Set<string>(enrichedRows.flatMap((row) => Object.keys(row))));
-
-    worksheet.columns = headers.map((header) => ({
-      header,
-      key: header,
-      width: Math.min(Math.max(header.length + 2, 12), 32),
-    }));
-    enrichedRows.forEach((row) => worksheet.addRow(row));
-    const periode = periodeCompta.trim().toUpperCase() || 'PERIODE';
-    const buffer = await workbook.xlsx.writeBuffer();
-    downloadWorkbook(buffer, `depart_compta_enrichi_${periode}.xlsx`);
-  };
-
-  const handleRetourDgiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const periode = periodeRetour.trim().toUpperCase();
-    if (!/^\d{4}T[1-4]$/.test(periode)) {
-      setRetourError('Veuillez saisir une période valide, par exemple 2026T2.');
-      if (retourFileInputRef.current) retourFileInputRef.current.value = '';
-      return;
-    }
+    setRetourError(null);
+    setRetourResult(null);
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
       setRetourError('Le retour DGI doit être un fichier Excel .xlsx.');
+      setSelectedRetourFile(null);
       if (retourFileInputRef.current) retourFileInputRef.current.value = '';
+      return;
+    }
+    setSelectedRetourFile(file);
+  };
+
+  const handleRetourDgiFile = async () => {
+    const file = selectedRetourFile;
+    if (!file) {
+      setRetourError('Veuillez sélectionner un fichier de retour précompte.');
+      return;
+    }
+    const periode = periodeGenerer.trim().toUpperCase();
+    if (!/^\d{4}T[1-4]$/.test(periode)) {
+      setRetourError('Veuillez saisir une période valide, par exemple 2026T2.');
       return;
     }
 
@@ -259,16 +331,20 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
           'MADGI_MATRICULE', 'MATRICULE', 'MATRICULE_AGENT',
         ]) ?? '').trim();
         const rawMontant = firstValue(row, [
-          'MONTANT_RETOUR', 'MONTANT_PRECOMPTE', 'MONTANT_EFFECTIVEMENT_PRECOMPTE',
-          'MONTANT_ESR_PRECOMPTE', 'MADGI_ESR',
+          'MONTANTRETOUR', 'MONTANT_RETOUR', 'MONTANT_PRECOMPTE', 'MONTANT_EFFECTIVEMENT_PRECOMPTE',
         ]);
-        const montantRetour = Number(String(rawMontant ?? '0').replace(/\s/g, '').replace(',', '.'));
+        const rawDate = firstValue(row, ['DATERETOUR', 'DATE_RETOUR']);
         const motif = String(firstValue(row, ['MOTIF', 'OBSERVATION', 'COMMENTAIRE']) ?? '').trim();
-        return { matricule, montantRetour, motif };
+        return {
+          matricule,
+          montantRetour: Number(String(rawMontant ?? '0').replace(/\s/g, '').replace(',', '.')) || 0,
+          dateRetour: parseDateToIso(rawDate),
+          motif,
+        };
       }).filter((row) => row.matricule && Number.isFinite(row.montantRetour) && row.montantRetour >= 0);
 
       if (lignes.length === 0) {
-        throw new Error('Aucune ligne exploitable. Colonnes attendues : MATRICULE et MONTANT_RETOUR.');
+        throw new Error('Aucune ligne exploitable. Colonne attendue : MADGI_MATRICULE.');
       }
       const { result, error } = await cotisationService.enregistrerRetourDgi({
         periode,
@@ -282,9 +358,63 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
       setRetourError(error?.message || 'Erreur pendant le traitement du retour DGI.');
     } finally {
       setIsProcessingRetour(false);
+      setSelectedRetourFile(null);
       if (retourFileInputRef.current) retourFileInputRef.current.value = '';
     }
   };
+
+  const openRegulariserModal = (p: VPrecompteDetails) => {
+    setSelectedRegularisation(p);
+    setMontantRegul(String(p.montant_depart ?? ''));
+    setModeRegul('VIREMENT');
+    setDateRegul(new Date().toISOString().split('T')[0]);
+    setRegulError(null);
+  };
+
+  const closeRegulariserModal = () => {
+    if (isSubmittingRegul) return;
+    setSelectedRegularisation(null);
+  };
+
+  const handleValiderRegularisation = async () => {
+    if (!selectedRegularisation) return;
+    setRegulError(null);
+    const montantNum = Number(montantRegul);
+    if (!montantNum || montantNum <= 0) {
+      setRegulError('Le montant versé doit être supérieur à 0.');
+      return;
+    }
+    if (!dateRegul) {
+      setRegulError('La date est obligatoire.');
+      return;
+    }
+
+    setIsSubmittingRegul(true);
+    const { error } = await cotisationService.createCotisationSpontanee({
+      id_adherent: String(selectedRegularisation.id_adherent),
+      matricule: selectedRegularisation.matricule,
+      mode: modeRegul,
+      date: dateRegul,
+      montant: montantNum,
+      id_precompte: selectedRegularisation.id_precompte,
+    });
+    setIsSubmittingRegul(false);
+
+    if (error) {
+      setRegulError(error.message);
+      return;
+    }
+    setSelectedRegularisation(null);
+    await fetchPrecomptes();
+  };
+
+  const filteredPrecomptes = statutFilter === 'TOUS'
+    ? precomptes
+    : precomptes.filter((p) => p.statut_precompte === statutFilter);
+  const statutsDisponibles = Array.from(new Set([
+    ...Object.keys(STATUT_STYLES),
+    ...precomptes.map((precompte) => precompte.statut_precompte).filter(Boolean),
+  ]));
 
   return (
     <div className="space-y-6" id="precomptes-container">
@@ -292,19 +422,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm font-sans">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Gestion des Précomptes</h2>
-          <p className="text-slate-600 text-sm mt-1">
-            Suivi des prélèvements sur salaire des agents.
-          </p>
         </div>
-        <button
-          id="btn-export-precomptes"
-          disabled
-          className="flex items-center gap-2 px-4 py-2.5 bg-slate-300 text-slate-500 rounded-xl text-sm font-semibold tracking-wide cursor-not-allowed shrink-0"
-          title="Export à finaliser dans une prochaine version"
-        >
-          <FileSpreadsheet className="w-4 h-4" />
-          Export à finaliser
-        </button>
       </div>
 
       {errorMsg && (
@@ -319,25 +437,60 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
           <p className="text-xs font-bold text-slate-600 uppercase tracking-wide font-mono">Générer un fichier de précompte</p>
           <div className="flex flex-col sm:flex-row gap-3 items-end">
             <div className="flex-1">
-              <label className="block text-xs text-slate-600 uppercase mb-1 font-mono">Période (ex : 2026T2)</label>
-              <input
-                type="text"
-                placeholder="2026T2"
+              <label className={`block text-xs uppercase mb-1 font-mono ${isSelectedPeriodeCloturee ? 'text-rose-700 font-bold' : 'text-slate-600'}`}>
+                {periodeStatusLabel}
+              </label>
+              <select
                 value={periodeGenerer}
-                onChange={(e) => setPeriodeGenerer(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:ring-2 focus:ring-[#2b529f] focus:outline-none font-mono"
-              />
+                onChange={(e) => setPeriodeGenerer(e.target.value)}
+                disabled={isLoadingPeriodes || periodesOuvertes.length === 0}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:ring-2 focus:ring-[#2b529f] focus:outline-none font-mono disabled:opacity-50"
+              >
+                {periodesOuvertes.length === 0 && <option value="">Aucune période ouverte</option>}
+                {periodesOuvertes.map((p) => (
+                  <option key={p.periode} value={p.periode}>
+                    {p.periode} — {p.statut === 'CLOTUREE' ? 'Clôturée' : 'Non clôturée'}
+                  </option>
+                ))}
+              </select>
             </div>
-            <button
-              id="btn-generer-precomptes"
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#2b529f] hover:bg-[#1c3e7b] text-white rounded-xl text-sm font-bold transition disabled:opacity-50 shrink-0"
-            >
-              {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              Générer les précomptes
-            </button>
+            {!dejaGenere && (
+              <button
+                id="btn-generer-precomptes"
+                onClick={handleGenerate}
+                disabled={isGenerating || isCheckingGenere || !periodeGenerer || isSelectedPeriodeCloturee}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#2b529f] hover:bg-[#1c3e7b] text-white rounded-xl text-sm font-bold transition disabled:opacity-50 shrink-0"
+              >
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                Générer les précomptes
+              </button>
+            )}
+            {dejaGenere && !isCheckingGenere && (
+              <>
+                <button
+                  id="btn-generer-fichier"
+                  onClick={handleExportGenere}
+                  disabled={isExportingGenere || !periodeGenerer}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#2b529f] hover:bg-blue-50 text-[#2b529f] rounded-xl text-sm font-bold transition disabled:opacity-50 shrink-0"
+                >
+                  {isExportingGenere ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  Générer le fichier
+                </button>
+                <button
+                  id="btn-retour-precompte"
+                  onClick={handleAllerRetourPrecompte}
+                  disabled={!periodeGenerer}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-amber-400 hover:bg-amber-50 text-amber-600 rounded-xl text-sm font-bold transition disabled:opacity-50 shrink-0"
+                >
+                  <Upload className="w-4 h-4" />
+                  Retour précompte
+                </button>
+              </>
+            )}
           </div>
+          {cloturerError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl">{cloturerError}</div>
+          )}
           {generateResult && (
             <div className={`p-3 rounded-xl text-sm ${generateResult.failed > 0 || generateResult.errors.length > 0 ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'}`}>
               Précomptes générés : <strong>{generateResult.created} créés</strong>, {generateResult.skipped} ignorés, {generateResult.failed} erreurs.
@@ -352,117 +505,39 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
         </div>
       )}
 
-      {/* Fichier comptabilité de départ */}
-      {canGenerate && (
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-          <p className="text-xs font-bold text-slate-600 uppercase tracking-wide font-mono">Fichier comptabilité de départ</p>
-          <div className="flex flex-col sm:flex-row gap-3 items-end">
-            <div className="flex-1">
-              <label className="block text-[10px] text-slate-400 uppercase mb-1 font-mono">Période (ex : 2026T2)</label>
-              <input
-                type="text"
-                placeholder="2026T2"
-                value={periodeCompta}
-                onChange={(e) => setPeriodeCompta(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-xs focus:ring-2 focus:ring-[#2b529f] focus:outline-none font-mono"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs text-slate-600 uppercase mb-1 font-mono">Fichier comptabilité (.xlsx)</label>
-              <label className={`flex items-center gap-2 px-4 py-2.5 border border-dashed rounded-xl text-sm cursor-pointer transition ${isProcessingFile ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-500 hover:border-[#2b529f] hover:text-[#2b529f]'}`}>
-                {isProcessingFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                {isProcessingFile ? 'Traitement en cours...' : 'Charger fichier comptabilité'}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx"
-                  className="hidden"
-                  onChange={handleComptaFile}
-                  disabled={isProcessingFile}
-                />
-              </label>
-            </div>
-          </div>
-          {fileError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl">{fileError}</div>
-          )}
-          {enrichSummary && (
-            <>
-              <div className="p-4 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-xl space-y-3">
-                <div className="font-bold">Rapprochement — {periodeCompta}</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="bg-white rounded-xl p-3 border border-blue-100 text-center">
-                    <div className="font-mono font-bold text-slate-800 text-lg">{enrichSummary.lignes}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Lignes lues</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-3 border border-blue-100 text-center">
-                    <div className="font-mono font-bold text-emerald-700 text-lg">{enrichSummary.rapproches}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Rapprochés</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-3 border border-blue-100 text-center">
-                    <div className="font-mono font-bold text-amber-600 text-lg">{enrichSummary.introuvables}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Introuvables</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-3 border border-blue-100 text-center">
-                    <div className="font-mono font-bold text-[#2b529f] text-base leading-tight">{formatFCFA(enrichSummary.totalMontant)}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Total ESR précompte</div>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={handleExportEnrichi}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition shadow-sm"
-              >
-                <Download className="w-4 h-4" />
-                Exporter fichier départ enrichi
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
       {/* Filtre et actualisation */}
-      {canGenerate && (
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+      {canGenerate && dejaGenere && (
+        <div ref={retourSectionRef} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
           <div>
             <p className="text-xs font-bold text-slate-600 uppercase tracking-wide font-mono">
               Retour DGI - montants effectivement précomptés
             </p>
-            <p className="text-xs text-slate-500 mt-1">
-              Colonnes reconnues : MATRICULE et MONTANT_RETOUR, avec MOTIF facultatif.
-            </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-            <div>
-              <label className="block text-xs text-slate-600 uppercase mb-1 font-mono">Période</label>
-              <input
-                value={periodeRetour}
-                onChange={(e) => setPeriodeRetour(e.target.value.toUpperCase())}
-                placeholder="2026T2"
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono"
-              />
+          <div className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="flex-1 min-w-0">
+              <label className="block text-xs text-slate-600 uppercase mb-1 font-mono">Fichier retour précompte (.xlsx)</label>
+              <label className="flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 rounded-xl text-sm cursor-pointer hover:border-[#2b529f] hover:text-[#2b529f] truncate">
+                <Upload className="w-4 h-4 shrink-0" />
+                <span className="truncate">{selectedRetourFile ? selectedRetourFile.name : 'Sélectionner le fichier'}</span>
+                <input
+                  ref={retourFileInputRef}
+                  type="file"
+                  accept=".xlsx"
+                  className="hidden"
+                  disabled={isProcessingRetour}
+                  onChange={handleSelectRetourFile}
+                />
+              </label>
             </div>
-            <div>
-              <label className="block text-xs text-slate-600 uppercase mb-1 font-mono">Date du retour</label>
-              <input
-                type="date"
-                value={dateRetour}
-                onChange={(e) => setDateRetour(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono"
-              />
-            </div>
-            <label className="flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 rounded-xl text-sm cursor-pointer hover:border-[#2b529f] hover:text-[#2b529f]">
+            <button
+              id="btn-importer-retour-dgi"
+              onClick={handleRetourDgiFile}
+              disabled={isProcessingRetour || !selectedRetourFile}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#2b529f] hover:bg-[#1c3e7b] text-white rounded-xl text-sm font-bold transition disabled:opacity-50 shrink-0"
+            >
               {isProcessingRetour ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               {isProcessingRetour ? 'Import en cours...' : 'Importer le retour DGI'}
-              <input
-                ref={retourFileInputRef}
-                type="file"
-                accept=".xlsx"
-                className="hidden"
-                disabled={isProcessingRetour}
-                onChange={handleRetourDgiFile}
-              />
-            </label>
+            </button>
           </div>
           {retourError && (
             <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl">
@@ -481,29 +556,6 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
         </div>
       )}
 
-      {/* Filtre et actualisation */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <input
-            id="input-precomptes-filter"
-            type="text"
-            placeholder="Filtrer par période (ex: 2026T2)..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value.toUpperCase())}
-            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all font-mono"
-          />
-          <RefreshCw className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
-        </div>
-        <button
-          id="btn-refresh-precomptes"
-          onClick={fetchPrecomptes}
-          disabled={isLoading}
-          className="p-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-slate-500 transition disabled:opacity-50"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
-      </div>
-
       {/* Tableau */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center p-20 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-3">
@@ -516,54 +568,85 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
         </div>
       ) : (
         <ScrollableTableWrapper>
-          <table className="min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-precomptes">
-            <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
+          <table className="w-full table-fixed divide-y divide-slate-100 text-xs text-left text-slate-700" id="tbl-precomptes">
+            <colgroup>
+              <col className="w-[9%]" />
+              <col className="w-[15%]" />
+              <col className="w-[7%]" />
+              <col className="w-[12%]" />
+              <col className="w-[13%]" />
+              <col className="w-[12%]" />
+              <col className="w-[11%]" />
+              <col className="w-[13%]" />
+              <col className="w-[8%]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-[10px]">
               <tr>
-                <th className="py-3.5 px-4">Matricule</th>
-                <th className="py-3.5 px-4">Adhérent</th>
-                <th className="py-3.5 px-4">Période</th>
-                <th className="py-3.5 px-4 text-right">Montant départ</th>
-                <th className="py-3.5 px-4 text-center">Date génération</th>
-                <th className="py-3.5 px-4 text-right">Montant retour</th>
-                <th className="py-3.5 px-4 text-center">Date retour</th>
-                <th className="py-3.5 px-4">Statut</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+                <th className="py-3 px-2">Matricule</th>
+                <th className="py-3 px-2">Adhérent</th>
+                <th className="py-3 px-2">Période</th>
+                <th className="py-3 px-2 text-right">Montant départ</th>
+                <th className="py-3 px-2 text-center">Date génération</th>
+                <th className="py-3 px-2 text-right">Montant retour</th>
+                <th className="py-3 px-2 text-center">Date retour</th>
+                <th className="py-3 px-2 text-center">
+                  <select
+                    id="filter-statut-precompte"
+                    value={statutFilter}
+                    onChange={(e) => setStatutFilter(e.target.value)}
+                    className="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-1.5 py-1 text-center text-[10px] font-bold uppercase tracking-normal text-slate-600 focus:ring-2 focus:ring-[#2b529f] focus:outline-none normal-case"
+                  >
+                    <option value="TOUS">Statut (Tous)</option>
+                    {statutsDisponibles.map((statut) => (
+                      <option key={statut} value={statut}>{statut}</option>
+                    ))}
+                  </select>
+                </th>
+                <th className="py-3 px-2 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {precomptes.map((p) => (
+              {filteredPrecomptes.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-16 text-center text-slate-400 text-sm">
+                    Aucun précompte avec le statut {statutFilter}.
+                  </td>
+                </tr>
+              ) : filteredPrecomptes.map((p) => (
                 <tr key={p.id_precompte} className="hover:bg-slate-50/50 transition">
-                  <td className="py-3 px-4 font-bold font-mono text-slate-700">{p.matricule}</td>
-                  <td className="py-3 px-4 font-semibold text-slate-800 uppercase">{p.nom} {p.prenoms}</td>
-                  <td className="py-3 px-4 font-mono text-slate-600">{p.periode}</td>
-                  <td className="py-3 px-4 text-right font-semibold font-mono text-slate-700">
+                  <td className="py-2.5 px-2 font-bold font-mono text-slate-700 truncate">{p.matricule}</td>
+                  <td className="py-2.5 px-2 font-semibold text-slate-800 uppercase leading-snug break-words">{p.nom} {p.prenoms}</td>
+                  <td className="py-2.5 px-2 font-mono text-slate-600 whitespace-nowrap">{p.periode}</td>
+                  <td className="py-2.5 px-2 text-right font-semibold font-mono text-slate-700 whitespace-nowrap">
                     {formatFCFA(p.montant_depart)}
                   </td>
-                  <td className="py-3 px-4 text-center font-mono text-slate-500">
+                  <td className="py-2.5 px-2 text-center font-mono text-slate-500 whitespace-nowrap">
                     {formatDateFr(p.date_generation)}
                   </td>
-                  <td className="py-3 px-4 text-right font-bold font-mono text-slate-800">
+                  <td className="py-2.5 px-2 text-right font-bold font-mono text-slate-800 whitespace-nowrap">
                     {p.montant_retour > 0 ? formatFCFA(p.montant_retour) : '-'}
                   </td>
-                  <td className="py-3 px-4 text-center font-mono text-slate-500">
+                  <td className="py-2.5 px-2 text-center font-mono text-slate-500 whitespace-nowrap">
                     {formatDateFr(p.date_retour)}
                   </td>
-                  <td className="py-3 px-4">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs border ${STATUT_STYLES[p.statut_precompte] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                  <td className="py-2.5 px-2 text-center">
+                    <span className={`inline-flex max-w-full items-center gap-1 px-2 py-1 rounded-full font-bold text-[10px] whitespace-nowrap border ${STATUT_STYLES[p.statut_precompte] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
                       {p.statut_precompte === 'ENCAISSE' && <FileCheck className="w-3 h-3" />}
                       {p.statut_precompte}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right">
-                    <button
-                      id={`btn-exp-row-${p.id_precompte}`}
-                      disabled
-                      className="p-1 px-2 border border-slate-200 rounded-lg text-slate-400 cursor-not-allowed inline-flex items-center gap-1 font-semibold"
-                      title="Export à finaliser"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>XLS</span>
-                    </button>
+                  <td className="py-2.5 px-2 text-right">
+                    <div className="flex justify-end items-center gap-2">
+                      {p.statut_precompte === 'NON_PRECOMPTE' && (
+                        <button
+                          id={`btn-regulariser-${p.id_precompte}`}
+                          onClick={() => openRegulariserModal(p)}
+                          className="max-w-full px-1.5 py-1 bg-[#2b529f] hover:bg-[#1c3e7b] text-white rounded-lg text-[10px] font-bold transition"
+                        >
+                          Régulariser
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -572,13 +655,107 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
         </ScrollableTableWrapper>
       )}
 
-      {/* Info */}
-      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex gap-3 text-sm text-slate-600">
-        <AlertCircle className="w-5 h-5 text-indigo-600 mt-0.5 shrink-0" />
-        <div>
-          <span className="font-bold text-slate-700">Rapprochement automatique :</span> Les écarts négatifs proviennent de l'invalidation d'un ou plusieurs agents pour cause de mise en disponibilité, départ à la retraite non signalé ou cessation d'activité en cours de mois.
+      {selectedRegularisation && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={closeRegulariserModal}>
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-[#2b529f] px-6 py-4 flex items-center justify-between">
+              <h3 className="text-white font-bold text-lg">
+                Régularisation de non précompte | Cotisation spontanée
+              </h3>
+              <button onClick={closeRegulariserModal} className="text-white/80 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {regulError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl">
+                  {regulError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">Adhérent</label>
+                <input
+                  readOnly
+                  value={`${selectedRegularisation.matricule} - ${selectedRegularisation.nom} ${selectedRegularisation.prenoms}`}
+                  className="block w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-600 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">Cotisation trimestrielle</label>
+                <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 font-bold text-center">
+                  {formatFCFA(selectedRegularisation.montant_depart)}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">
+                  Montant versé <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={montantRegul}
+                  onChange={(e) => setMontantRegul(e.target.value)}
+                  placeholder="0"
+                  className="block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f] text-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">
+                  Mode Versement <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={modeRegul}
+                  onChange={(e) => setModeRegul(e.target.value)}
+                  className="block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f] text-slate-700"
+                >
+                  {['VIREMENT', 'CHEQUE', 'ESPECES'].map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">
+                  Date <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={dateRegul}
+                  onChange={(e) => setDateRegul(e.target.value)}
+                  className="block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f] text-slate-700"
+                />
+              </div>
+
+              <div className="flex justify-center gap-3 pt-2">
+                <button
+                  onClick={handleValiderRegularisation}
+                  disabled={isSubmittingRegul}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[#2b529f] hover:bg-[#1c3e7b] text-white rounded-xl text-sm font-bold transition disabled:opacity-50"
+                >
+                  {isSubmittingRegul ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  Valider
+                </button>
+                <button
+                  onClick={closeRegulariserModal}
+                  disabled={isSubmittingRegul}
+                  className="px-6 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-bold transition disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

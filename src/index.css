@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@media print {
+  #root {
+    display: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

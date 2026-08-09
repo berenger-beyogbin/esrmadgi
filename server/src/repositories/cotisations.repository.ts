@@ -16,6 +16,7 @@ export interface CotisationSpontaneePayload {
   mode: string;
   date: string;
   montant: number;
+  id_precompte?: number;
 }
 
 export interface ActiveAdherentForCotisation {
@@ -36,20 +37,44 @@ export interface ParsedTrimestre {
 }
 
 export const cotisationsRepository = {
+  async regulariserPrecompte(input: {
+    idPrecompte: number;
+    idAdherent: number;
+    mode: string;
+    periode: string;
+    periodeDeb: string;
+    periodeFin: string;
+    dateValeur: string;
+    montant: number;
+    reference: string;
+  }): Promise<unknown> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase.rpc('regulariser_precompte_esr', {
+      p_id_precompte: input.idPrecompte,
+      p_id_adherent: input.idAdherent,
+      p_mode: input.mode,
+      p_periode: input.periode,
+      p_periode_deb: input.periodeDeb,
+      p_periode_fin: input.periodeFin,
+      p_date_valeur: input.dateValeur,
+      p_montant: input.montant,
+      p_reference: input.reference,
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
   async findCotisations(filters?: CotisationFilters): Promise<unknown[]> {
     const supabase = getSupabaseServer();
 
     // Supabase query builder loses fluent type precision after dynamic filters.
-    let query: any = supabase.from('v_cotisations_details').select('*');
+    let query: any = supabase.from('v_cotisations_details').select('*').eq('statut_detail', 'ENCAISSEE');
 
     if (filters?.idAdherent) {
       query = query.eq('id_adherent', filters.idAdherent);
     }
     if (filters?.periode) {
       query = query.eq('periode', filters.periode);
-    }
-    if (filters?.statut && filters.statut !== 'TOUS') {
-      query = query.eq('statut_detail', filters.statut);
     }
     if (filters?.source && filters.source !== 'TOUS') {
       query = query.eq('source', filters.source);
@@ -97,11 +122,12 @@ export const cotisationsRepository = {
   async findEncaisseesByAdherentId(idAdherent: string, dateCalcul: string): Promise<Array<{
     montant: number;
     date_valeur: string;
+    source: string;
   }>> {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from('v_cotisations_details')
-      .select('montant,date_valeur')
+      .select('montant,date_valeur,source')
       .eq('id_adherent', idAdherent)
       .eq('statut_detail', 'ENCAISSEE')
       .not('date_valeur', 'is', null)
@@ -112,6 +138,7 @@ export const cotisationsRepository = {
     return (data ?? []).map((row: any) => ({
       montant: Number(row.montant ?? 0),
       date_valeur: String(row.date_valeur),
+      source: String(row.source ?? 'PRECOMPTE').toUpperCase(),
     }));
   },
 

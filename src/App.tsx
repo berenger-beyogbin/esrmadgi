@@ -15,7 +15,10 @@ import AdhesionsEnLigne from './pages/AdhesionsEnLigne';
 import ComptesEsr from './pages/ComptesEsr';
 import Cotisations from './pages/Cotisations';
 import Precomptes from './pages/Precomptes';
+import RegularisationPrecomptes from './pages/RegularisationPrecomptes';
+import CloturePeriode from './pages/CloturePeriode';
 import Prestations from './pages/Prestations';
+import Rachats from './pages/Rachats';
 import Parametres from './pages/Parametres';
 import Audit from './pages/Audit';
 import Utilisateurs from './pages/Utilisateurs';
@@ -36,7 +39,13 @@ import {
   HelpCircle,
   Power,
   Menu,
-  X
+  X,
+  Repeat,
+  ChevronDown,
+  PlusCircle,
+  List,
+  Lock,
+  WalletCards,
 } from 'lucide-react';
 
 type ModuleType =
@@ -45,8 +54,11 @@ type ModuleType =
   | 'ADHERENTS'
   | 'COTISATIONS'
   | 'PRESTATIONS'
+  | 'RACHATS'
   | 'COMPTES'
   | 'PRECOMPTES'
+  | 'REGULARISATION_PRECOMPTES'
+  | 'CLOTURE_PERIODE'
   | 'REPORTING'
   | 'PARAMETRES'
   | 'UTILISATEURS'
@@ -58,6 +70,9 @@ export default function App() {
   const [publicView, setPublicView] = useState<'LOGIN' | 'ONLINE_ADHESION'>('LOGIN');
   const [activeModule, setActiveModule] = useState<ModuleType>('DASHBOARD');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCotisationsMenuOpen, setIsCotisationsMenuOpen] = useState(false);
+  const [openSpontaneeSignal, setOpenSpontaneeSignal] = useState(0);
+  const [activeCotisationChildKey, setActiveCotisationChildKey] = useState<string>('COTISATIONS_LISTE');
   const [sessionExpiredMsg, setSessionExpiredMsg] = useState<string | null>(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
@@ -182,10 +197,17 @@ export default function App() {
       allowed: ['ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'],
     },
     {
-      id: 'COTISATIONS' as ModuleType,
+      id: 'COTISATIONS_GROUP',
       label: 'Cotisations',
       icon: Coins,
       allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
+      children: [
+        { key: 'PRECOMPTES', label: 'Gestion des Précomptes', icon: RefreshCw, moduleId: 'PRECOMPTES' as ModuleType },
+        { key: 'REGULARISATION_PRECOMPTES', label: 'Régularisation de Précompte', icon: Repeat, moduleId: 'REGULARISATION_PRECOMPTES' as ModuleType },
+        { key: 'COTISATION_SPONTANEE', label: 'Cotisation Spontanée', icon: PlusCircle, moduleId: 'COTISATIONS' as ModuleType, action: 'SPONTANEE' as const },
+        { key: 'COTISATIONS_LISTE', label: 'Liste des Cotisations', icon: List, moduleId: 'COTISATIONS' as ModuleType },
+        { key: 'CLOTURE_PERIODE', label: 'Clôture de Période', icon: Lock, moduleId: 'CLOTURE_PERIODE' as ModuleType },
+      ],
     },
     {
       id: 'PRESTATIONS' as ModuleType,
@@ -194,16 +216,16 @@ export default function App() {
       allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
     },
     {
+      id: 'RACHATS' as ModuleType,
+      label: 'Rachats & Résiliations',
+      icon: WalletCards,
+      allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
+    },
+    {
       id: 'COMPTES' as ModuleType,
       label: 'Comptes individuels',
       icon: Wallet,
       allowed: ['ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'],
-    },
-    {
-      id: 'PRECOMPTES' as ModuleType,
-      label: 'Précomptes',
-      icon: RefreshCw,
-      allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
     },
     {
       id: 'REPORTING' as ModuleType,
@@ -235,6 +257,14 @@ export default function App() {
     currentUser.role === 'SUPERADMIN' || item.allowed.includes(currentUser.role),
   );
 
+  const selectCotisationChild = (child: { key: string; moduleId: ModuleType; action?: 'SPONTANEE' }) => {
+    setActiveModule(child.moduleId);
+    setActiveCotisationChildKey(child.key);
+    if (child.action === 'SPONTANEE') {
+      setOpenSpontaneeSignal((n) => n + 1);
+    }
+  };
+
   const renderActiveModule = () => {
     switch (activeModule) {
       case 'DASHBOARD':
@@ -246,11 +276,23 @@ export default function App() {
       case 'COMPTES':
         return <ComptesEsr currentUser={currentUser} />;
       case 'COTISATIONS':
-        return <Cotisations currentUser={currentUser} />;
+        return (
+          <Cotisations
+            currentUser={currentUser}
+            openSpontaneeSignal={openSpontaneeSignal}
+            activeView={activeCotisationChildKey === 'COTISATION_SPONTANEE' ? 'SPONTANEE' : 'LISTE'}
+          />
+        );
       case 'PRECOMPTES':
         return <Precomptes currentUser={currentUser} />;
+      case 'REGULARISATION_PRECOMPTES':
+        return <RegularisationPrecomptes currentUser={currentUser} />;
+      case 'CLOTURE_PERIODE':
+        return <CloturePeriode currentUser={currentUser} />;
       case 'PRESTATIONS':
         return <Prestations currentUser={currentUser} />;
+      case 'RACHATS':
+        return <Rachats currentUser={currentUser} />;
       case 'PARAMETRES':
         return <Parametres currentUser={currentUser} />;
       case 'UTILISATEURS':
@@ -315,6 +357,52 @@ export default function App() {
                 <div className="space-y-1">
                   {visibleMenuItems.map((item) => {
                     const IconComponent = item.icon;
+
+                    if ('children' in item) {
+                      const isGroupActive = item.children.some((c) => c.moduleId === activeModule);
+                      return (
+                        <div key={item.id}>
+                          <button
+                            onClick={() => setIsCotisationsMenuOpen((o) => !o)}
+                            className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded text-sm font-semibold leading-snug transition ${
+                              isGroupActive
+                                ? 'bg-white/15 text-white border-l-4 border-[#df9f28]'
+                                : 'text-slate-100/80 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            <IconComponent className="w-5 h-5 shrink-0 stroke-[2]" />
+                            <span className="flex-1 text-left">{item.label}</span>
+                            <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isCotisationsMenuOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isCotisationsMenuOpen && (
+                            <div className="ml-4 border-l border-white/10 space-y-0.5 mt-0.5">
+                              {item.children.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive = activeModule === child.moduleId && activeCotisationChildKey === child.key;
+                                return (
+                                  <button
+                                    key={child.key}
+                                    onClick={() => {
+                                      selectCotisationChild(child);
+                                      setIsMobileMenuOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded text-sm leading-snug transition ${
+                                      isChildActive
+                                        ? 'bg-white/15 text-white font-semibold'
+                                        : 'text-slate-200/80 hover:bg-white/5 hover:text-white'
+                                    }`}
+                                  >
+                                    <ChildIcon className="w-4 h-4 shrink-0 stroke-[2]" />
+                                    <span>{child.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
                     const isActive = activeModule === item.id;
                     return (
                       <button
@@ -354,6 +442,51 @@ export default function App() {
           <nav className="space-y-0.5 px-3">
             {visibleMenuItems.map((item) => {
               const IconComponent = item.icon;
+
+              if ('children' in item) {
+                const isGroupActive = item.children.some((c) => c.moduleId === activeModule);
+                return (
+                  <div key={item.id}>
+                    <button
+                      id="desktop-nav-COTISATIONS_GROUP"
+                      onClick={() => setIsCotisationsMenuOpen((o) => !o)}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-lg text-sm leading-snug font-medium transition-all ${
+                        isGroupActive
+                          ? 'bg-[#1c3e7b] text-white font-bold border-l-[3px] border-[#df9f28] shadow-inner'
+                          : 'text-slate-100/90 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <IconComponent className="w-[18px] h-[18px] shrink-0 stroke-[1.8]" />
+                      <span className="flex-1 text-left truncate">{item.label}</span>
+                      <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isCotisationsMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isCotisationsMenuOpen && (
+                      <div className="ml-4 border-l border-white/10 space-y-0.5 mt-0.5 mb-1">
+                        {item.children.map((child) => {
+                          const ChildIcon = child.icon;
+                          const isChildActive = activeModule === child.moduleId && activeCotisationChildKey === child.key;
+                          return (
+                            <button
+                              key={child.key}
+                              id={`desktop-nav-${child.key}`}
+                              onClick={() => selectCotisationChild(child)}
+                              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm leading-snug font-medium transition-all ${
+                                isChildActive
+                                  ? 'bg-[#1c3e7b] text-white font-bold'
+                                  : 'text-slate-100/80 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              <ChildIcon className="w-4 h-4 shrink-0 stroke-[1.8]" />
+                              <span className="truncate">{child.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               const isActive = activeModule === item.id;
               return (
                 <button

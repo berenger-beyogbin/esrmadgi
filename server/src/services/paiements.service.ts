@@ -41,6 +41,7 @@ export const paiementsService = {
     id: string,
     nouveauStatut: PaiementWorkflowStatut,
     observation: string,
+    donnees: Record<string, unknown> = {},
   ): Promise<unknown> {
     const paiement = await paiementsRepository.findById(id);
     if (!paiement) throw new AppError(404, 'Paiement introuvable');
@@ -50,12 +51,42 @@ export const paiementsService = {
       throw new AppError(400, `Transition de paiement interdite : ${current} vers ${nouveauStatut}`);
     }
 
+    const estCheque = String(paiement.moyen).toUpperCase() === 'CHEQUE';
+    if (estCheque && current === 'CONTROLE' && nouveauStatut === 'VALIDE') {
+      throw new AppError(400, 'Un cheque doit etre depose puis compense avant validation');
+    }
+    if (estCheque && nouveauStatut === 'DEPOSE_BANQUE') {
+      if (!donnees.reference_bordereau || !donnees.date_depot_banque) {
+        throw new AppError(400, 'Reference du bordereau et date de depot obligatoires');
+      }
+      await paiementsRepository.updateChequeValidation(id, {
+        reference_bordereau: String(donnees.reference_bordereau),
+        date_depot_banque: String(donnees.date_depot_banque),
+      });
+    }
+    if (estCheque && nouveauStatut === 'COMPENSE') {
+      if (!donnees.reference_avis_credit || !donnees.date_compensation) {
+        throw new AppError(400, 'Reference bancaire et date de compensation obligatoires');
+      }
+      await paiementsRepository.updateChequeValidation(id, {
+        reference_avis_credit: String(donnees.reference_avis_credit),
+        date_compensation: String(donnees.date_compensation),
+        date_valeur: String(donnees.date_compensation),
+      });
+    }
+    if (nouveauStatut === 'REJETE_BANQUE') {
+      await paiementsRepository.updateChequeValidation(id, {
+        motif_rejet: String(donnees.motif_rejet ?? observation),
+      });
+    }
+
     if (nouveauStatut === 'ENCAISSE') {
       await cotisationsService.createCotisationSpontanee({
         id_adherent: Number(paiement.adherent_id),
         mode: String(paiement.moyen),
-        date: String(paiement.date_valeur ?? paiement.date_paiement),
+        date: String(paiement.date_compensation ?? paiement.date_valeur ?? paiement.date_paiement),
         montant: Number(paiement.montant_paiement),
+        id_precompte: paiement.id_precompte ? Number(paiement.id_precompte) : undefined,
       });
     }
 

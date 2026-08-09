@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { parametreService } from '../services/parametreService';
 import { parametresGenerauxService } from '../services/parametresGenerauxService';
+import { periodeService } from '../services/periodeService';
 import {
   Grade, ParametreVersion, ParamRepartition, Mortalite, ParametreGeneral, DBUser,
-  Civilite, SituationMatrimoniale, Emploi, LienBeneficiaire, Fonction,
+  Civilite, SituationMatrimoniale, Emploi, LienBeneficiaire, Fonction, PeriodeMetier,
 } from '../types';
-import { Settings, Plus, RotateCw, Save, Layers, HeartPulse, BookOpen, X } from 'lucide-react';
+import { Settings, Plus, RotateCw, Save, Layers, HeartPulse, BookOpen, X, CalendarDays } from 'lucide-react';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
 
 interface ParametresProps {
   currentUser: DBUser;
 }
 
-type SubTab = 'ESR_GENERAL' | 'GRADES' | 'VERSIONS' | 'REPARTITIONS' | 'MORTALITE' | 'REFERENTIELS_ADMIN';
+type SubTab = 'ESR_GENERAL' | 'PERIODES' | 'GRADES' | 'VERSIONS' | 'REPARTITIONS' | 'MORTALITE' | 'REFERENTIELS_ADMIN';
 
 const percentageParameterCodes = new Set([
   'TAUX_GAR',
@@ -30,6 +31,14 @@ export default function Parametres({ currentUser }: ParametresProps) {
   const canAdmin = currentUser.role === 'ADMINISTRATEUR' || currentUser.role === 'SUPERADMIN';
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('ESR_GENERAL');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [periodes, setPeriodes] = useState<PeriodeMetier[]>([]);
+  const [isLoadingPeriodes, setIsLoadingPeriodes] = useState(false);
+  const [periodeError, setPeriodeError] = useState<string | null>(null);
+  const [periodeSuccess, setPeriodeSuccess] = useState<string | null>(null);
+  const [periodeForm, setPeriodeForm] = useState({
+    annee: new Date().getFullYear(),
+    trimestre: Math.floor(new Date().getMonth() / 3) + 1,
+  });
 
   // Paramètres généraux ESR States
   const [parametresGeneraux, setParametresGeneraux] = useState<ParametreGeneral[]>([]);
@@ -386,8 +395,33 @@ export default function Parametres({ currentUser }: ParametresProps) {
     setIsLoadingRef(false);
   };
 
+  const loadPeriodes = async () => {
+    setIsLoadingPeriodes(true);
+    setPeriodeError(null);
+    const { data, error } = await periodeService.list();
+    if (error) setPeriodeError(error.message);
+    setPeriodes(data);
+    setIsLoadingPeriodes(false);
+  };
+
+  const handleCreatePeriode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoadingPeriodes(true);
+    setPeriodeError(null);
+    setPeriodeSuccess(null);
+    const { data, error } = await periodeService.create(periodeForm);
+    if (error) {
+      setPeriodeError(error.message);
+      setIsLoadingPeriodes(false);
+      return;
+    }
+    setPeriodeSuccess(`La période ${data?.periode} a été créée avec succès.`);
+    await loadPeriodes();
+  };
+
   useEffect(() => {
     if (activeSubTab === 'ESR_GENERAL') loadParametresGeneraux();
+    else if (activeSubTab === 'PERIODES') loadPeriodes();
     else if (activeSubTab === 'GRADES') loadGradesData();
     else if (activeSubTab === 'VERSIONS') loadVersionsData();
     else if (activeSubTab === 'REPARTITIONS') loadRepartitionsData();
@@ -421,6 +455,16 @@ export default function Parametres({ currentUser }: ParametresProps) {
           }`}
         >
           Paramètres généraux ESR
+        </button>
+        <button
+          onClick={() => setActiveSubTab('PERIODES')}
+          className={`pb-3 px-4 border-b-2 transition ${
+            activeSubTab === 'PERIODES'
+              ? 'border-emerald-500 text-emerald-600 font-bold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Périodes
         </button>
         <button
           onClick={() => setActiveSubTab('GRADES')}
@@ -481,6 +525,75 @@ export default function Parametres({ currentUser }: ParametresProps) {
       )}
 
       {/* 0. PARAMÈTRES GÉNÉRAUX ESR TAB */}
+      {activeSubTab === 'PERIODES' && (
+        <div className="space-y-5">
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6">
+            <div className="flex items-start gap-3 mb-5">
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700"><CalendarDays className="w-5 h-5" /></div>
+              <div>
+                <h3 className="font-bold text-slate-800">Créer une période</h3>
+                <p className="text-xs text-slate-500 mt-1">Référentiel commun aux cotisations spontanées, précomptes, paiements et reportings.</p>
+              </div>
+            </div>
+
+            {periodeError && <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">{periodeError}</div>}
+            {periodeSuccess && <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">{periodeSuccess}</div>}
+
+            <form onSubmit={handleCreatePeriode} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-end max-w-3xl">
+              <label className="space-y-1.5 text-xs font-semibold text-slate-600">
+                <span>Année</span>
+                <input type="number" min={2000} max={2100} required value={periodeForm.annee}
+                  onChange={(e) => setPeriodeForm((prev) => ({ ...prev, annee: Number(e.target.value) }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+              </label>
+              <label className="space-y-1.5 text-xs font-semibold text-slate-600">
+                <span>Trimestre</span>
+                <select value={periodeForm.trimestre}
+                  onChange={(e) => setPeriodeForm((prev) => ({ ...prev, trimestre: Number(e.target.value) }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                  {[1, 2, 3, 4].map((value) => <option key={value} value={value}>Trimestre {value}</option>)}
+                </select>
+              </label>
+              <button type="submit" disabled={!canAdmin || isLoadingPeriodes}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 disabled:opacity-50">
+                {isLoadingPeriodes ? <RotateCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Créer
+              </button>
+            </form>
+            {!canAdmin && <p className="text-xs text-amber-700 mt-3">La création est réservée aux administrateurs.</p>}
+          </div>
+
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="font-bold text-slate-800">Périodes enregistrées</h3>
+              <span className="text-xs text-slate-500">{periodes.length} période{periodes.length !== 1 ? 's' : ''}</span>
+            </div>
+            {isLoadingPeriodes && periodes.length === 0 ? (
+              <div className="py-10 text-center"><RotateCw className="w-6 h-6 animate-spin mx-auto text-slate-400" /></div>
+            ) : periodes.length === 0 ? (
+              <div className="py-10 text-center text-sm text-slate-400">Aucune période enregistrée.</div>
+            ) : (
+              <ScrollableTableWrapper>
+                <table className="min-w-full text-sm">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr>
+                    <th className="px-6 py-3 text-left">Période</th><th className="px-6 py-3 text-left">Année</th>
+                    <th className="px-6 py-3 text-left">Trimestre</th><th className="px-6 py-3 text-left">Statut</th>
+                    <th className="px-6 py-3 text-left">Date de clôture</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {periodes.map((item) => <tr key={item.periode} className="hover:bg-slate-50/60">
+                      <td className="px-6 py-3 font-mono font-bold text-slate-800">{item.periode}</td>
+                      <td className="px-6 py-3 text-slate-600">{item.annee}</td><td className="px-6 py-3 text-slate-600">T{item.trimestre}</td>
+                      <td className="px-6 py-3"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${item.statut === 'OUVERTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>{item.statut}</span></td>
+                      <td className="px-6 py-3 text-xs text-slate-500">{item.date_cloture ? new Date(item.date_cloture).toLocaleString('fr-FR') : '—'}</td>
+                    </tr>)}
+                  </tbody>
+                </table>
+              </ScrollableTableWrapper>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeSubTab === 'ESR_GENERAL' && (
         <div className="space-y-4">
           <div className="p-4 bg-indigo-50 border border-indigo-100 text-indigo-800 text-xs rounded-xl">

@@ -3,9 +3,21 @@ import { AuthenticatedUser } from '../types';
 import { CompteEsrFilters, comptesEsrRepository } from '../repositories/comptes-esr.repository';
 import { cotisationsRepository } from '../repositories/cotisations.repository';
 import { auditService } from './audit.service';
-import { calculerProvisionDepuisMouvements } from './moteur-actuariel.service';
+import { calculerProvisionDepuisMouvements, calculerValeurRachatEligibleDepuisProvision } from './moteur-actuariel.service';
 import { reglesActuariellesService } from './regles-actuarielles.service';
 import { genererAvisAnnuelPdf } from './pdf-document.service';
+
+export function repartirCotisationsCompte(cotisations: Array<{ montant: number; source: string }>): {
+  primesPeriodiques: number; cotisationUnique: number;
+} {
+  return cotisations.reduce((totaux, cotisation) => {
+    const montant = Number(cotisation.montant ?? 0);
+    const source = String(cotisation.source ?? '').toUpperCase();
+    if (source === 'COTISATION_UNIQUE' || source === 'UNIQUE') totaux.cotisationUnique += montant;
+    else totaux.primesPeriodiques += montant;
+    return totaux;
+  }, { primesPeriodiques: 0, cotisationUnique: 0 });
+}
 
 export const comptesEsrService = {
   async getComptes(user: AuthenticatedUser, filters?: CompteEsrFilters): Promise<unknown[]> {
@@ -46,13 +58,16 @@ export const comptesEsrService = {
       dateCalcul,
       tauxAnnuelPourcent: regles.tauxGaranti,
     });
+    const repartition = repartirCotisationsCompte(cotisations);
     if (provision.statut !== 'OK') {
       throw new AppError(400, 'Impossible de recalculer le compte ESR avec les mouvements disponibles');
     }
 
-    const frais = provision.provisionBrute * regles.fraisGestionRachat / 100;
-    const baseApresFrais = provision.provisionBrute - frais;
-    const valeurRachat = baseApresFrais * (1 - regles.penaliteRachat / 100);
+    // Le rachat est interdit avant le delai minimum. La penalite contractuelle
+    // prevue avant ce delai ne doit donc pas etre appliquee a une valeur de
+    // rachat devenue eligible.
+    const liquidation = calculerValeurRachatEligibleDepuisProvision(provision.provisionBrute, regles.fraisGestionRachat);
+    const valeurRachat = liquidation.montantNet;
     const effectiveDates = Array.from(new Set(
       Object.values(regles.versions).map((version) => version.dateDebut ?? 'origine'),
     )).sort();
@@ -61,6 +76,8 @@ export const comptesEsrService = {
     const compte = await comptesEsrRepository.saveCalculatedAccount({
       adherentId,
       capitalAcquis: provision.capitalVerse,
+      primesPeriodiques: repartition.primesPeriodiques,
+      cotisationUnique: repartition.cotisationUnique,
       provisionMathematique: provision.provisionBrute,
       valeurRachat: Math.round((valeurRachat + Number.EPSILON) * 100) / 100,
       dateCalcul,
@@ -75,6 +92,8 @@ export const comptesEsrService = {
         dateCalcul,
         nombreMouvements: provision.nombreMouvements,
         capitalVerse: provision.capitalVerse,
+        primesPeriodiques: repartition.primesPeriodiques,
+        cotisationUnique: repartition.cotisationUnique,
         provision: provision.provisionBrute,
         valeurRachat,
         parametres: regles.versions,
@@ -86,6 +105,8 @@ export const comptesEsrService = {
       calcul: {
         nombreMouvements: provision.nombreMouvements,
         capitalVerse: provision.capitalVerse,
+        primesPeriodiques: repartition.primesPeriodiques,
+        cotisationUnique: repartition.cotisationUnique,
         provisionMathematique: provision.provisionBrute,
         valeurRachat: Math.round((valeurRachat + Number.EPSILON) * 100) / 100,
         tauxTrimestriel: provision.tauxTrimestriel,
@@ -101,18 +122,31 @@ export const comptesEsrService = {
   ): Promise<Uint8Array> {
     const compte = await this.getCompteByAdherentId(user, adherentId) as any;
     if (!compte) throw new AppError(404, 'Compte ESR introuvable');
+    const periode = `${annee}T4`;
+    const historique = await comptesEsrRepository.findHistoriqueAnnuel(adherentId, periode) as any;
+    if (!historique) {
+      throw new AppError(404, `Avis annuel indisponible : la periode ${periode} n'est pas cloturee`);
+    }
+    const dateCalcul = String(historique.date_valeur ?? `${annee}-12-31`);
+    const mouvements = await cotisationsRepository.findEncaisseesByAdherentId(adherentId, dateCalcul);
+    const repartition = repartirCotisationsCompte(mouvements);
+    const regles = await reglesActuariellesService.getRegles(dateCalcul);
+    const valeurRachatHistorique = calculerValeurRachatEligibleDepuisProvision(
+      Number(historique.pm ?? 0),
+      regles.fraisGestionRachat,
+    ).montantNet;
     return genererAvisAnnuelPdf({
       annee,
       nom: String(compte.nom ?? ''),
       prenoms: String(compte.prenoms ?? ''),
       matricule: String(compte.matricule ?? ''),
-      capitalAcquis: Number(compte.capital_acquis ?? 0),
-      provisionMathematique: Number(compte.pm ?? 0),
-      valeurRachat: Number(compte.valeur_rachat ?? 0),
-      primesPeriodiques: Number(compte.pp ?? 0),
-      cotisationUnique: Number(compte.pu ?? 0),
-      dateCalcul: String(compte.date_calcul ?? `${annee}-12-31`),
-      versionCalcul: String(compte.version_calc ?? ''),
+      capitalAcquis: Number(historique.capital_cumule ?? 0),
+      provisionMathematique: Number(historique.pm ?? 0),
+      valeurRachat: valeurRachatHistorique,
+      primesPeriodiques: repartition.primesPeriodiques,
+      cotisationUnique: repartition.cotisationUnique,
+      dateCalcul,
+      versionCalcul: String(historique.version_calc ?? ''),
     });
   },
 };

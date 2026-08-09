@@ -8,6 +8,12 @@ export interface PaiementPayload {
   origine_paiement: string;
   observation_dgi: string;
   date_valeur: string;
+  numero_cheque?: string;
+  banque_emettrice?: string;
+  titulaire_cheque?: string;
+  date_emission_cheque?: string;
+  reference_bordereau?: string;
+  id_precompte?: number;
 }
 
 export const paiementsRepository = {
@@ -24,6 +30,15 @@ export const paiementsRepository = {
         origine_paiement,
         observation_dgi,
         date_valeur,
+        numero_cheque,
+        banque_emettrice,
+        titulaire_cheque,
+        date_emission_cheque,
+        reference_bordereau,
+        date_depot_banque,
+        reference_avis_credit,
+        date_compensation,
+        id_precompte,
         adherents (
           matricule,
           nom,
@@ -46,6 +61,15 @@ export const paiementsRepository = {
       origine_paiement: p.origine_paiement,
       observation_dgi: p.observation_dgi,
       date_valeur: p.date_valeur,
+      numero_cheque: p.numero_cheque,
+      banque_emettrice: p.banque_emettrice,
+      titulaire_cheque: p.titulaire_cheque,
+      date_emission_cheque: p.date_emission_cheque,
+      reference_bordereau: p.reference_bordereau,
+      date_depot_banque: p.date_depot_banque,
+      reference_avis_credit: p.reference_avis_credit,
+      date_compensation: p.date_compensation,
+      id_precompte: p.id_precompte,
     }));
   },
 
@@ -75,5 +99,11 @@ export const paiementsRepository = {
       .maybeSingle();
     if (error) throw new Error(error.message);
     return data ? { ...data, id: data.id_paiement, adherent_id: data.id_adherent } : null;
+  },
+
+  async updateChequeValidation(id: string, fields: Record<string, string | null>): Promise<void> {
+    const supabase = getSupabaseServer();
+    const { error } = await supabase.from('paiements').update(fields).eq('id_paiement', id);
+    if (error) throw new Error(error.message);
   },
 };

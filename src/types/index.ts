@@ -174,6 +174,7 @@ export interface VPrecompteDetails {
   id_precompte: number;
   matricule: string;
   id_adherent: number;
+  telephone?: string | null;
   nom: string;
   prenoms: string;
   periode: string;
@@ -192,6 +193,39 @@ export interface GeneratePrecomptesResult {
   skipped: number;
   failed: number;
   errors: string[];
+}
+
+export interface PeriodeMetier {
+  periode: string;
+  annee: number;
+  trimestre: number;
+  statut: 'OUVERTE' | 'CLOTUREE';
+  date_cloture: string | null;
+  cloture_par: string | null;
+  date_ouverture?: string | null;
+  date_cloture_prevue?: string | null;
+}
+
+export interface ControleCloturePeriode {
+  periode: string;
+  statut: 'OUVERTE' | 'CLOTUREE';
+  dateCloturePrevue: string;
+  synthese: {
+    adherentsConcernes: number;
+    precomptesAttendus: number;
+    precomptesEncaisses: number;
+    precomptesRegularises: number;
+    paiementsSpontanes: number;
+  };
+  controles: {
+    cotisationsToutesEncaissees: boolean;
+    paiementsAvecDateValeur: boolean;
+    datesValeurCompatibles: boolean;
+    precomptesTousTraites: boolean;
+  };
+  clotureAutorisee: boolean;
+  infrastructurePrete: boolean;
+  alertes: string[];
 }
 
 export interface VPrestationDetails {
@@ -219,7 +253,16 @@ export interface Paiement {
   origine_paiement: string;
   observation_dgi: string;
   date_valeur: string;
-  statut_workflow?: 'SAISI' | 'CONTROLE' | 'VALIDE' | 'REJETE' | 'ENCAISSE';
+  numero_cheque?: string;
+  banque_emettrice?: string;
+  titulaire_cheque?: string;
+  date_emission_cheque?: string;
+  reference_bordereau?: string;
+  date_depot_banque?: string;
+  reference_avis_credit?: string;
+  date_compensation?: string;
+  id_precompte?: number;
+  statut_workflow?: 'SAISI' | 'CONTROLE' | 'DEPOSE_BANQUE' | 'COMPENSE' | 'VALIDE' | 'REJETE' | 'REJETE_BANQUE' | 'ENCAISSE';
 }
 
 export interface RenreDetails {
@@ -231,6 +274,13 @@ export interface RenreDetails {
   capital_initial: number;
   capital_restant: number;
   statut_rente: 'ACTIVE' | 'SUSPENDUE' | 'EXTINTE' | string;
+  date_effet?: string;
+  date_retraite?: string;
+  cotisation_maladie_annuelle?: number;
+  montant_trimestriel?: number;
+  taux_couverture?: number;
+  organisme_beneficiaire?: string;
+  reference_aps?: string | null;
 }
 
 export interface RenteVersement {
@@ -238,6 +288,29 @@ export interface RenteVersement {
   rente_id: string;
   date_versement: string;
   montant_versement: number;
+  annee?: number;
+  trimestre?: number;
+  periode?: string;
+  date_echeance?: string;
+  statut?: EcheanceApsStatut;
+  reference_paiement?: string | null;
+  capital_avant?: number | null;
+  capital_apres?: number | null;
+}
+
+export type EcheanceApsStatut =
+  | 'GENEREE' | 'EN_CONTROLE' | 'VALIDEE' | 'PAYEE'
+  | 'REJETEE' | 'SUSPENDUE' | 'ANNULEE';
+
+export interface EcheanceAps extends RenteVersement {
+  adherent_id: string;
+  matricule: string;
+  nom: string;
+  prenoms: string;
+  organisme_beneficiaire: string;
+  montant_brut?: number;
+  montant_a_payer?: number;
+  observation?: string | null;
 }
 
 export interface ParametreVersion {
@@ -366,6 +439,11 @@ export interface CotisationSpontaneePayload {
   mode: string;
   date: string;
   montant: number;
+  id_precompte?: number;
+  numero_cheque?: string;
+  banque_emettrice?: string;
+  titulaire_cheque?: string;
+  date_emission_cheque?: string;
 }
 
 export interface ExternalAgentInfo {

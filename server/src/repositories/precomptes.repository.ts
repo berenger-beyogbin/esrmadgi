@@ -92,6 +92,48 @@ export const precomptesRepository = {
     return data ?? null;
   },
 
+  async findById(idPrecompte: number): Promise<any | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('precomptes')
+      .select('*')
+      .eq('id_precompte', idPrecompte)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ?? null;
+  },
+
+  async markRegularise(input: {
+    idPrecompte: number;
+    montantRetour: number;
+    dateRetour: string;
+    statutPrecompte: string;
+  }): Promise<void> {
+    const supabase = getSupabaseServer();
+    const { error } = await supabase
+      .from('precomptes')
+      .update({
+        montant_retour: input.montantRetour,
+        date_retour: input.dateRetour,
+        statut_precompte: input.statutPrecompte,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id_precompte', input.idPrecompte);
+    if (error) throw new Error(error.message);
+  },
+
+  async reporterPrecompte(idPrecompte: number): Promise<void> {
+    const supabase = getSupabaseServer();
+    const { error } = await supabase
+      .from('precomptes')
+      .update({
+        statut_precompte: 'REPORTE',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id_precompte', idPrecompte);
+    if (error) throw new Error(error.message);
+  },
+
   async applyRetour(input: {
     idPrecompte: number;
     idCotisationDetail: number;

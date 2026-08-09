@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { cotisationService } from '../services/cotisationService';
 import { VAdherentComplet } from '../types';
-import { ArrowLeft, Loader2, AlertTriangle, CheckCircle2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, CheckCircle2, Save, Search, ChevronDown } from 'lucide-react';
+import RecuVersement, { RecuVersementData } from '../components/RecuVersement';
 
 interface CotisationSpontaneeProps {
   onClose: () => void;
@@ -21,16 +22,25 @@ export default function CotisationSpontanee({ onClose }: CotisationSpontaneeProp
   const [isLoadingAdherents, setIsLoadingAdherents] = useState(true);
 
   const [selectedAdherentId, setSelectedAdherentId] = useState('');
+  const [adherentQuery, setAdherentQuery] = useState('');
+  const [isAdherentComboOpen, setIsAdherentComboOpen] = useState(false);
+  const [highlightedAdherentIndex, setHighlightedAdherentIndex] = useState(0);
+  const adherentComboRef = useRef<HTMLDivElement>(null);
   const [cotisationEs, setCotisationEs] = useState<number | null>(null);
   const [isLoadingInfo, setIsLoadingInfo] = useState(false);
 
   const [montant, setMontant] = useState('');
   const [mode, setMode] = useState(MODES_VERSEMENT[0]);
   const [date, setDate] = useState(todayISO);
+  const [numeroCheque, setNumeroCheque] = useState('');
+  const [banqueEmettrice, setBanqueEmettrice] = useState('');
+  const [titulaireCheque, setTitulaireCheque] = useState('');
+  const [dateEmissionCheque, setDateEmissionCheque] = useState(todayISO);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [recuData, setRecuData] = useState<RecuVersementData | null>(null);
 
   useEffect(() => {
     async function loadAdherents() {
@@ -66,12 +76,54 @@ export default function CotisationSpontanee({ onClose }: CotisationSpontaneeProp
     setIsLoadingInfo(false);
   };
 
+  const normalizeSearch = (value: string) =>
+    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+  const filteredAdherents = useMemo(() => {
+    const terms = normalizeSearch(adherentQuery).split(/\s+/).filter(Boolean);
+    if (terms.length === 0) return adherents.slice(0, 50);
+
+    return adherents.filter((adherent) => {
+      const searchable = normalizeSearch(`${adherent.matricule} ${adherent.nom ?? ''} ${adherent.prenoms ?? ''}`);
+      return terms.every((term) => searchable.includes(term));
+    }).slice(0, 50);
+  }, [adherentQuery, adherents]);
+
+  const selectAdherent = (adherent: VAdherentComplet) => {
+    setAdherentQuery(`${adherent.matricule} — ${adherent.nom ?? ''} ${adherent.prenoms ?? ''}`.trim());
+    setIsAdherentComboOpen(false);
+    setHighlightedAdherentIndex(0);
+    void handleAdherentChange(String(adherent.id_adherent));
+  };
+
+  const handleAdherentKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setIsAdherentComboOpen(true);
+      setHighlightedAdherentIndex((index) => Math.min(index + 1, Math.max(filteredAdherents.length - 1, 0)));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setHighlightedAdherentIndex((index) => Math.max(index - 1, 0));
+    } else if (event.key === 'Enter' && isAdherentComboOpen && filteredAdherents[highlightedAdherentIndex]) {
+      event.preventDefault();
+      selectAdherent(filteredAdherents[highlightedAdherentIndex]);
+    } else if (event.key === 'Escape') {
+      setIsAdherentComboOpen(false);
+    }
+  };
+
   const resetForm = () => {
     setSelectedAdherentId('');
+    setAdherentQuery('');
+    setIsAdherentComboOpen(false);
     setCotisationEs(null);
     setMontant('');
     setMode(MODES_VERSEMENT[0]);
     setDate(todayISO());
+    setNumeroCheque('');
+    setBanqueEmettrice('');
+    setTitulaireCheque('');
+    setDateEmissionCheque(todayISO());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,17 +143,25 @@ export default function CotisationSpontanee({ onClose }: CotisationSpontaneeProp
       setError('La date est obligatoire.');
       return;
     }
+    if (mode === 'CHEQUE' && (!numeroCheque.trim() || !banqueEmettrice.trim() || !titulaireCheque.trim() || !dateEmissionCheque)) {
+      setError("Renseignez le numero, la banque, le titulaire et la date d'emission du cheque.");
+      return;
+    }
 
     const adherent = adherents.find((a) => a.id_adherent === Number(selectedAdherentId));
     if (!adherent) return;
 
     setIsSubmitting(true);
-    const { error: createError } = await cotisationService.createCotisationSpontanee({
+    const { data: result, error: createError } = await cotisationService.createCotisationSpontanee({
       id_adherent: selectedAdherentId,
       matricule: adherent.matricule,
       mode,
       date,
       montant: Number(montant),
+      numero_cheque: mode === 'CHEQUE' ? numeroCheque.trim() : undefined,
+      banque_emettrice: mode === 'CHEQUE' ? banqueEmettrice.trim() : undefined,
+      titulaire_cheque: mode === 'CHEQUE' ? titulaireCheque.trim() : undefined,
+      date_emission_cheque: mode === 'CHEQUE' ? dateEmissionCheque : undefined,
     });
 
     if (createError) {
@@ -111,6 +171,23 @@ export default function CotisationSpontanee({ onClose }: CotisationSpontaneeProp
     }
 
     setSuccessMsg('Cotisation spontanée enregistrée avec succès.');
+    if (result?.en_attente_validation) {
+      setSuccessMsg(`Cheque enregistre sous le paiement #${result.paiement?.id ?? ''}. La cotisation sera comptabilisee apres compensation bancaire.`);
+      setIsSubmitting(false);
+      resetForm();
+      return;
+    }
+    setRecuData({
+      reference: result?.entete?.reference ?? '',
+      nom: adherent.nom ?? '',
+      prenoms: adherent.prenoms ?? '',
+      matricule: adherent.matricule,
+      montant: Number(montant),
+      date_versement: date,
+      nature_recette: 'Cotisation spontanée - Épargne Santé Retraite',
+      periode_couverture: result?.detail?.periode ?? '',
+      mode,
+    });
     setIsSubmitting(false);
     resetForm();
   };
@@ -162,18 +239,70 @@ export default function CotisationSpontanee({ onClose }: CotisationSpontaneeProp
           <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">
             Adhérent <span className="text-rose-500">*</span>
           </label>
-          <select
-            value={selectedAdherentId}
-            onChange={(e) => handleAdherentChange(e.target.value)}
-            className="block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f] text-slate-700"
+          <div
+            ref={adherentComboRef}
+            className="relative"
+            onBlur={(event) => {
+              if (!adherentComboRef.current?.contains(event.relatedTarget as Node)) setIsAdherentComboOpen(false);
+            }}
           >
-            <option value="">— Sélectionner un adhérent —</option>
-            {adherents.map((a) => (
-              <option key={a.id_adherent} value={a.id_adherent}>
-                {a.matricule} — {a.nom} {a.prenoms}
-              </option>
-            ))}
-          </select>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              role="combobox"
+              aria-expanded={isAdherentComboOpen}
+              aria-controls="adherent-combo-options"
+              aria-autocomplete="list"
+              autoComplete="off"
+              value={adherentQuery}
+              onFocus={() => setIsAdherentComboOpen(true)}
+              onKeyDown={handleAdherentKeyDown}
+              onChange={(event) => {
+                setAdherentQuery(event.target.value);
+                setSelectedAdherentId('');
+                setCotisationEs(null);
+                setHighlightedAdherentIndex(0);
+                setIsAdherentComboOpen(true);
+              }}
+              placeholder="Saisir un matricule, un nom ou des prénoms..."
+              className="block w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2b529f] text-slate-700"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label="Afficher la liste des adhérents"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => setIsAdherentComboOpen((open) => !open)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-[#2b529f]"
+            >
+              <ChevronDown className={`w-4 h-4 transition-transform ${isAdherentComboOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isAdherentComboOpen && (
+              <div id="adherent-combo-options" role="listbox" className="absolute z-30 mt-1.5 w-full max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                {filteredAdherents.length === 0 ? (
+                  <p className="px-4 py-4 text-sm text-slate-500 text-center">Aucun adhérent trouvé.</p>
+                ) : filteredAdherents.map((adherent, index) => (
+                  <button
+                    key={adherent.id_adherent}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedAdherentId === String(adherent.id_adherent)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setHighlightedAdherentIndex(index)}
+                    onClick={() => selectAdherent(adherent)}
+                    className={`block w-full px-4 py-3 text-left border-b border-slate-100 last:border-0 transition ${index === highlightedAdherentIndex ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+                  >
+                    <span className="block text-sm font-bold text-slate-800">{adherent.nom} {adherent.prenoms}</span>
+                    <span className="block mt-0.5 text-xs font-mono text-[#2b529f]">{adherent.matricule}</span>
+                  </button>
+                ))}
+                {filteredAdherents.length === 50 && (
+                  <p className="px-4 py-2 text-xs text-center text-slate-400 bg-slate-50">Affinez la saisie pour réduire les résultats.</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Cotisation trimestrielle (readonly) */}
@@ -244,6 +373,30 @@ export default function CotisationSpontanee({ onClose }: CotisationSpontaneeProp
           />
         </div>
 
+        {mode === 'CHEQUE' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="sm:col-span-2 text-xs text-amber-800">
+              Le cheque reste en attente. La cotisation sera creditee apres compensation bancaire.
+            </p>
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">Numero du cheque *</label>
+              <input value={numeroCheque} onChange={(e) => setNumeroCheque(e.target.value)} required className="block w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">Banque emettrice *</label>
+              <input value={banqueEmettrice} onChange={(e) => setBanqueEmettrice(e.target.value)} required className="block w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">Titulaire *</label>
+              <input value={titulaireCheque} onChange={(e) => setTitulaireCheque(e.target.value)} required className="block w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase mb-1">Date d'emission *</label>
+              <input type="date" value={dateEmissionCheque} onChange={(e) => setDateEmissionCheque(e.target.value)} required className="block w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+          </div>
+        )}
+
         {/* Boutons */}
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button
@@ -263,10 +416,14 @@ export default function CotisationSpontanee({ onClose }: CotisationSpontaneeProp
             ) : (
               <Save className="w-4 h-4" />
             )}
-            Valider
+            {mode === 'CHEQUE' ? 'Enregistrer pour validation' : 'Valider'}
           </button>
         </div>
       </form>
+
+      {recuData && (
+        <RecuVersement open onClose={() => setRecuData(null)} data={recuData} />
+      )}
     </div>
   );
 }

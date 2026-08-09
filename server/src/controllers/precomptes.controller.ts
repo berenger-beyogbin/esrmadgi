@@ -15,9 +15,12 @@ const retourSchema = z.object({
   lignes: z.array(z.object({
     matricule: z.string().trim().min(1),
     montantRetour: z.coerce.number().min(0),
+    dateRetour: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     motif: z.string().trim().max(500).optional(),
   })).min(1),
 });
+
+const idSchema = z.coerce.number().int().positive();
 
 function requireUser(req: Request): AuthenticatedUser {
   if (!req.user) throw new AppError(401, 'Authentification requise');
@@ -75,6 +78,19 @@ export const precomptesController = {
       }
       const result = await precomptesService.enregistrerRetour(requireUser(req), parsed.data);
       res.json({ result, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async reporter(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsedId = idSchema.safeParse(req.params.id);
+      if (!parsedId.success) {
+        throw new AppError(400, 'ID précompte invalide');
+      }
+      await precomptesService.reporterPrecompte(requireUser(req), parsedId.data);
+      res.json({ data: { id_precompte: parsedId.data }, error: null });
     } catch (err) {
       next(err);
     }

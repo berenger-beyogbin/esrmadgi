@@ -32,12 +32,13 @@ export const paiementService = {
 
   async changerStatut(
     id: string,
-    statut: 'CONTROLE' | 'VALIDE' | 'REJETE' | 'ENCAISSE',
+    statut: 'CONTROLE' | 'DEPOSE_BANQUE' | 'COMPENSE' | 'VALIDE' | 'REJETE' | 'REJETE_BANQUE' | 'ENCAISSE',
     observation = '',
+    donnees: Record<string, string> = {},
   ): Promise<{ data: Paiement | null; error: Error | null }> {
     const { data, error } = await apiPut<ApiResponse<Paiement>>(
       `/api/paiements/${encodeURIComponent(id)}/statut`,
-      { statut, observation },
+      { statut, observation, ...donnees },
     );
     if (error) return { data: null, error: new Error(error) };
     return { data: data?.data ?? null, error: toError(data?.error) };

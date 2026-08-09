@@ -7,6 +7,7 @@ import {
   calculerInvaliditeAvantRetraite,
   calculerProvisionDepuisMouvements,
   calculerProvisionMathematique,
+  calculerValeurRachatEligibleDepuisProvision,
   calculerRachat,
 } from './moteur-actuariel.service';
 
@@ -85,6 +86,8 @@ test('rachat reproduit le classeur de reference', () => {
   });
   assert.equal(result.statut, 'OK');
   assert.equal(result.eligible, true);
+  // Le moteur generique sait appliquer une penalite explicite. Dans le flux
+  // metier, le compte et le rachat passent 0 apres le delai d'eligibilite.
   assert.ok(Math.abs(result.montantNet - 184_431.46) <= 0.01);
 });
 
@@ -100,6 +103,12 @@ test('rachat refuse avant le delai parametre', () => {
   });
   assert.equal(result.statut, 'NON_ELIGIBLE');
   assert.equal(result.montantNet, 0);
+});
+
+test('une valeur de rachat eligible ne subit plus la penalite avant delai', () => {
+  const result = calculerValeurRachatEligibleDepuisProvision(204_356.18711402288, 5);
+  assert.equal(result.penalite, 0);
+  assert.equal(result.montantNet, 194_138.38);
 });
 
 test('deces et invalidite utilisent leur taux parametre', () => {

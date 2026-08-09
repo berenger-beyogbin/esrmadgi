@@ -42,6 +42,15 @@ export interface RachatResult extends ProvisionMathematiqueResult {
   montantNet: number;
 }
 
+export interface ValeurRachatResult {
+  provisionBrute: number;
+  fraisGestion: number;
+  baseApresFrais: number;
+  penalite: number;
+  montantNet: number;
+  formule: string;
+}
+
 export interface LiquidationResult extends ProvisionMathematiqueResult {
   tauxVersementPourcent: number;
   montantVerse: number;
@@ -94,6 +103,26 @@ function isPercentage(value: number): boolean {
 
 function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+export function calculerValeurRachatDepuisProvision(
+  provisionBrute: number, fraisGestionPourcent: number, penalitePourcent: number,
+): ValeurRachatResult {
+  const formule = 'Net = PM - (PM * frais) - ((PM - PM * frais) * penalite)';
+  if (!isNonNegativeFinite(provisionBrute) || !isPercentage(fraisGestionPourcent) || !isPercentage(penalitePourcent)) {
+    return { provisionBrute: 0, fraisGestion: 0, baseApresFrais: 0, penalite: 0, montantNet: 0, formule };
+  }
+  const fraisGestion = provisionBrute * fraisGestionPourcent / 100;
+  const baseApresFrais = Math.max(0, provisionBrute - fraisGestion);
+  const penalite = baseApresFrais * penalitePourcent / 100;
+  return { provisionBrute: roundMoney(provisionBrute), fraisGestion: roundMoney(fraisGestion), baseApresFrais: roundMoney(baseApresFrais), penalite: roundMoney(penalite), montantNet: roundMoney(Math.max(0, baseApresFrais - penalite)), formule };
+}
+
+export function calculerValeurRachatEligibleDepuisProvision(
+  provisionBrute: number,
+  fraisGestionPourcent: number,
+): ValeurRachatResult {
+  return calculerValeurRachatDepuisProvision(provisionBrute, fraisGestionPourcent, 0);
 }
 
 export function calculerCotisationUnique(input: CotisationUniqueInput): CotisationRetraiteResult {
@@ -290,16 +319,14 @@ export function calculerRachat(input: RachatInput): RachatResult {
     };
   }
 
-  const fraisGestion = provision.provisionBrute * input.fraisGestionPourcent / 100;
-  const baseApresFrais = provision.provisionBrute - fraisGestion;
-  const penalite = baseApresFrais * input.penalitePourcent / 100;
+  const valeur = calculerValeurRachatDepuisProvision(provision.provisionBrute, input.fraisGestionPourcent, input.penalitePourcent);
 
   return {
     ...provision,
     eligible: true,
-    fraisGestion: roundMoney(fraisGestion),
-    penalite: roundMoney(penalite),
-    montantNet: roundMoney(Math.max(baseApresFrais - penalite, 0)),
+    fraisGestion: valeur.fraisGestion,
+    penalite: valeur.penalite,
+    montantNet: valeur.montantNet,
   };
 }
 

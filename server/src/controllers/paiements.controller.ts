@@ -15,8 +15,13 @@ const createPaiementSchema = z.object({
 });
 
 const workflowSchema = z.object({
-  statut: z.enum(['CONTROLE', 'VALIDE', 'REJETE', 'ENCAISSE']),
+  statut: z.enum(['CONTROLE', 'DEPOSE_BANQUE', 'COMPENSE', 'VALIDE', 'REJETE', 'REJETE_BANQUE', 'ENCAISSE']),
   observation: z.string().trim().max(500).default(''),
+  reference_bordereau: z.string().trim().max(120).optional(),
+  date_depot_banque: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  reference_avis_credit: z.string().trim().max(120).optional(),
+  date_compensation: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  motif_rejet: z.string().trim().max(500).optional(),
 });
 
 function requireUser(req: Request): AuthenticatedUser {
@@ -60,6 +65,7 @@ export const paiementsController = {
         id,
         parsed.data.statut,
         parsed.data.observation,
+        parsed.data,
       );
       res.json({ data, error: null });
     } catch (err) {

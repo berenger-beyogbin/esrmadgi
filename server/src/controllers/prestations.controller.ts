@@ -6,7 +6,7 @@ import { AuthenticatedUser } from '../types';
 
 const createPrestationSchema = z.object({
   adherent_id: z.string().trim().min(1, 'Adherent requis'),
-  type_prestation: z.enum(['RETRAITE', 'DECES', 'INVALIDITE', 'RACHAT']),
+  type_prestation: z.enum(['RETRAITE', 'DECES', 'INVALIDITE']),
   statut_prestation: z
     .enum(['DOSSIER_OUVERT', 'EN_CONTROLE', 'VALIDE', 'PAYE', 'ANNULE'])
     .default('DOSSIER_OUVERT'),
@@ -51,6 +51,23 @@ const calculPrestationSchema = z.discriminatedUnion('typeCalcul', [
 const statutPrestationSchema = z.object({
   statut: z.enum(['EN_CONTROLE', 'VALIDE', 'PAYE', 'ANNULE']),
   observation: z.string().trim().max(500).default(''),
+});
+
+const genererEcheancesSchema = z.object({
+  annee: z.coerce.number().int().min(2000).max(2200),
+  trimestre: z.coerce.number().int().min(1).max(4),
+});
+
+const statutEcheanceSchema = z.object({
+  statut: z.enum(['EN_CONTROLE', 'VALIDEE', 'REJETEE', 'SUSPENDUE', 'ANNULEE']),
+  observation: z.string().trim().max(500).default(''),
+});
+
+const paiementEcheanceSchema = z.object({
+  datePaiement: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  referencePaiement: z.string().trim().min(1).max(100),
+  modePaiement: z.enum(['VIREMENT', 'CHEQUE']),
+  pieceJustificative: z.string().trim().max(500).optional(),
 });
 
 function requireUser(req: Request): AuthenticatedUser {
@@ -119,6 +136,47 @@ export const prestationsController = {
     } catch (err) {
       next(err);
     }
+  },
+
+  async echeances(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const filters = {
+        annee: req.query.annee ? Number(req.query.annee) : undefined,
+        trimestre: req.query.trimestre ? Number(req.query.trimestre) : undefined,
+        statut: typeof req.query.statut === 'string' ? req.query.statut : undefined,
+      };
+      const data = await prestationsService.getEcheances(filters);
+      res.json({ data, error: null });
+    } catch (err) { next(err); }
+  },
+
+  async genererEcheances(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsed = genererEcheancesSchema.safeParse(req.body);
+      if (!parsed.success) throw new AppError(400, parsed.error.errors[0]?.message ?? 'Periode invalide');
+      const data = await prestationsService.genererEcheances(requireUser(req), parsed.data);
+      res.status(201).json({ data, error: null });
+    } catch (err) { next(err); }
+  },
+
+  async changerStatutEcheance(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsed = statutEcheanceSchema.safeParse(req.body);
+      if (!parsed.success) throw new AppError(400, parsed.error.errors[0]?.message ?? 'Statut invalide');
+      const data = await prestationsService.changerStatutEcheance(
+        requireUser(req), String(req.params.id), parsed.data.statut, parsed.data.observation,
+      );
+      res.json({ data, error: null });
+    } catch (err) { next(err); }
+  },
+
+  async payerEcheance(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsed = paiementEcheanceSchema.safeParse(req.body);
+      if (!parsed.success) throw new AppError(400, parsed.error.errors[0]?.message ?? 'Paiement invalide');
+      const data = await prestationsService.payerEcheance(requireUser(req), String(req.params.id), parsed.data);
+      res.json({ data, error: null });
+    } catch (err) { next(err); }
   },
 
   async liquidation(req: Request, res: Response, next: NextFunction): Promise<void> {

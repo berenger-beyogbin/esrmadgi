@@ -3,6 +3,22 @@ import { prestationsController } from '../controllers/prestations.controller';
 
 export const prestationsRouter = Router();
 
+prestationsRouter.patch('/echeances/:id/paiement', (req, res, next) => {
+  prestationsController.payerEcheance(req, res, next);
+});
+
+prestationsRouter.patch('/echeances/:id/statut', (req, res, next) => {
+  prestationsController.changerStatutEcheance(req, res, next);
+});
+
+prestationsRouter.post('/echeances/generer', (req, res, next) => {
+  prestationsController.genererEcheances(req, res, next);
+});
+
+prestationsRouter.get('/echeances', (req, res, next) => {
+  prestationsController.echeances(req, res, next);
+});
+
 prestationsRouter.patch('/:id/statut', (req, res, next) => {
   prestationsController.changerStatut(req, res, next);
 });

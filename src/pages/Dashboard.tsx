@@ -3,7 +3,6 @@ import { getDashboardStats } from '../services/dashboardService';
 import { DashboardStats, DBUser } from '../types';
 import { Users, FileText, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
-import { exporterCimaC20 } from '../services/reportingService';
 
 interface DashboardProps {
   currentUser: DBUser;
@@ -13,7 +12,6 @@ export default function Dashboard({ currentUser }: DashboardProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isExportingCima, setIsExportingCima] = useState(false);
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -34,18 +32,6 @@ export default function Dashboard({ currentUser }: DashboardProps) {
   useEffect(() => {
     fetchStats();
   }, []);
-
-  const handleExportCima = async () => {
-    setIsExportingCima(true);
-    setErrorMsg(null);
-    try {
-      await exporterCimaC20(new Date().getFullYear());
-    } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : 'Export CIMA impossible.');
-    } finally {
-      setIsExportingCima(false);
-    }
-  };
 
   // SVG chart — max dynamique basé sur les données réelles
   const chartDataMax = stats ? Math.max(stats.capitalAcquisTotal, stats.totalPm) : 0;
@@ -105,16 +91,6 @@ export default function Dashboard({ currentUser }: DashboardProps) {
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Actualiser</span>
         </button>
-        {currentUser.role !== 'ADHERENT' && (
-          <button
-            onClick={handleExportCima}
-            disabled={isExportingCima}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold disabled:opacity-50"
-          >
-            <FileText className="w-4 h-4" />
-            {isExportingCima ? 'Export...' : 'CIMA C-20 Excel'}
-          </button>
-        )}
       </div>
 
       {/* Header */}
@@ -369,17 +345,23 @@ export default function Dashboard({ currentUser }: DashboardProps) {
                 )}
               </div>
 
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full min-w-[640px] border-collapse">
+              <div className="hidden md:block">
+                <table className="w-full table-fixed border-collapse">
+                  <colgroup>
+                    <col className="w-[18%]" />
+                    <col className="w-[22%]" />
+                    <col className="w-[38%]" />
+                    <col className="w-[22%]" />
+                  </colgroup>
                   <thead>
-                    <tr className="bg-[#dce4f0] text-sm font-bold text-slate-700 border-b border-slate-300">
-                      <th className="py-3.5 px-4 text-left">Date</th>
-                      <th className="py-3.5 px-4 text-center">Montant</th>
-                      <th className="py-3.5 px-4 text-center">Adhérent</th>
-                      <th className="py-3.5 px-4 text-center">Source</th>
+                    <tr className="bg-[#dce4f0] text-xs font-bold text-slate-700 border-b border-slate-300">
+                      <th className="py-2.5 px-2 xl:px-3 text-left">Date</th>
+                      <th className="py-2.5 px-2 xl:px-3 text-center">Montant</th>
+                      <th className="py-2.5 px-2 xl:px-3 text-center">Adhérent</th>
+                      <th className="py-2.5 px-2 xl:px-3 text-center">Source</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm font-medium divide-y divide-slate-100">
+                  <tbody className="text-xs font-medium divide-y divide-slate-100">
                     {isLoading ? (
                       <tr>
                         <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
@@ -389,19 +371,19 @@ export default function Dashboard({ currentUser }: DashboardProps) {
                     ) : stats && stats.dernieresCotisations.length > 0 ? (
                       stats.dernieresCotisations.map((c, i) => (
                         <tr key={i} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 text-left text-slate-600 font-mono">
+                          <td className="py-2 px-2 xl:px-3 text-left text-slate-600 font-mono whitespace-nowrap">
                             {formatDateFr(c.date)}
                           </td>
-                          <td className="py-3 px-4 text-center font-semibold text-slate-800">
+                          <td className="py-2 px-2 xl:px-3 text-center font-semibold text-slate-800 whitespace-nowrap">
                             {formatFCFA(c.montant)}
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className="font-semibold text-slate-800">{c.adherent}</span>
+                          <td className="py-2 px-2 xl:px-3 text-center break-words">
+                            <span className="font-semibold text-slate-800 leading-snug">{c.adherent}</span>
                             {c.matricule && (
-                              <span className="block text-xs text-slate-500">{c.matricule}</span>
+                              <span className="block text-[11px] text-slate-500">{c.matricule}</span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-center text-slate-600">
+                          <td className="py-2 px-2 xl:px-3 text-center text-slate-600 text-[11px] xl:text-xs whitespace-nowrap">
                             {c.source || '—'}
                           </td>
                         </tr>
@@ -466,17 +448,23 @@ export default function Dashboard({ currentUser }: DashboardProps) {
                 )}
               </div>
 
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full min-w-[640px] border-collapse">
+              <div className="hidden md:block">
+                <table className="w-full table-fixed border-collapse">
+                  <colgroup>
+                    <col className="w-[20%]" />
+                    <col className="w-[36%]" />
+                    <col className="w-[24%]" />
+                    <col className="w-[20%]" />
+                  </colgroup>
                   <thead>
-                    <tr className="bg-[#dce4f0] text-sm font-bold text-slate-700 border-b border-slate-300">
-                      <th className="py-3.5 px-4 text-left">Date</th>
-                      <th className="py-3.5 px-4 text-center">Adhérent</th>
-                      <th className="py-3.5 px-4 text-center">Type</th>
-                      <th className="py-3.5 px-4 text-center">Statut</th>
+                    <tr className="bg-[#dce4f0] text-xs font-bold text-slate-700 border-b border-slate-300">
+                      <th className="py-2.5 px-2 xl:px-3 text-left">Date</th>
+                      <th className="py-2.5 px-2 xl:px-3 text-center">Adhérent</th>
+                      <th className="py-2.5 px-2 xl:px-3 text-center">Type</th>
+                      <th className="py-2.5 px-2 xl:px-3 text-center">Statut</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm font-medium divide-y divide-slate-100">
+                  <tbody className="text-xs font-medium divide-y divide-slate-100">
                     {isLoading ? (
                       <tr>
                         <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
@@ -486,17 +474,17 @@ export default function Dashboard({ currentUser }: DashboardProps) {
                     ) : stats && stats.dernieresPrestations.length > 0 ? (
                       stats.dernieresPrestations.map((p, i) => (
                         <tr key={i} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 text-left text-slate-600 font-mono">
+                          <td className="py-2 px-2 xl:px-3 text-left text-slate-600 font-mono whitespace-nowrap">
                             {formatDateFr(p.date)}
                           </td>
-                          <td className="py-3 px-4 text-center font-semibold text-slate-800">
+                          <td className="py-2 px-2 xl:px-3 text-center font-semibold text-slate-800 break-words">
                             {p.adherent || '—'}
                           </td>
-                          <td className="py-3 px-4 text-center text-slate-600">
+                          <td className="py-2 px-2 xl:px-3 text-center text-slate-600 break-words">
                             {p.type || '—'}
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                          <td className="py-2 px-2 xl:px-3 text-center">
+                            <span className="inline-block max-w-full text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700 break-words">
                               {p.statut || '—'}
                             </span>
                           </td>

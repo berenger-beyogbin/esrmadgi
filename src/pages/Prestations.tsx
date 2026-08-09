@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { prestationService } from '../services/prestationService';
 import { adherentService } from '../services/adherentService';
-import { VPrestationDetails, RenreDetails, RenteVersement, VAdherentComplet, DBUser } from '../types';
+import { EcheanceAps, VPrestationDetails, RenreDetails, RenteVersement, VAdherentComplet, DBUser } from '../types';
 import { Wallet, Plus, Award, RefreshCw, Calendar, FileText, CheckCircle2, RotateCw, Activity, HeartCrack, ChevronRight, HelpCircle } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
@@ -10,7 +10,7 @@ interface PrestationsProps {
   currentUser: DBUser;
 }
 
-type TabType = 'PRESTATIONS' | 'RENTES';
+type TabType = 'PRESTATIONS' | 'RENTES' | 'ECHEANCES_APS';
 
 export default function Prestations({ currentUser }: PrestationsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('PRESTATIONS');
@@ -36,6 +36,11 @@ export default function Prestations({ currentUser }: PrestationsProps) {
   const [selectedRente, setSelectedRente] = useState<RenreDetails | null>(null);
   const [versements, setVersements] = useState<RenteVersement[]>([]);
   const [isLoadingVersements, setIsLoadingVersements] = useState(false);
+  const maintenant = new Date();
+  const [anneeEcheances, setAnneeEcheances] = useState(maintenant.getFullYear());
+  const [trimestreEcheances, setTrimestreEcheances] = useState(Math.floor(maintenant.getMonth() / 3) + 1);
+  const [echeances, setEcheances] = useState<EcheanceAps[]>([]);
+  const [isLoadingEcheances, setIsLoadingEcheances] = useState(false);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -95,13 +100,52 @@ export default function Prestations({ currentUser }: PrestationsProps) {
     }
   };
 
+  const loadEcheances = async () => {
+    setIsLoadingEcheances(true);
+    setErrorMsg(null);
+    const { data, error } = await prestationService.getEcheances({
+      annee: anneeEcheances, trimestre: trimestreEcheances,
+    });
+    if (error) setErrorMsg(error.message);
+    setEcheances(data);
+    setIsLoadingEcheances(false);
+  };
+
   useEffect(() => {
     if (activeTab === 'PRESTATIONS') {
       loadPrestationTab();
-    } else {
+    } else if (activeTab === 'RENTES') {
       loadRentesTab();
+    } else {
+      loadEcheances();
     }
-  }, [activeTab]);
+  }, [activeTab, anneeEcheances, trimestreEcheances]);
+
+  const handleGenererEcheances = async () => {
+    setIsSubmitting(true);
+    const { data, error } = await prestationService.genererEcheances(anneeEcheances, trimestreEcheances);
+    setIsSubmitting(false);
+    if (error) return setErrorMsg(error.message);
+    setErrorMsg(data ? `${data.creees} échéance(s) créée(s) sur ${data.eligibles} rente(s) éligible(s).` : null);
+    await loadEcheances();
+  };
+
+  const handleAvancerEcheance = async (e: EcheanceAps) => {
+    if (!e.statut) return;
+    if (e.statut === 'VALIDEE') {
+      const referencePaiement = window.prompt('Référence du paiement APS :');
+      if (!referencePaiement) return;
+      const { error } = await prestationService.payerEcheance(e.id, {
+        datePaiement: new Date().toISOString().slice(0, 10), referencePaiement, modePaiement: 'VIREMENT',
+      });
+      if (error) setErrorMsg(error.message); else await loadEcheances();
+      return;
+    }
+    const suivant = e.statut === 'GENEREE' ? 'EN_CONTROLE' : e.statut === 'EN_CONTROLE' ? 'VALIDEE' : null;
+    if (!suivant) return;
+    const { error } = await prestationService.changerStatutEcheance(e.id, suivant);
+    if (error) setErrorMsg(error.message); else await loadEcheances();
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -196,6 +240,16 @@ export default function Prestations({ currentUser }: PrestationsProps) {
         >
           Liquidation & Rentes viagères
         </button>
+        <button
+          onClick={() => setActiveTab('ECHEANCES_APS')}
+          className={`pb-3 px-6 text-sm font-semibold border-b-2 transition ${
+            activeTab === 'ECHEANCES_APS'
+              ? 'border-emerald-500 text-emerald-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Échéances APS
+        </button>
       </div>
 
       {errorMsg && (
@@ -267,7 +321,6 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                     <option value="RETRAITE">RETRAITE (Départ normal)</option>
                     <option value="DECES">DECES (Prestation Ayants droit)</option>
                     <option value="INVALIDITE">INVALIDITE ACCIDENTELLE</option>
-                    <option value="RACHAT">RACHAT (Sortie anticipée)</option>
                   </select>
                 </div>
 
@@ -534,6 +587,72 @@ export default function Prestations({ currentUser }: PrestationsProps) {
               <p className="text-slate-400 text-xs text-center py-10">Sélectionnez une rente dans la liste de gauche pour afficher l'historique complet de ses versements.</p>
             )}
           </div>
+        </div>
+      )}
+
+      {activeTab === 'ECHEANCES_APS' && (
+        <div className="space-y-5">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 flex flex-wrap items-end gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-500">Année</label>
+              <input type="number" value={anneeEcheances} onChange={(e) => setAnneeEcheances(Number(e.target.value))}
+                className="mt-1 w-28 border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-500">Trimestre</label>
+              <select value={trimestreEcheances} onChange={(e) => setTrimestreEcheances(Number(e.target.value))}
+                className="mt-1 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                {[1, 2, 3, 4].map((t) => <option key={t} value={t}>T{t}</option>)}
+              </select>
+            </div>
+            {currentUser.role !== 'ADHERENT' && (
+              <button onClick={handleGenererEcheances} disabled={isSubmitting}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold disabled:opacity-50">
+                {isSubmitting ? 'Génération…' : 'Générer les échéances'}
+              </button>
+            )}
+            <div className="ml-auto text-right">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Total à payer à l’APS</p>
+              <p className="text-xl font-extrabold text-emerald-700">
+                {formatFCFA(echeances.filter((e) => e.statut !== 'ANNULEE').reduce((s, e) => s + Number(e.montant_versement || 0), 0))}
+              </p>
+            </div>
+          </div>
+
+          <ScrollableTableWrapper>
+            <table className="min-w-full divide-y divide-slate-100 text-sm bg-white">
+              <thead className="bg-slate-100 text-xs uppercase text-slate-600">
+                <tr>
+                  <th className="p-3 text-left">Retraité</th><th className="p-3">Matricule</th>
+                  <th className="p-3">Période</th><th className="p-3 text-right">Montant APS</th>
+                  <th className="p-3">Échéance</th><th className="p-3">Statut</th><th className="p-3">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {isLoadingEcheances ? (
+                  <tr><td colSpan={7} className="p-10 text-center text-slate-400">Chargement…</td></tr>
+                ) : echeances.length === 0 ? (
+                  <tr><td colSpan={7} className="p-10 text-center text-slate-400">Aucune échéance pour cette période.</td></tr>
+                ) : echeances.map((e) => (
+                  <tr key={e.id}>
+                    <td className="p-3 font-bold uppercase">{e.nom} {e.prenoms}</td>
+                    <td className="p-3 text-center font-mono">{e.matricule}</td>
+                    <td className="p-3 text-center font-bold">{e.periode}</td>
+                    <td className="p-3 text-right font-bold text-emerald-700">{formatFCFA(e.montant_versement)}</td>
+                    <td className="p-3 text-center">{e.date_echeance ? formatDateFr(e.date_echeance) : '—'}</td>
+                    <td className="p-3 text-center"><span className="px-2 py-1 bg-slate-100 rounded-full text-[10px] font-bold">{e.statut}</span></td>
+                    <td className="p-3 text-center">
+                      {currentUser.role !== 'ADHERENT' && ['GENEREE', 'EN_CONTROLE', 'VALIDEE'].includes(e.statut || '') && (
+                        <button onClick={() => handleAvancerEcheance(e)} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-[10px] font-bold">
+                          {e.statut === 'GENEREE' ? 'Contrôler' : e.statut === 'EN_CONTROLE' ? 'Valider' : 'Payer APS'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ScrollableTableWrapper>
         </div>
       )}
     </div>

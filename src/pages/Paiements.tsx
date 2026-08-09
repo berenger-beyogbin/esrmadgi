@@ -101,13 +101,28 @@ export default function Paiements({ currentUser }: PaiementsProps) {
 
   const handleWorkflow = async (
     paiement: Paiement,
-    statut: 'CONTROLE' | 'VALIDE' | 'REJETE' | 'ENCAISSE',
+    statut: 'CONTROLE' | 'DEPOSE_BANQUE' | 'COMPENSE' | 'VALIDE' | 'REJETE' | 'REJETE_BANQUE' | 'ENCAISSE',
   ) => {
     if (statut === 'REJETE' && !window.confirm('Confirmer le rejet de ce paiement ?')) return;
     setUpdatingPaymentId(paiement.id);
     setErrorMsg(null);
     try {
-      const { error } = await paiementService.changerStatut(paiement.id, statut);
+      const donnees: Record<string, string> = {};
+      if (statut === 'DEPOSE_BANQUE') {
+        donnees.reference_bordereau = window.prompt('Reference du bordereau de remise :')?.trim() ?? '';
+        donnees.date_depot_banque = window.prompt('Date de depot en banque (AAAA-MM-JJ) :', new Date().toISOString().slice(0, 10))?.trim() ?? '';
+        if (!donnees.reference_bordereau || !donnees.date_depot_banque) return;
+      }
+      if (statut === 'COMPENSE') {
+        donnees.reference_avis_credit = window.prompt("Reference de l'avis de credit bancaire :")?.trim() ?? '';
+        donnees.date_compensation = window.prompt('Date de compensation (AAAA-MM-JJ) :', new Date().toISOString().slice(0, 10))?.trim() ?? '';
+        if (!donnees.reference_avis_credit || !donnees.date_compensation) return;
+      }
+      if (statut === 'REJETE_BANQUE') {
+        donnees.motif_rejet = window.prompt('Motif du rejet bancaire :')?.trim() ?? '';
+        if (!donnees.motif_rejet) return;
+      }
+      const { error } = await paiementService.changerStatut(paiement.id, statut, '', donnees);
       if (error) throw error;
       await loadData();
     } catch (error: any) {
@@ -375,7 +390,7 @@ export default function Paiements({ currentUser }: PaiementsProps) {
                               Contrôler
                             </button>
                           )}
-                          {p.statut_workflow === 'CONTROLE' && (
+                          {p.statut_workflow === 'CONTROLE' && p.moyen !== 'CHEQUE' && (
                             <button
                               disabled={updatingPaymentId === p.id}
                               onClick={() => handleWorkflow(p, 'VALIDE')}
@@ -383,6 +398,20 @@ export default function Paiements({ currentUser }: PaiementsProps) {
                             >
                               Valider
                             </button>
+                          )}
+                          {p.statut_workflow === 'CONTROLE' && p.moyen === 'CHEQUE' && (
+                            <button disabled={updatingPaymentId === p.id} onClick={() => handleWorkflow(p, 'DEPOSE_BANQUE')} className="px-2 py-1 bg-indigo-600 text-white rounded text-[9px] font-bold">
+                              Deposer en banque
+                            </button>
+                          )}
+                          {p.statut_workflow === 'DEPOSE_BANQUE' && (
+                            <>
+                              <button disabled={updatingPaymentId === p.id} onClick={() => handleWorkflow(p, 'COMPENSE')} className="px-2 py-1 bg-cyan-700 text-white rounded text-[9px] font-bold">Confirmer compensation</button>
+                              <button disabled={updatingPaymentId === p.id} onClick={() => handleWorkflow(p, 'REJETE_BANQUE')} className="px-2 py-1 border border-rose-300 text-rose-700 rounded text-[9px] font-bold">Impayé</button>
+                            </>
+                          )}
+                          {p.statut_workflow === 'COMPENSE' && (
+                            <button disabled={updatingPaymentId === p.id} onClick={() => handleWorkflow(p, 'VALIDE')} className="px-2 py-1 bg-blue-600 text-white rounded text-[9px] font-bold">Valider</button>
                           )}
                           {p.statut_workflow === 'VALIDE' && (
                             <button
@@ -401,7 +430,7 @@ export default function Paiements({ currentUser }: PaiementsProps) {
                               Reçu PDF
                             </button>
                           )}
-                          {!['REJETE', 'ENCAISSE'].includes(p.statut_workflow || 'SAISI') && (
+                          {!['REJETE', 'REJETE_BANQUE', 'ENCAISSE', 'DEPOSE_BANQUE'].includes(p.statut_workflow || 'SAISI') && (
                             <button
                               disabled={updatingPaymentId === p.id}
                               onClick={() => handleWorkflow(p, 'REJETE')}

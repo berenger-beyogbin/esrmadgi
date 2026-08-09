@@ -43,7 +43,14 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
   };
 
   const handleAvisAnnuel = async (compte: VCompteEsrDetails) => {
-    const annee = new Date().getFullYear();
+    const anneeParDefaut = new Date().getFullYear() - 1;
+    const saisie = window.prompt("Annee de l'avis annuel cloture :", String(anneeParDefaut));
+    if (saisie == null) return;
+    const annee = Number(saisie);
+    if (!Number.isInteger(annee) || annee < 2020 || annee > new Date().getFullYear()) {
+      setErrorMsg("L'annee de l'avis annuel est invalide.");
+      return;
+    }
     const { data, error } = await compteEsrService.telechargerAvisAnnuel(compte.adherent_id, annee);
     if (error || !data) {
       setErrorMsg(error?.message || 'Avis annuel indisponible.');
@@ -184,7 +191,7 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
         <div className="space-y-1">
           <p className="font-bold">Spécificité Légale des Provisions Mathématiques :</p>
           <p className="text-amber-800 leading-relaxed font-light">
-            La provision mathématique correspond aux réserves financières que la MADGI doit conserver pour faire face à ses engagements envers les membres retraités ou ayants droit de la DGI. Elle est actualisée à chaque fin de période de précompte suivant un barème actuariel consolidé (Table de mortalité TV 88/90 et taux d'intérêt de référence de 3.5% par an).
+            La provision mathématique correspond aux cotisations encaissées, capitalisées selon le taux technique en vigueur et leurs dates de valeur. Elle est actualisée à chaque fin de période de précompte. La table de mortalité CIMA F intervient ensuite dans les calculs viagers liés à la rente santé.
           </p>
         </div>
       </div>

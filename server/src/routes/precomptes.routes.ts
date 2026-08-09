@@ -11,6 +11,10 @@ precomptesRouter.post('/retour', (req, res, next) => {
   precomptesController.retour(req, res, next);
 });
 
+precomptesRouter.post('/:id/reporter', (req, res, next) => {
+  precomptesController.reporter(req, res, next);
+});
+
 precomptesRouter.get('/map', (req, res, next) => {
   precomptesController.mapByPeriode(req, res, next);
 });

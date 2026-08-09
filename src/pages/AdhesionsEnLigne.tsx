@@ -326,17 +326,17 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
             </div>
           ) : (
             <ScrollableTableWrapper>
-              <table className="min-w-full divide-y divide-slate-100 text-sm text-left">
-                <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
+              <table className="min-w-full divide-y divide-slate-100 text-xs text-left">
+                <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Matricule</th>
-                    <th className="py-3 px-4">Nom et prenoms</th>
-                    <th className="py-3 px-4">Telephone</th>
-                    <th className="py-3 px-4">Grade</th>
-                    <th className="py-3 px-4">Emploi / Fonction</th>
-                    <th className="py-3 px-4">Statut</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-2.5 px-3">Date</th>
+                    <th className="py-2.5 px-3">Matricule</th>
+                    <th className="py-2.5 px-3">Nom et prénoms</th>
+                    <th className="py-2.5 px-3">Téléphone</th>
+                    <th className="py-2.5 px-3">Grade</th>
+                    <th className="py-2.5 px-3">Emploi / Fonction</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap">Statut</th>
+                    <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -347,22 +347,22 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
                   ) : (
                     items.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50">
-                        <td className="py-3 px-4 font-mono">{formatDateFr(item.date_souscription)}</td>
-                        <td className="py-3 px-4 font-bold font-mono">{item.matricule}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-3 font-mono whitespace-nowrap">{formatDateFr(item.date_souscription)}</td>
+                        <td className="py-2.5 px-3 font-bold font-mono whitespace-nowrap">{item.matricule}</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
                           <span className="font-semibold text-slate-800">{item.nom}</span>
-                          <span className="block text-xs text-slate-500">{item.prenoms}</span>
+                          <span className="ml-1 text-[11px] text-slate-500">{item.prenoms}</span>
                         </td>
-                        <td className="py-3 px-4 font-mono">{item.telephone}</td>
-                        <td className="py-3 px-4 font-bold">{item.grade || '-'}</td>
-                        <td className="py-3 px-4 max-w-xs truncate" title={item.emploi}>{item.emploi}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-3 font-mono whitespace-nowrap">{item.telephone}</td>
+                        <td className="py-2.5 px-3 font-bold">{item.grade || '-'}</td>
+                        <td className="py-2.5 px-3 max-w-xs truncate" title={item.emploi}>{item.emploi}</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
                           <StatusBadge status={item.statut_demande} />
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-2.5 px-3 text-right">
                           <button
                             onClick={() => openDetail(item)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-[#2b529f] font-bold hover:bg-slate-50"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-slate-200 rounded-lg text-[#2b529f] text-xs font-bold hover:bg-slate-50 whitespace-nowrap"
                           >
                             <Eye className="w-4 h-4" />
                             Ouvrir
@@ -502,7 +502,7 @@ function StatusBadge({ status }: { status: OnlineAdhesionStatus }) {
       ? 'bg-rose-50 border-rose-200 text-rose-700'
       : 'bg-amber-50 border-amber-200 text-amber-700';
 
-  return <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-bold ${classes}`}>{status.replace('_', ' ')}</span>;
+  return <span className={`inline-flex px-2 py-1 rounded-full border text-[10px] leading-none font-bold whitespace-nowrap ${classes}`}>{status.replace('_', ' ')}</span>;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

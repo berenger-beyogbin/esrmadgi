@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { cotisationService } from '../services/cotisationService';
-import { VCotisationDetails, DBUser } from '../types';
-import { Search, Filter, CalendarPlus, Landmark, FileSpreadsheet, RefreshCw, Eye, CheckCircle2, AlertCircle, Clock, Loader2, PlusCircle } from 'lucide-react';
+import { VCotisationDetails, DBUser, PeriodeMetier } from '../types';
+import { Search, RefreshCw, Loader2, PlusCircle } from 'lucide-react';
 import CotisationSpontanee from './CotisationSpontanee';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
 
 interface CotisationsProps {
   currentUser: DBUser;
+  openSpontaneeSignal?: number;
+  activeView?: 'LISTE' | 'SPONTANEE';
 }
 
-export default function Cotisations({ currentUser }: CotisationsProps) {
+export default function Cotisations({ currentUser, openSpontaneeSignal, activeView = 'LISTE' }: CotisationsProps) {
   const canManageCotisations =
     currentUser.role === 'GESTIONNAIRE' ||
     currentUser.role === 'ADMINISTRATEUR' ||
@@ -23,10 +25,10 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
   // Filters
   const [search, setSearch] = useState('');
   const [periodeFilter, setPeriodeFilter] = useState('');
-  const [statutFilter, setStatutFilter] = useState<'TOUS' | 'VALIDE' | 'EN_COURS' | 'REJETE'>('TOUS');
   const [sourceFilter, setSourceFilter] = useState<'TOUS' | 'PRECOMPTE' | 'DIRECT' | 'SPONTANEE'>('TOUS');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
+  const [periodes, setPeriodes] = useState<PeriodeMetier[]>([]);
 
   // Adherent detail history drill-down
   const [selectedAdherentId, setSelectedAdherentId] = useState<string | null>(null);
@@ -41,7 +43,6 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
       const { data, error } = await cotisationService.getCotisations({
         search: search.trim() || undefined,
         periode: periodeFilter.trim() || undefined,
-        statut: statutFilter !== 'TOUS' ? statutFilter : undefined,
         source: sourceFilter !== 'TOUS' ? sourceFilter : undefined,
         dateDebut: dateDebut || undefined,
         dateFin: dateFin || undefined,
@@ -59,7 +60,23 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
 
   useEffect(() => {
     fetchCotisations();
-  }, [periodeFilter, statutFilter, sourceFilter, dateDebut, dateFin]);
+  }, [periodeFilter, sourceFilter, dateDebut, dateFin]);
+
+  useEffect(() => {
+    if (openSpontaneeSignal) {
+      setShowSpontanee(true);
+    }
+  }, [openSpontaneeSignal]);
+
+  useEffect(() => {
+    if (activeView === 'LISTE') {
+      setShowSpontanee(false);
+    }
+  }, [activeView]);
+
+  useEffect(() => {
+    cotisationService.getPeriodesOuvertes().then(({ data }) => setPeriodes(data));
+  }, []);
 
   const handleSearchKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -101,9 +118,6 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm font-sans">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Registre des Versements & Cotisations</h2>
-          <p className="text-slate-600 text-sm mt-1">
-            Suivi analytique des échéances d'épargne et des versements ESR.
-          </p>
         </div>
         {canManageCotisations && (
           <button
@@ -136,14 +150,17 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
 
           {/* Period Filter */}
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1 font-mono">Période (ex : 2026T2)</label>
-            <input
-              type="text"
-              placeholder="Ex: 2026T2"
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1 font-mono">Période</label>
+            <select
               value={periodeFilter}
-              onChange={(e) => setPeriodeFilter(e.target.value.toUpperCase())}
+              onChange={(e) => setPeriodeFilter(e.target.value)}
               className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all font-mono"
-            />
+            >
+              <option value="">Toutes les périodes</option>
+              {periodes.map((p) => (
+                <option key={p.periode} value={p.periode}>{p.periode}</option>
+              ))}
+            </select>
           </div>
 
           {/* Source Filter */}
@@ -157,22 +174,6 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
               <option value="TOUS">Toutes les sources</option>
               <option value="PRECOMPTE">PRECOMPTE (Salaire)</option>
               <option value="SPONTANEE">SPONTANEE (Cotisation directe)</option>
-              <option value="DIRECT">DIRECT (Banque)</option>
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1 font-mono">Statut du Versement</label>
-            <select
-              value={statutFilter}
-              onChange={(e) => setStatutFilter(e.target.value as any)}
-              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-            >
-              <option value="TOUS">Tous les statuts</option>
-              <option value="VALIDE">VALIDE</option>
-              <option value="EN_COURS">EN COURS</option>
-              <option value="REJETE">REJETE</option>
             </select>
           </div>
 
@@ -240,14 +241,16 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
                 <th className="py-3.5 px-4 text-center">Date valeur</th>
                 <th className="py-3.5 px-4">Source</th>
                 <th className="py-3.5 px-4">Mode</th>
-                <th className="py-3.5 px-4">Statut</th>
                 <th className="py-3.5 px-4 text-right">Montant</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {cotisations.map((cot) => (
-                <tr key={cot.id} className="hover:bg-slate-50/50 transition">
+                <tr
+                  key={cot.id}
+                  className="hover:bg-slate-50/50 transition cursor-pointer"
+                  onClick={() => loadAdherentHistory(cot.matricule, `${cot.prenoms} ${cot.nom} (${cot.matricule})`)}
+                >
                   <td className="py-3.5 px-4 font-bold text-slate-800 uppercase">
                     {cot.nom} {cot.prenoms}
                   </td>
@@ -272,32 +275,8 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
                   <td className="py-3.5 px-4 text-slate-600 text-sm">
                     {cot.mode || '-'}
                   </td>
-                  <td className="py-3.5 px-4">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs ${
-                      cot.statut === 'VALIDE'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : cot.statut === 'EN_COURS'
-                        ? 'bg-amber-50 text-amber-600'
-                        : 'bg-rose-50 text-rose-700'
-                    }`}>
-                      {cot.statut === 'VALIDE' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                      {cot.statut === 'EN_COURS' && <Clock className="w-3.5 h-3.5 text-amber-500" />}
-                      {cot.statut === 'REJETE' && <AlertCircle className="w-3.5 h-3.5 text-rose-500" />}
-                      {cot.statut}
-                    </span>
-                  </td>
                   <td className="py-3.5 px-4 text-right font-extrabold font-mono text-slate-800">
                     {formatFCFA(cot.montant)}
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      id={`btn-voir-cotis-${cot.id}`}
-                      onClick={() => loadAdherentHistory(cot.matricule, `${cot.prenoms} ${cot.nom} (${cot.matricule})`)}
-                      className="p-1 px-2 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-emerald-600 font-semibold inline-flex items-center gap-1 transition text-sm"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>Historique</span>
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -337,14 +316,13 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
                       <th className="py-3.5 px-4">Date valeur</th>
                       <th className="py-3.5 px-4">Source</th>
                       <th className="py-3.5 px-4">Mode</th>
-                      <th className="py-3.5 px-4">Statut</th>
                       <th className="py-3.5 px-4 text-right">Montant versé</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
                     {adherentHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-slate-400">Aucune cotisation enregistrée pour cet adhérent.</td>
+                        <td colSpan={5} className="py-8 text-center text-slate-400">Aucune cotisation enregistrée pour cet adhérent.</td>
                       </tr>
                     ) : (
                       adherentHistory.map((h, i) => (
@@ -353,13 +331,6 @@ export default function Cotisations({ currentUser }: CotisationsProps) {
                           <td className="py-3 px-4 font-mono text-slate-500">{formatDateFr(h.date_valeur || h.date_cotisation || '')}</td>
                           <td className="py-3 px-4 font-semibold text-slate-600">{h.source || '-'}</td>
                           <td className="py-3 px-4 text-slate-600 text-sm">{h.mode || '-'}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                              h.statut === 'VALIDE' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                            }`}>
-                              {h.statut}
-                            </span>
-                          </td>
                           <td className="py-3 px-4 text-right font-extrabold font-mono text-slate-800">{formatFCFA(h.montant)}</td>
                         </tr>
                       ))

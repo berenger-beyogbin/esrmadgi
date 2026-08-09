@@ -8,6 +8,7 @@ import {
   cotisationsRepository,
 } from '../repositories/cotisations.repository';
 import { precomptesRepository } from '../repositories/precomptes.repository';
+import { periodesRepository } from '../repositories/periodes-precompte.repository';
 
 export interface GeneratePrecomptesResult {
   created: number;
@@ -121,7 +122,65 @@ export const cotisationsService = {
     );
     const parsed = parseDateQuarter(payload.date);
     const periode = `${parsed.annee}T${parsed.trimestre}`;
+    await periodesRepository.ensureOuverte(periode);
     const reference = buildReference('SP', parsed.annee, parsed.trimestre, adherent.matricule);
+
+    if (payload.id_precompte) {
+      const precompte = await precomptesRepository.findById(payload.id_precompte);
+      if (!precompte) throw new AppError(404, 'Precompte a regulariser introuvable.');
+      if (Number(precompte.id_adherent) !== payload.id_adherent) {
+        throw new AppError(409, "Le precompte n'appartient pas a cet adherent.");
+      }
+      await periodesRepository.ensureOuverte(String(precompte.periode));
+      try {
+        return await cotisationsRepository.regulariserPrecompte({
+          idPrecompte: payload.id_precompte,
+          idAdherent: payload.id_adherent,
+          mode: payload.mode,
+          periode,
+          periodeDeb: parsed.periodeDeb,
+          periodeFin: parsed.periodeFin,
+          dateValeur: payload.date,
+          montant: payload.montant,
+          reference: reference.replace(/^SP/, 'RG'),
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (!/regulariser_precompte_esr|schema cache/i.test(message)) throw err;
+
+        // Compatibilite jusqu'au deploiement de la migration SQL. Le lecteur
+        // reconnait ces anciennes lignes par leur adherent, montant et date.
+        const entete = await cotisationsRepository.createCotisationEntete({
+          id_adherent: payload.id_adherent,
+          mode: payload.mode,
+          periode_deb: parsed.periodeDeb,
+          periode_fin: parsed.periodeFin,
+          reference: reference.replace(/^SP/, 'RG'),
+          statut: 'OUVERT',
+        });
+        try {
+          const detail = await cotisationsRepository.createCotisationDetail({
+            id_cotisation_entete: entete.id_cotisation_entete,
+            periode,
+            date_valeur: payload.date,
+            montant: payload.montant,
+            source: 'SPONTANEE',
+            statut: 'ENCAISSEE',
+          });
+          const montantDepart = Number(precompte.montant_depart ?? 0);
+          await precomptesRepository.markRegularise({
+            idPrecompte: payload.id_precompte,
+            montantRetour: payload.montant,
+            dateRetour: payload.date,
+            statutPrecompte: payload.montant >= montantDepart - 0.01 ? 'ENCAISSE' : 'PARTIEL',
+          });
+          return { entete, detail };
+        } catch (fallbackError) {
+          await cotisationsRepository.deleteCotisationEntete(entete.id_cotisation_entete).catch(() => undefined);
+          throw fallbackError;
+        }
+      }
+    }
 
     const entete = await cotisationsRepository.createCotisationEntete({
       id_adherent: payload.id_adherent,
@@ -156,6 +215,8 @@ export const cotisationsService = {
     }
 
     const normalizedPeriode = `${parsed.annee}T${parsed.trimestre}`;
+    await periodesRepository.ensureOuverte(normalizedPeriode);
+
     const today = new Date().toISOString().split('T')[0];
     const adherents = await cotisationsRepository.findActiveAdherentsForCotisation();
     const eligible = adherents.filter((adherent: any) => Number(adherent.cotisation_es) > 0);

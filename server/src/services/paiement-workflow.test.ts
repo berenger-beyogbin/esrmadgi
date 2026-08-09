@@ -37,3 +37,14 @@ test('un rejet est terminal', () => {
   assert.equal(paiementTransitionPermise('VALIDE', 'REJETE'), true);
   assert.equal(paiementTransitionPermise('REJETE', 'SAISI'), false);
 });
+
+test('un cheque suit depot banque et compensation avant validation', () => {
+  const chemin: PaiementWorkflowStatut[] = [
+    'SAISI', 'CONTROLE', 'DEPOSE_BANQUE', 'COMPENSE', 'VALIDE', 'ENCAISSE',
+  ];
+  for (let index = 0; index < chemin.length - 1; index += 1) {
+    assert.equal(paiementTransitionPermise(chemin[index], chemin[index + 1]), true);
+  }
+  assert.equal(paiementTransitionPermise('DEPOSE_BANQUE', 'REJETE_BANQUE'), true);
+  assert.equal(paiementTransitionPermise('REJETE_BANQUE', 'SAISI'), false);
+});

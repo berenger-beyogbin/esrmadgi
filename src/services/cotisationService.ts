@@ -3,6 +3,7 @@ import {
   CotisationSpontaneePayload,
   GeneratePrecomptesResult,
   InfoCotisation,
+  PeriodeMetier,
   VAdherentComplet,
   VCotisationDetails,
   VPrecompteDetails,
@@ -20,6 +21,12 @@ export interface RetourDgiResult {
   introuvables: string[];
 }
 type RetourDgiResponse = { result: RetourDgiResult; error: string | null };
+export interface CotisationSpontaneeResult {
+  entete?: { id_cotisation_entete: number; reference: string };
+  detail?: { periode: string; date_valeur: string | null; montant: number; source: string; statut: string };
+  paiement?: { id?: string | number; statut_workflow?: string };
+  en_attente_validation?: boolean;
+}
 
 function toError(error: string | null | undefined): Error | null {
   return error ? new Error(error) : null;
@@ -99,8 +106,8 @@ export const cotisationService = {
     return { data: data?.data ?? null, error: toError(data?.error) };
   },
 
-  async createCotisationSpontanee(payload: CotisationSpontaneePayload): Promise<{ data: unknown | null; error: Error | null }> {
-    const { data, error } = await apiPost<ApiResponse<unknown>>('/api/cotisations/spontanee', payload);
+  async createCotisationSpontanee(payload: CotisationSpontaneePayload): Promise<{ data: CotisationSpontaneeResult | null; error: Error | null }> {
+    const { data, error } = await apiPost<ApiResponse<CotisationSpontaneeResult>>('/api/cotisations/spontanee', payload);
 
     if (error) return { data: null, error: new Error(error) };
     return { data: data?.data ?? null, error: toError(data?.error) };
@@ -143,10 +150,42 @@ export const cotisationService = {
     };
   },
 
+  async getPeriodesOuvertes(): Promise<{ data: PeriodeMetier[]; error: Error | null }> {
+    const { data, error } = await apiGet<ApiResponse<PeriodeMetier[]>>('/api/periodes');
+    if (error) return { data: [], error: new Error(error) };
+    return { data: data?.data ?? [], error: toError(data?.error) };
+  },
+
+  async cloturerPeriode(periode: string): Promise<{ error: Error | null }> {
+    const { error } = await apiPost<ApiResponse<{ periode: string }>>(
+      `/api/periodes/${encodeURIComponent(periode)}/cloturer`,
+      {},
+    );
+    if (error) return { error: new Error(error) };
+    return { error: null };
+  },
+
+  async getNonPrecomptes(periode: string): Promise<{ data: VPrecompteDetails[]; error: Error | null }> {
+    const { data, error } = await apiGet<ApiResponse<VPrecompteDetails[]>>(
+      `/api/precomptes/non-precomptes?periode=${encodeURIComponent(periode)}`,
+    );
+    if (error) return { data: [], error: new Error(error) };
+    return { data: data?.data ?? [], error: toError(data?.error) };
+  },
+
+  async reporterPrecompte(idPrecompte: number): Promise<{ error: Error | null }> {
+    const { error } = await apiPost<ApiResponse<{ id_precompte: number }>>(
+      `/api/precomptes/${encodeURIComponent(String(idPrecompte))}/reporter`,
+      {},
+    );
+    if (error) return { error: new Error(error) };
+    return { error: null };
+  },
+
   async enregistrerRetourDgi(payload: {
     periode: string;
     dateRetour: string;
-    lignes: Array<{ matricule: string; montantRetour: number; motif?: string }>;
+    lignes: Array<{ matricule: string; montantRetour: number; dateRetour?: string; motif?: string }>;
   }): Promise<{ result: RetourDgiResult | null; error: Error | null }> {
     const { data, error } = await apiPost<RetourDgiResponse>('/api/precomptes/retour', payload);
     if (error) return { result: null, error: new Error(error) };

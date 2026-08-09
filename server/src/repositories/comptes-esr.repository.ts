@@ -7,6 +7,14 @@ export interface CompteEsrFilters {
 }
 
 export const comptesEsrRepository = {
+  async actualiserRepartition(adherentId: string): Promise<void> {
+    const supabase = getSupabaseServer();
+    const { error } = await supabase.rpc('actualiser_pp_pu_compte_esr', {
+      p_id_adherent: Number(adherentId),
+    });
+    if (error) throw new Error(error.message);
+  },
+
   async findComptes(filters?: CompteEsrFilters): Promise<unknown[]> {
     const supabase = getSupabaseServer();
     let query: any = supabase.from('v_comptes_esr_details').select('*');
@@ -40,9 +48,23 @@ export const comptesEsrRepository = {
     return data ?? null;
   },
 
+  async findHistoriqueAnnuel(adherentId: string, periode: string): Promise<unknown | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('historique_cotisations_esr')
+      .select('id_adherent,periode,capital_cumule,pm,valeur_rachat,date_valeur,version_calc')
+      .eq('id_adherent', adherentId)
+      .eq('periode', periode)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ?? null;
+  },
+
   async saveCalculatedAccount(input: {
     adherentId: string;
     capitalAcquis: number;
+    primesPeriodiques: number;
+    cotisationUnique: number;
     provisionMathematique: number;
     valeurRachat: number;
     dateCalcul: string;
@@ -58,6 +80,8 @@ export const comptesEsrRepository = {
 
     const payload = {
       capital_acquis: input.capitalAcquis,
+      pp: input.primesPeriodiques,
+      pu: input.cotisationUnique,
       pm: input.provisionMathematique,
       valeur_rachat: input.valeurRachat,
       date_calcul: input.dateCalcul,
