@@ -9,7 +9,7 @@ import Login from './pages/Login';
 import OnlineAdhesion from './pages/OnlineAdhesion';
 import FirstLoginPasswordChange from './pages/FirstLoginPasswordChange';
 import EspaceAdherent from './pages/EspaceAdherent';
-import Dashboard from './pages/Dashboard';
+import DashboardV2 from './pages/DashboardV2';
 import Adherents from './pages/Adherents';
 import AdhesionsEnLigne from './pages/AdhesionsEnLigne';
 import ComptesEsr from './pages/ComptesEsr';
@@ -22,6 +22,7 @@ import Rachats from './pages/Rachats';
 import Parametres from './pages/Parametres';
 import Reporting from './pages/Reporting';
 import Utilisateurs from './pages/Utilisateurs';
+import Aide from './pages/Aide';
 import HeaderBanner from './components/HeaderBanner';
 
 // Icons matching French labels in Screenshot 3
@@ -280,7 +281,7 @@ export default function App() {
   const renderActiveModule = () => {
     switch (activeModule) {
       case 'DASHBOARD':
-        return <Dashboard currentUser={currentUser} />;
+        return <DashboardV2 currentUser={currentUser} />;
       case 'ADHESIONS_EN_LIGNE':
         return <AdhesionsEnLigne currentUser={currentUser} />;
       case 'ADHERENTS':
@@ -312,27 +313,9 @@ export default function App() {
       case 'REPORTING':
         return <Reporting />;
       case 'AIDE':
-        return (
-          <div className="bg-white p-8 rounded-2xl border border-slate-150 shadow-xs max-w-4xl mx-auto space-y-6">
-            <h2 className="text-2xl font-bold text-[#2b529f]">Aide & Centre d'assistance MADGI ESR</h2>
-            <div className="h-px bg-slate-100" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-base text-slate-600 leading-relaxed">
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-slate-800">Comment suivre mes cotisations ?</h3>
-                <p>Vos cotisations précomptées ou directes sont automatiquement versées sur votre compte individuel visible dans l'onglet <strong>Comptes Indiv</strong>.</p>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-slate-800">Comment demander une prestation ?</h3>
-                <p>Rapprochez-vous de votre gestionnaire de mutuelle pour soumettre un dossier de Retraite, Décès ou Invalidité, et suivez son avancement en temps réel.</p>
-              </div>
-            </div>
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-medium">
-              💡 Support technique direct par email : <span className="underline select-text">support.mutuelle@dgi.gouv.ci</span> ou par téléphone au 225-20-30-40-50.
-            </div>
-          </div>
-        );
+        return <Aide currentUser={currentUser} />;
       default:
-        return <Dashboard currentUser={currentUser} />;
+        return <DashboardV2 currentUser={currentUser} />;
     }
   };
 
