@@ -1,6 +1,132 @@
 import { reportingRepository } from '../repositories/reporting.repository';
 
+function groupBy<T, K>(rows: T[], key: (row: T) => K): Map<K, T[]> {
+  const map = new Map<K, T[]>();
+  for (const row of rows) {
+    const k = key(row);
+    const list = map.get(k);
+    if (list) list.push(row);
+    else map.set(k, [row]);
+  }
+  return map;
+}
+
+function statutPrecompteActuel(rows: Array<{ annee: number; trimestre: number; statut_precompte: string }>): string {
+  if (rows.length === 0) return 'PAS_A_JOUR';
+  const dernier = [...rows].sort((a, b) => b.annee - a.annee || b.trimestre - a.trimestre)[0];
+  return dernier.statut_precompte === 'ENCAISSE' ? 'A_JOUR' : 'PAS_A_JOUR';
+}
+
+function statutRenteActuel(rows: Array<{ annee: number; trimestre: number; statut: string }>): string {
+  if (rows.length === 0) return 'PAS_A_JOUR';
+  const dernier = [...rows].sort((a, b) => b.annee - a.annee || b.trimestre - a.trimestre)[0];
+  return dernier.statut === 'PAYEE' ? 'A_JOUR' : 'PAS_A_JOUR';
+}
+
+function adherentBase(row: any) {
+  return {
+    matricule: row.matricule,
+    nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+    grade: row.grade ?? '',
+    dateAdhesion: row.date_souscription,
+    datePremierPrecompte: row.date_precompte,
+    primeTrimestrielle: Number(row.cotisation_es ?? 0),
+  };
+}
+
 export const reportingService = {
+  async listeAdherents(): Promise<unknown[]> {
+    const adherents = await reportingRepository.findAdherents('TOUS');
+    const matricules = adherents.map((row) => row.matricule).filter(Boolean);
+    const precomptes = await reportingRepository.findPrecomptesParMatricules(matricules);
+    const parMatricule = groupBy(precomptes, (row) => row.matricule);
+    return adherents.map((row) => ({
+      ...adherentBase(row),
+      statut: statutPrecompteActuel(parMatricule.get(row.matricule) ?? []),
+    }));
+  },
+
+  async adherentsActifs(): Promise<unknown[]> {
+    const adherents = await reportingRepository.findAdherents('ACTIFS');
+    return adherents.map((row) => adherentBase(row));
+  },
+
+  async adherentsRetraites(): Promise<unknown[]> {
+    const adherents = await reportingRepository.findAdherents('RETRAITES');
+    return adherents.map((row) => ({
+      ...adherentBase(row),
+      dateDepartRetraite: row.date_retraite,
+    }));
+  },
+
+  async adherentsRetraitesParStatut(): Promise<unknown[]> {
+    const adherents = await reportingRepository.findAdherents('RETRAITES');
+    const rentes = await reportingRepository.findRentesActives();
+    const renteParAdherent = new Map(rentes.map((row) => [row.id_adherent, row]));
+    const idsRentes = rentes.map((row) => row.id_rente);
+    const versements = await reportingRepository.findVersementsParRentes(idsRentes);
+    const versementsParRente = groupBy(versements, (row) => row.id_rente);
+    return adherents.map((row) => {
+      const rente = renteParAdherent.get(row.id_adherent);
+      const statut = rente ? statutRenteActuel(versementsParRente.get(rente.id_rente) ?? []) : 'PAS_A_JOUR';
+      return {
+        matricule: row.matricule,
+        nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+        grade: row.grade ?? '',
+        dateAdhesion: row.date_souscription,
+        primeTrimestrielle: Number(row.cotisation_es ?? 0),
+        dateDepartRetraite: row.date_retraite,
+        montantRestantDu: Number(rente?.capital_restant ?? 0),
+        statut,
+      };
+    });
+  },
+
+  async rachatsResiliations(): Promise<unknown[]> {
+    const rows = await reportingRepository.findRachatsResiliations();
+    return rows.map((row) => ({
+      matricule: row.matricule,
+      nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+      dateDemande: row.date_demande,
+      statut: row.statut,
+      capitalVerse: Number(row.capital_verse ?? 0),
+      penalite: Number(row.penalite ?? 0),
+      montantNet: Number(row.montant_net ?? 0),
+    }));
+  },
+
+  async agentsDecedes(): Promise<unknown[]> {
+    const rows = await reportingRepository.findPrestationsParType(['DECES']);
+    return rows.map((row) => ({
+      matricule: row.matricule,
+      nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+      dateEvenement: row.date_evenement,
+      dateDemande: row.date_demande,
+      statut: row.statut_prestation,
+      montantDu: Number(row.montant_du ?? 0),
+      montantPaye: Number(row.montant_paye ?? 0),
+    }));
+  },
+
+  async agentsDecedesCapitalVerse(): Promise<unknown[]> {
+    const rows = (await reportingRepository.findPrestationsParType(['DECES'])).filter(
+      (row) => row.statut_prestation === 'PAYE',
+    );
+    const idsAdherents = rows.map((row) => Number(row.id_adherent));
+    const beneficiaires = await reportingRepository.findBeneficiairesParAdherents(idsAdherents);
+    const parAdherent = groupBy(beneficiaires, (row) => row.id_adherent);
+    return rows.map((row) => ({
+      matricule: row.matricule,
+      nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+      dateEvenement: row.date_evenement,
+      datePaiement: row.date_paiement,
+      montantPaye: Number(row.montant_paye ?? 0),
+      ayantsDroit: (parAdherent.get(row.id_adherent) ?? [])
+        .map((b) => `${b.nom_benef ?? ''} ${b.prenoms_benef ?? ''}`.trim())
+        .join(', '),
+    }));
+  },
+
   async getCimaC20(annee: number): Promise<unknown> {
     const [cotisations, comptes, prestations] = await Promise.all([
       reportingRepository.findCotisationsAnnee(annee),

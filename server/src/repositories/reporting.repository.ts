@@ -30,4 +30,85 @@ export const reportingRepository = {
     if (error) throw new Error(error.message);
     return data ?? [];
   },
+
+  async findAdherents(scope: 'TOUS' | 'ACTIFS' | 'RETRAITES'): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    let query: any = supabase
+      .from('v_adherents_complets')
+      .select(
+        'id_adherent,matricule,nom,prenoms,grade,date_souscription,date_precompte,cotisation_es,date_retraite,capital_acquis,statut,decede,retraite',
+      )
+      .not('etat', 'in', '("EN_ATTENTE","REJETE")')
+      .eq('decede', false);
+    if (scope === 'ACTIFS') query = query.eq('retraite', false);
+    if (scope === 'RETRAITES') query = query.eq('retraite', true);
+    const { data, error } = await query.order('nom');
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findPrecomptesParMatricules(matricules: string[]): Promise<any[]> {
+    if (matricules.length === 0) return [];
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_precomptes_details')
+      .select('matricule,annee,trimestre,statut_precompte')
+      .in('matricule', matricules);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findRentesActives(): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('rentes')
+      .select('id_rente,id_adherent,capital_initial,capital_restant,statut_rente');
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findVersementsParRentes(idsRentes: number[]): Promise<any[]> {
+    if (idsRentes.length === 0) return [];
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('rente_versements')
+      .select('id_rente,annee,trimestre,statut')
+      .in('id_rente', idsRentes);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findRachatsResiliations(): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_rachats_details')
+      .select('id_rachat,matricule,nom,prenoms,date_demande,statut,capital_verse,penalite,montant_net')
+      .order('date_demande', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findPrestationsParType(types: string[]): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_prestations_details')
+      .select(
+        'id_prestation,id_adherent,matricule,nom,prenoms,type_prestation,statut_prestation,date_evenement,date_demande,date_paiement,montant_du,montant_paye',
+      )
+      .in('type_prestation', types)
+      .order('date_demande', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findBeneficiairesParAdherents(idsAdherents: number[]): Promise<any[]> {
+    if (idsAdherents.length === 0) return [];
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('beneficiaires')
+      .select('id_adherent,nom_benef,prenoms_benef,lien,pourcentage')
+      .in('id_adherent', idsAdherents);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
 };
