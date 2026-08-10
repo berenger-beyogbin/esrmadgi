@@ -148,4 +148,95 @@ export const reportingController = {
       next(err);
     }
   },
+
+  async avisAnnuelEligibles(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.avisAnnuelEligibles();
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async rachats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.rachats();
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async resiliations(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.resiliations();
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async retraitesAJour(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.retraitesParStatutFiltre('A_JOUR');
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async retraitesNonAJour(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.retraitesParStatutFiltre('PAS_A_JOUR');
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async actifsAJour(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.actifsParStatutFiltre('A_JOUR');
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async actifsNonAJour(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.actifsParStatutFiltre('PAS_A_JOUR');
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async ayantsDroitGlobal(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.ayantsDroitGlobal();
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async capitalRestantDuPeriode(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { dateDebut, dateFin } = parsePeriode(req);
+      const data = await reportingService.capitalRestantDuPeriode(dateDebut, dateFin);
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async capitalDecesInvaliditeAvantRetraite(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportingService.capitalDecesInvaliditeAvantRetraite();
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

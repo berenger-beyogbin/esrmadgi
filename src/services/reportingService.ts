@@ -22,6 +22,13 @@ export interface RachatReportRow {
   montantNet: number;
 }
 
+export interface AvisAnnuelEligibleRow {
+  idAdherent: string;
+  matricule: string;
+  nomPrenoms: string;
+  grade: string;
+}
+
 export interface AgentDecedeReportRow {
   matricule: string;
   nomPrenoms: string;
@@ -32,6 +39,22 @@ export interface AgentDecedeReportRow {
   montantDu?: number;
   montantPaye: number;
   ayantsDroit?: string;
+}
+
+export interface AyantDroitReportRow {
+  matriculeAdherent: string;
+  nomPrenomsAdherent: string;
+  nomPrenomsAyantDroit: string;
+  lien: string;
+  pourcentage: number;
+  statut: string;
+}
+
+export interface CapitalRestantDuPeriodeReport {
+  dateDebut: string;
+  dateFin: string;
+  total: number;
+  lignes: Array<{ matricule: string; nomPrenoms: string; nombreVersements: number; montantReverse: number }>;
 }
 
 export interface CotisationsPeriodeReport {
@@ -201,6 +224,14 @@ export const getAdherentsRetraitesParStatut = () => fetchReport<AdherentReportRo
 export const getRachatsResiliations = () => fetchReport<RachatReportRow>('rachats-resiliations');
 export const getAgentsDecedes = () => fetchReport<AgentDecedeReportRow>('agents-decedes');
 export const getAgentsDecedesCapitalVerse = () => fetchReport<AgentDecedeReportRow>('agents-decedes-capital-verse');
+export const getAvisAnnuelEligibles = () => fetchReport<AvisAnnuelEligibleRow>('avis-annuel-eligibles');
+export const getRachats = () => fetchReport<RachatReportRow>('rachats');
+export const getResiliations = () => fetchReport<RachatReportRow>('resiliations');
+export const getRetraitesAJour = () => fetchReport<AdherentReportRow>('retraites-a-jour');
+export const getRetraitesNonAJour = () => fetchReport<AdherentReportRow>('retraites-non-a-jour');
+export const getActifsAJour = () => fetchReport<AdherentReportRow>('actifs-a-jour');
+export const getActifsNonAJour = () => fetchReport<AdherentReportRow>('actifs-non-a-jour');
+export const getAyantsDroit = () => fetchReport<AyantDroitReportRow>('ayants-droit');
 
 async function fetchObjet<T>(path: string): Promise<T> {
   const { data, error } = await apiGet<ApiResponse<T>>(`/api/reporting/${path}`);
@@ -222,6 +253,12 @@ export const getMouvementsFlux = (dateDebut: string, dateFin: string) =>
   fetchObjet<MouvementsFluxReport>(
     `mouvements-flux?dateDebut=${encodeURIComponent(dateDebut)}&dateFin=${encodeURIComponent(dateFin)}`,
   );
+export const getCapitalRestantDuPeriode = (dateDebut: string, dateFin: string) =>
+  fetchObjet<CapitalRestantDuPeriodeReport>(
+    `capital-restant-du-periode?dateDebut=${encodeURIComponent(dateDebut)}&dateFin=${encodeURIComponent(dateFin)}`,
+  );
+export const getCapitalDecesInvaliditeAvantRetraite = () =>
+  fetchObjet<CapitalDecesInvaliditeReport>('capital-deces-invalidite-avant-retraite');
 
 interface ColonneExport {
   header: string;

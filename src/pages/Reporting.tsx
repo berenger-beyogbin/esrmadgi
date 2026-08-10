@@ -3,24 +3,35 @@ import {
   CimaC20Report,
   exporterCimaC20,
   exporterTableauExcel,
+  getActifsAJour,
+  getActifsNonAJour,
   getAdherentsActifs,
   getAdherentsRetraites,
   getAdherentsRetraitesParStatut,
   getAgentsDecedes,
   getAgentsDecedesCapitalVerse,
+  getAvisAnnuelEligibles,
+  getAyantsDroit,
   getCapitalDecesInvalidite,
+  getCapitalDecesInvaliditeAvantRetraite,
   getCapitalRenteAdherents,
+  getCapitalRestantDuPeriode,
   getCapitalRestantDuRetraites,
   getCimaC20,
   getCotisationsPeriode,
   getListeAdherents,
   getMouvementsFlux,
   getProvisionsGlobales,
+  getRachats,
   getRachatsResiliations,
+  getResiliations,
+  getRetraitesAJour,
+  getRetraitesNonAJour,
 } from '../services/reportingService';
+import { compteEsrService } from '../services/compteEsrService';
 import { formatDateFr, formatFCFA } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
-import { Download, FileBarChart2, Loader2, RefreshCw } from 'lucide-react';
+import { Download, FileBarChart2, FileDown, Loader2, RefreshCw } from 'lucide-react';
 
 const STATUT_STYLES: Record<string, string> = {
   A_JOUR: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -36,15 +47,24 @@ type EtatId =
   | 'ADHERENTS'
   | 'ADHERENTS_ACTIFS'
   | 'ADHERENTS_RETRAITES'
-  | 'ADHERENTS_RETRAITES_STATUT'
+  | 'AYANTS_DROIT'
   | 'RACHATS'
+  | 'RACHATS_SEULS'
+  | 'RESILIATIONS_SEULES'
+  | 'RETRAITES_A_JOUR'
+  | 'RETRAITES_NON_A_JOUR'
+  | 'ACTIFS_A_JOUR'
+  | 'ACTIFS_NON_A_JOUR'
+  | 'ADHERENTS_RETRAITES_STATUT'
   | 'AGENTS_DECEDES'
   | 'AGENTS_DECEDES_CAPITAL'
   | 'CIMA_C20'
   | 'COTISATIONS_PERIODE'
   | 'CAPITAL_RENTE'
   | 'CAPITAL_RESTANT_DU'
+  | 'CAPITAL_RESTANT_DU_PERIODE'
   | 'CAPITAL_DECES'
+  | 'CAPITAL_DECES_AVANT_RETRAITE'
   | 'PROVISIONS_GLOBALES'
   | 'MOUVEMENTS_FLUX'
   | 'AVIS_ANNUEL';
@@ -57,25 +77,34 @@ interface EtatDef {
 }
 
 const ETATS: EtatDef[] = [
-  { id: 'ADHERENTS', label: 'Liste des adhérents', categorie: 'Listes', disponible: true },
+  { id: 'ADHERENTS', label: 'Liste globale des adhérents', categorie: 'Listes', disponible: true },
   { id: 'ADHERENTS_ACTIFS', label: 'Adhérents en activité', categorie: 'Listes', disponible: true },
   { id: 'ADHERENTS_RETRAITES', label: 'Adhérents retraités', categorie: 'Listes', disponible: true },
-  { id: 'ADHERENTS_RETRAITES_STATUT', label: 'Adhérents retraités par statut', categorie: 'Listes', disponible: true },
-  { id: 'RACHATS', label: 'Rachats et résiliations', categorie: 'Listes', disponible: true },
-  { id: 'AGENTS_DECEDES', label: 'Agents décédés', categorie: 'Listes', disponible: true },
+  { id: 'AYANTS_DROIT', label: 'Liste globale des ayants-droit', categorie: 'Listes', disponible: true },
+  { id: 'RACHATS', label: 'Liste des retraits (rachats et résiliations)', categorie: 'Listes', disponible: true },
+  { id: 'RETRAITES_A_JOUR', label: 'Retraités à jour', categorie: 'Listes', disponible: true },
+  { id: 'RETRAITES_NON_A_JOUR', label: 'Retraités non à jour', categorie: 'Listes', disponible: true },
+  { id: 'ACTIFS_A_JOUR', label: 'Adhérents en activité à jour', categorie: 'Listes', disponible: true },
+  { id: 'ACTIFS_NON_A_JOUR', label: 'Adhérents en activité pas à jour', categorie: 'Listes', disponible: true },
+  { id: 'RACHATS_SEULS', label: 'Liste des rachats', categorie: 'Listes', disponible: true },
+  { id: 'RESILIATIONS_SEULES', label: 'Liste des résiliations', categorie: 'Listes', disponible: true },
+  { id: 'AGENTS_DECEDES', label: 'Liste des décédés', categorie: 'Listes', disponible: true },
+  { id: 'ADHERENTS_RETRAITES_STATUT', label: 'Adhérents retraités par statut (vue combinée)', categorie: 'Listes', disponible: true },
   { id: 'AGENTS_DECEDES_CAPITAL', label: "Décès — capital versé aux ayants droit", categorie: 'Listes', disponible: true },
   { id: 'CIMA_C20', label: 'État CIMA C-20', categorie: 'Montants', disponible: true },
   { id: 'COTISATIONS_PERIODE', label: 'Cotisations encaissées sur une période', categorie: 'Montants', disponible: true },
   { id: 'CAPITAL_RENTE', label: 'Capital constitutif de rente par adhérent', categorie: 'Montants', disponible: true },
-  { id: 'CAPITAL_RESTANT_DU', label: 'Capital restant dû par retraité', categorie: 'Montants', disponible: true },
+  { id: 'CAPITAL_RESTANT_DU', label: 'Capital restant dû par retraité (à date)', categorie: 'Montants', disponible: true },
+  { id: 'CAPITAL_RESTANT_DU_PERIODE', label: 'Reversement du capital restant dû sur une période', categorie: 'Montants', disponible: true },
   { id: 'CAPITAL_DECES', label: 'Capital décès/invalidité par adhérent', categorie: 'Montants', disponible: true },
+  { id: 'CAPITAL_DECES_AVANT_RETRAITE', label: 'Reversements décès/invalidité avant la retraite', categorie: 'Montants', disponible: true },
   { id: 'PROVISIONS_GLOBALES', label: 'Provisions globales & flux de rentes', categorie: 'Montants', disponible: true },
   { id: 'MOUVEMENTS_FLUX', label: 'Mouvements de flux (entrants/sortants)', categorie: 'Montants', disponible: true },
-  { id: 'AVIS_ANNUEL', label: 'Avis annuel adhérents', categorie: 'Autres', disponible: false },
+  { id: 'AVIS_ANNUEL', label: 'Avis annuel adhérents', categorie: 'Autres', disponible: true },
 ];
 
 const CATEGORIES: EtatDef['categorie'][] = ['Listes', 'Montants', 'Autres'];
-const ETATS_PERIODE: EtatId[] = ['COTISATIONS_PERIODE', 'MOUVEMENTS_FLUX'];
+const ETATS_PERIODE: EtatId[] = ['COTISATIONS_PERIODE', 'MOUVEMENTS_FLUX', 'CAPITAL_RESTANT_DU_PERIODE'];
 
 type Ligne = Record<string, unknown>;
 
@@ -125,6 +154,45 @@ function colonnesPour(id: EtatId): ColonneVue[] {
         { header: "Date d'Adhésion", key: 'dateAdhesion', format: 'date', width: 16 },
         { header: 'Prime Trimestrielle', key: 'primeTrimestrielle', format: 'money', width: 18 },
         { header: 'Date de départ retraite', key: 'dateDepartRetraite', format: 'date', width: 18 },
+      ];
+    case 'AYANTS_DROIT':
+      return [
+        { header: 'Matricule adhérent', key: 'matriculeAdherent', width: 16 },
+        { header: 'Adhérent', key: 'nomPrenomsAdherent', width: 26 },
+        { header: 'Ayant droit', key: 'nomPrenomsAyantDroit', width: 26 },
+        { header: 'Lien', key: 'lien', width: 16 },
+        { header: 'Pourcentage', key: 'pourcentage', width: 14 },
+      ];
+    case 'RETRAITES_A_JOUR':
+    case 'RETRAITES_NON_A_JOUR':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Grade', key: 'grade', width: 16 },
+        { header: "Date d'Adhésion", key: 'dateAdhesion', format: 'date', width: 16 },
+        { header: 'Prime Trimestrielle', key: 'primeTrimestrielle', format: 'money', width: 18 },
+        { header: 'Date de départ retraite', key: 'dateDepartRetraite', format: 'date', width: 18 },
+      ];
+    case 'ACTIFS_A_JOUR':
+    case 'ACTIFS_NON_A_JOUR':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Grade', key: 'grade', width: 16 },
+        { header: "Date d'Adhésion", key: 'dateAdhesion', format: 'date', width: 16 },
+        { header: 'Date de 1er précompte', key: 'datePremierPrecompte', format: 'date', width: 18 },
+        { header: 'Prime Trimestrielle', key: 'primeTrimestrielle', format: 'money', width: 18 },
+      ];
+    case 'RACHATS_SEULS':
+    case 'RESILIATIONS_SEULES':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Date de demande', key: 'dateDemande', format: 'date', width: 16 },
+        { header: 'Statut', key: 'statut', width: 16 },
+        { header: 'Capital versé', key: 'capitalVerse', format: 'money', width: 18 },
+        { header: 'Pénalité', key: 'penalite', format: 'money', width: 16 },
+        { header: 'Montant net', key: 'montantNet', format: 'money', width: 18 },
       ];
     case 'ADHERENTS_RETRAITES_STATUT':
       return [
@@ -189,6 +257,7 @@ function colonnesPour(id: EtatId): ColonneVue[] {
         { header: 'Montant restant dû', key: 'montantRestantDu', format: 'money', width: 20 },
       ];
     case 'CAPITAL_DECES':
+    case 'CAPITAL_DECES_AVANT_RETRAITE':
       return [
         { header: 'Matricule', key: 'matricule', width: 14 },
         { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
@@ -196,6 +265,13 @@ function colonnesPour(id: EtatId): ColonneVue[] {
         { header: 'Statut', key: 'statut', width: 16 },
         { header: 'Montant dû', key: 'montantDu', format: 'money', width: 18 },
         { header: 'Montant payé', key: 'montantPaye', format: 'money', width: 18 },
+      ];
+    case 'CAPITAL_RESTANT_DU_PERIODE':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Versements', key: 'nombreVersements', width: 14 },
+        { header: 'Montant reversé', key: 'montantReverse', format: 'money', width: 20 },
       ];
     case 'MOUVEMENTS_FLUX':
       return [
@@ -205,6 +281,12 @@ function colonnesPour(id: EtatId): ColonneVue[] {
         { header: 'Matricule', key: 'matricule', width: 14 },
         { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 26 },
         { header: 'Montant', key: 'montant', format: 'money', width: 18 },
+      ];
+    case 'AVIS_ANNUEL':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Grade', key: 'grade', width: 16 },
       ];
     default:
       return [];
@@ -228,6 +310,20 @@ async function chargerDonnees(id: EtatId, periode: { dateDebut: string; dateFin:
       return { lignes: (await getAdherentsRetraitesParStatut()) as unknown as Ligne[], resume: null };
     case 'RACHATS':
       return { lignes: (await getRachatsResiliations()) as unknown as Ligne[], resume: null };
+    case 'RACHATS_SEULS':
+      return { lignes: (await getRachats()) as unknown as Ligne[], resume: null };
+    case 'RESILIATIONS_SEULES':
+      return { lignes: (await getResiliations()) as unknown as Ligne[], resume: null };
+    case 'RETRAITES_A_JOUR':
+      return { lignes: (await getRetraitesAJour()) as unknown as Ligne[], resume: null };
+    case 'RETRAITES_NON_A_JOUR':
+      return { lignes: (await getRetraitesNonAJour()) as unknown as Ligne[], resume: null };
+    case 'ACTIFS_A_JOUR':
+      return { lignes: (await getActifsAJour()) as unknown as Ligne[], resume: null };
+    case 'ACTIFS_NON_A_JOUR':
+      return { lignes: (await getActifsNonAJour()) as unknown as Ligne[], resume: null };
+    case 'AYANTS_DROIT':
+      return { lignes: (await getAyantsDroit()) as unknown as Ligne[], resume: null };
     case 'AGENTS_DECEDES':
       return { lignes: (await getAgentsDecedes()) as unknown as Ligne[], resume: null };
     case 'AGENTS_DECEDES_CAPITAL':
@@ -263,6 +359,23 @@ async function chargerDonnees(id: EtatId, periode: { dateDebut: string; dateFin:
         ],
       };
     }
+    case 'CAPITAL_DECES_AVANT_RETRAITE': {
+      const rapport = await getCapitalDecesInvaliditeAvantRetraite();
+      return {
+        lignes: rapport.lignes as unknown as Ligne[],
+        resume: [
+          { label: 'Total dû', valeur: rapport.totalDu },
+          { label: 'Total payé', valeur: rapport.totalPaye },
+        ],
+      };
+    }
+    case 'CAPITAL_RESTANT_DU_PERIODE': {
+      const rapport = await getCapitalRestantDuPeriode(periode.dateDebut, periode.dateFin);
+      return {
+        lignes: rapport.lignes as unknown as Ligne[],
+        resume: [{ label: 'Total reversé sur la période', valeur: rapport.total }],
+      };
+    }
     case 'PROVISIONS_GLOBALES': {
       const rapport = await getProvisionsGlobales();
       return {
@@ -287,6 +400,8 @@ async function chargerDonnees(id: EtatId, periode: { dateDebut: string; dateFin:
         ],
       };
     }
+    case 'AVIS_ANNUEL':
+      return { lignes: (await getAvisAnnuelEligibles()) as unknown as Ligne[], resume: null };
     default:
       return { lignes: [], resume: null };
   }
@@ -329,10 +444,12 @@ export default function Reporting() {
   const [periode, setPeriode] = useState({ dateDebut: premierJourAnnee(), dateFin: aujourdHuiIso() });
   const [rapportCima, setRapportCima] = useState<CimaC20Report | null>(null);
   const [exportEnCours, setExportEnCours] = useState(false);
+  const [telechargementEnCours, setTelechargementEnCours] = useState<string | null>(null);
 
   const definition = useMemo(() => ETATS.find((e) => e.id === etatActif), [etatActif]);
   const colonnes = useMemo(() => colonnesPour(etatActif), [etatActif]);
   const necessitePeriode = ETATS_PERIODE.includes(etatActif);
+  const necessiteAnnee = etatActif === 'CIMA_C20' || etatActif === 'AVIS_ANNUEL';
 
   const chargerCima = async () => {
     setIsLoading(true);
@@ -398,6 +515,27 @@ export default function Reporting() {
     }
   };
 
+  const handleTelechargerAvisAnnuel = async (idAdherent: string, matricule: string) => {
+    setTelechargementEnCours(idAdherent);
+    setErreur(null);
+    try {
+      const { data, error } = await compteEsrService.telechargerAvisAnnuel(idAdherent, annee);
+      if (error || !data) {
+        throw error || new Error('Avis annuel indisponible.');
+      }
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `avis-annuel-esr-${matricule || idAdherent}-${annee}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      setErreur(e?.message || "Erreur lors du téléchargement de l'avis annuel.");
+    } finally {
+      setTelechargementEnCours(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
@@ -446,7 +584,7 @@ export default function Reporting() {
             <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
               <h3 className="text-base font-bold text-slate-800">{definition?.label}</h3>
               <div className="flex flex-wrap items-center gap-2">
-                {etatActif === 'CIMA_C20' && (
+                {necessiteAnnee && (
                   <input
                     type="number"
                     value={annee}
@@ -574,6 +712,9 @@ export default function Reporting() {
                               {c.header}
                             </th>
                           ))}
+                          {etatActif === 'AVIS_ANNUEL' && (
+                            <th className="py-2.5 px-3 whitespace-nowrap">Action</th>
+                          )}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -605,6 +746,27 @@ export default function Reporting() {
                                 </td>
                               );
                             })}
+                            {etatActif === 'AVIS_ANNUEL' && (
+                              <td className="py-2.5 px-3 whitespace-nowrap">
+                                <button
+                                  onClick={() =>
+                                    handleTelechargerAvisAnnuel(
+                                      String((ligne as any).idAdherent),
+                                      String((ligne as any).matricule ?? ''),
+                                    )
+                                  }
+                                  disabled={telechargementEnCours === (ligne as any).idAdherent}
+                                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#2b529f]/10 hover:bg-[#2b529f]/20 text-[#2b529f] text-xs font-semibold rounded-lg transition disabled:opacity-50"
+                                >
+                                  {telechargementEnCours === (ligne as any).idAdherent ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <FileDown className="w-3.5 h-3.5" />
+                                  )}
+                                  PDF {annee}
+                                </button>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>

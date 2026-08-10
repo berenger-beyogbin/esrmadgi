@@ -23,6 +23,18 @@ function statutRenteActuel(rows: Array<{ annee: number; trimestre: number; statu
   return dernier.statut === 'PAYEE' ? 'A_JOUR' : 'PAS_A_JOUR';
 }
 
+function rachatLigne(row: any) {
+  return {
+    matricule: row.matricule,
+    nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+    dateDemande: row.date_demande,
+    statut: row.statut,
+    capitalVerse: Number(row.capital_verse ?? 0),
+    penalite: Number(row.penalite ?? 0),
+    montantNet: Number(row.montant_net ?? 0),
+  };
+}
+
 function adherentBase(row: any) {
   return {
     matricule: row.matricule,
@@ -82,17 +94,106 @@ export const reportingService = {
     });
   },
 
+  async retraitesParStatutFiltre(cible: 'A_JOUR' | 'PAS_A_JOUR'): Promise<unknown[]> {
+    const lignes = (await this.adherentsRetraitesParStatut()) as Array<{ statut: string }>;
+    return lignes.filter((row) => row.statut === cible);
+  },
+
+  async actifsParStatut(): Promise<Array<{ statut: string; [key: string]: unknown }>> {
+    const adherents = await reportingRepository.findAdherents('ACTIFS');
+    const matricules = adherents.map((row) => row.matricule).filter(Boolean);
+    const precomptes = await reportingRepository.findPrecomptesParMatricules(matricules);
+    const parMatricule = groupBy(precomptes, (row) => row.matricule);
+    return adherents.map((row) => ({
+      ...adherentBase(row),
+      statut: statutPrecompteActuel(parMatricule.get(row.matricule) ?? []),
+    }));
+  },
+
+  async actifsParStatutFiltre(cible: 'A_JOUR' | 'PAS_A_JOUR'): Promise<unknown[]> {
+    const lignes = await this.actifsParStatut();
+    return lignes.filter((row) => row.statut === cible);
+  },
+
+  async ayantsDroitGlobal(): Promise<unknown[]> {
+    const beneficiaires = await reportingRepository.findBeneficiairesTous();
+    const idsAdherents = Array.from(new Set(beneficiaires.map((row) => Number(row.id_adherent))));
+    const adherents = await reportingRepository.findAdherentsParIds(idsAdherents);
+    const parAdherent = new Map(adherents.map((row) => [row.id_adherent, row]));
+    return beneficiaires.map((row) => {
+      const adherent = parAdherent.get(row.id_adherent);
+      return {
+        matriculeAdherent: adherent?.matricule ?? '',
+        nomPrenomsAdherent: adherent ? `${adherent.nom ?? ''} ${adherent.prenoms ?? ''}`.trim() : '',
+        nomPrenomsAyantDroit: `${row.nom_benef ?? ''} ${row.prenoms_benef ?? ''}`.trim(),
+        lien: row.lien ?? '',
+        pourcentage: Number(row.pourcentage ?? 0),
+        statut: row.statut ?? '',
+      };
+    });
+  },
+
+  // "Reversement du capital restant dû sur une période" = somme des versements de rente
+  // effectivement payés (rente_versements, statut PAYEE) dans l'intervalle demandé.
+  async capitalRestantDuPeriode(dateDebut: string, dateFin: string): Promise<unknown> {
+    const versements = await reportingRepository.findVersementsRentesPeriodeAvecAdherent(dateDebut, dateFin);
+    const idsAdherents = Array.from(
+      new Set(versements.map((row) => Number(row.rentes?.id_adherent)).filter((id) => !Number.isNaN(id))),
+    );
+    const adherents = await reportingRepository.findAdherentsParIds(idsAdherents);
+    const parAdherent = new Map(adherents.map((row) => [row.id_adherent, row]));
+    const parAdherentVersements = groupBy(versements, (row) => Number(row.rentes?.id_adherent));
+    const lignes = Array.from(parAdherentVersements.entries())
+      .map(([idAdherent, groupe]) => {
+        const adherent = parAdherent.get(idAdherent);
+        return {
+          matricule: adherent?.matricule ?? '',
+          nomPrenoms: adherent ? `${adherent.nom ?? ''} ${adherent.prenoms ?? ''}`.trim() : '',
+          nombreVersements: groupe.length,
+          montantReverse: groupe.reduce((sum, row) => sum + Number(row.montant ?? row.montant_a_payer ?? 0), 0),
+        };
+      })
+      .sort((a, b) => b.montantReverse - a.montantReverse);
+    const total = lignes.reduce((sum, row) => sum + row.montantReverse, 0);
+    return { dateDebut, dateFin, total, lignes };
+  },
+
+  // "Avant la retraite" = adhérent dont le statut retraite est resté false au moment du décès/invalidité.
+  async capitalDecesInvaliditeAvantRetraite(): Promise<unknown> {
+    const rows = await reportingRepository.findPrestationsParType(['DECES', 'INVALIDITE']);
+    const idsAdherents = Array.from(new Set(rows.map((row) => Number(row.id_adherent))));
+    const adherents = await reportingRepository.findAdherentsParIds(idsAdherents);
+    const parAdherent = new Map(adherents.map((row) => [row.id_adherent, row]));
+    const lignes = rows
+      .filter((row) => parAdherent.get(Number(row.id_adherent))?.retraite === false)
+      .map((row) => ({
+        matricule: row.matricule,
+        nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+        type: row.type_prestation,
+        statut: row.statut_prestation,
+        montantDu: Number(row.montant_du ?? 0),
+        montantPaye: Number(row.montant_paye ?? 0),
+      }));
+    const totalDu = lignes.reduce((sum, row) => sum + row.montantDu, 0);
+    const totalPaye = lignes.reduce((sum, row) => sum + row.montantPaye, 0);
+    return { totalDu, totalPaye, lignes };
+  },
+
   async rachatsResiliations(): Promise<unknown[]> {
     const rows = await reportingRepository.findRachatsResiliations();
-    return rows.map((row) => ({
-      matricule: row.matricule,
-      nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
-      dateDemande: row.date_demande,
-      statut: row.statut,
-      capitalVerse: Number(row.capital_verse ?? 0),
-      penalite: Number(row.penalite ?? 0),
-      montantNet: Number(row.montant_net ?? 0),
-    }));
+    return rows.map((row) => rachatLigne(row));
+  },
+
+  // Un dossier avant 2 années complètes de cotisations est une résiliation (pénalité de 5%
+  // selon la note technique) ; au-delà, c'est un rachat total.
+  async rachats(): Promise<unknown[]> {
+    const rows = await reportingRepository.findRachatsResiliations();
+    return rows.filter((row) => Number(row.anciennete_annees ?? 0) >= 2).map((row) => rachatLigne(row));
+  },
+
+  async resiliations(): Promise<unknown[]> {
+    const rows = await reportingRepository.findRachatsResiliations();
+    return rows.filter((row) => Number(row.anciennete_annees ?? 0) < 2).map((row) => rachatLigne(row));
   },
 
   async agentsDecedes(): Promise<unknown[]> {
@@ -271,6 +372,18 @@ export const reportingService = {
     ].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 
     return { dateDebut, dateFin, entrees, sorties, solde: entrees - sorties, mouvements };
+  },
+
+  async avisAnnuelEligibles(): Promise<unknown> {
+    const adherents = await reportingRepository.findAdherents('TOUS');
+    return adherents
+      .map((row) => ({
+        idAdherent: String(row.id_adherent),
+        matricule: row.matricule,
+        nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+        grade: row.grade ?? '',
+      }))
+      .sort((a, b) => a.nomPrenoms.localeCompare(b.nomPrenoms));
   },
 
   async getCimaC20(annee: number): Promise<unknown> {

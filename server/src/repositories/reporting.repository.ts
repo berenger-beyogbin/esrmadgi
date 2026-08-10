@@ -82,7 +82,9 @@ export const reportingRepository = {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from('v_rachats_details')
-      .select('id_rachat,matricule,nom,prenoms,date_demande,statut,capital_verse,penalite,montant_net')
+      .select(
+        'id_rachat,matricule,nom,prenoms,date_demande,statut,capital_verse,penalite,montant_net,anciennete_annees',
+      )
       .order('date_demande', { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -117,7 +119,7 @@ export const reportingRepository = {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from('v_adherents_complets')
-      .select('id_adherent,matricule,nom,prenoms,grade')
+      .select('id_adherent,matricule,nom,prenoms,grade,retraite')
       .in('id_adherent', idsAdherents);
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -170,6 +172,29 @@ export const reportingRepository = {
     if (dateDebut) query = query.gte('date_paiement', dateDebut);
     if (dateFin) query = query.lte('date_paiement', dateFin);
     const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findBeneficiairesTous(): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('beneficiaires')
+      .select('id_beneficiaire,id_adherent,nom_benef,prenoms_benef,lien,pourcentage,statut,date_enreg')
+      .order('date_enreg', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findVersementsRentesPeriodeAvecAdherent(dateDebut: string, dateFin: string): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('rente_versements')
+      .select('id_rente,montant,montant_a_payer,statut,date_paiement,rentes!inner(id_adherent)')
+      .eq('statut', 'PAYEE')
+      .not('date_paiement', 'is', null)
+      .gte('date_paiement', dateDebut)
+      .lte('date_paiement', dateFin);
     if (error) throw new Error(error.message);
     return data ?? [];
   },
