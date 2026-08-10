@@ -5,7 +5,7 @@ import { cotisationsRepository } from '../repositories/cotisations.repository';
 import { auditService } from './audit.service';
 import { calculerProvisionDepuisMouvements, calculerValeurRachatEligibleDepuisProvision } from './moteur-actuariel.service';
 import { reglesActuariellesService } from './regles-actuarielles.service';
-import { genererAvisAnnuelPdf } from './pdf-document.service';
+import { genererAvisAnnuelPdf, genererReleveComptePdf } from './pdf-document.service';
 
 export function repartirCotisationsCompte(cotisations: Array<{ montant: number; source: string }>): {
   primesPeriodiques: number; cotisationUnique: number;
@@ -44,8 +44,8 @@ export const comptesEsrService = {
     adherentId: string,
     dateCalcul: string,
   ): Promise<unknown> {
-    if (user.role === 'ADHERENT') {
-      throw new AppError(403, 'Recalcul reserve aux gestionnaires');
+    if (user.role === 'ADHERENT' && (!user.id_adherent || String(user.id_adherent) !== String(adherentId))) {
+      throw new AppError(403, 'Acces refuse au recalcul du compte ESR de cet adherent');
     }
 
     const regles = await reglesActuariellesService.getRegles(dateCalcul);
@@ -147,6 +147,27 @@ export const comptesEsrService = {
       cotisationUnique: repartition.cotisationUnique,
       dateCalcul,
       versionCalcul: String(historique.version_calc ?? ''),
+    });
+  },
+
+  async genererReleveCompte(user: AuthenticatedUser, adherentId: string): Promise<Uint8Array> {
+    const compte = await this.getCompteByAdherentId(user, adherentId) as any;
+    if (!compte) throw new AppError(404, 'Compte ESR introuvable');
+    const cotisations = await cotisationsRepository.findCotisationsByAdherentId(adherentId) as any[];
+    return genererReleveComptePdf({
+      nom: String(compte.nom ?? ''),
+      prenoms: String(compte.prenoms ?? ''),
+      matricule: String(compte.matricule ?? ''),
+      dateCalcul: String(compte.date_calcul ?? new Date().toISOString().slice(0, 10)),
+      capitalAcquis: Number(compte.capital_acquis ?? 0),
+      provisionMathematique: Number(compte.pm ?? 0),
+      valeurRachat: Number(compte.valeur_rachat ?? 0),
+      cotisations: cotisations.map((row) => ({
+        periode: String(row.periode ?? ''),
+        montant: Number(row.montant ?? 0),
+        dateValeur: String(row.date_valeur ?? row.date_cotisation ?? ''),
+        source: String(row.source ?? ''),
+      })),
     });
   },
 };

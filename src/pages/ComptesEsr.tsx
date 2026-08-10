@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { compteEsrService } from '../services/compteEsrService';
 import { VCompteEsrDetails, DBUser } from '../types';
-import { Search, Info, Landmark, Calculator, AlertCircle, RefreshCw, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Search, Landmark, Calculator, AlertCircle, RefreshCw, Layers } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
 
@@ -9,11 +9,15 @@ interface ComptesEsrProps {
   currentUser: DBUser;
 }
 
+const COMPTES_PER_PAGE_OPTIONS = [10, 25, 50, 100];
+
 export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
   const [comptes, setComptes] = useState<VCompteEsrDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchComptes = async () => {
     setIsLoading(true);
@@ -24,6 +28,7 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
       });
       if (error) throw error;
       setComptes(data || []);
+      setCurrentPage(1);
     } catch (e: any) {
       console.error(e);
       setErrorMsg('Erreur de chargement des comptes individuels.');
@@ -42,27 +47,27 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
     }
   };
 
-  const handleAvisAnnuel = async (compte: VCompteEsrDetails) => {
-    const anneeParDefaut = new Date().getFullYear() - 1;
-    const saisie = window.prompt("Annee de l'avis annuel cloture :", String(anneeParDefaut));
-    if (saisie == null) return;
-    const annee = Number(saisie);
-    if (!Number.isInteger(annee) || annee < 2020 || annee > new Date().getFullYear()) {
-      setErrorMsg("L'annee de l'avis annuel est invalide.");
+  const openFicheAdherent = (compte: VCompteEsrDetails) => {
+    const adherentId = String(compte.id_adherent ?? compte.adherent_id ?? '');
+    if (!adherentId) {
+      setErrorMsg("Impossible d'ouvrir la fiche : identifiant adhérent manquant.");
       return;
     }
-    const { data, error } = await compteEsrService.telechargerAvisAnnuel(compte.adherent_id, annee);
-    if (error || !data) {
-      setErrorMsg(error?.message || 'Avis annuel indisponible.');
-      return;
-    }
-    const url = URL.createObjectURL(data);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `avis-annuel-esr-${compte.matricule}-${annee}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('fiche-adherent', adherentId);
+    window.open(url.toString(), '_blank', 'noopener,noreferrer');
   };
+
+  const totalPages = Math.max(1, Math.ceil(comptes.length / rowsPerPage));
+  const paginatedComptes = comptes.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage,
+  );
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   return (
     <div className="space-y-6" id="comptes-esr-container">
@@ -118,32 +123,32 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
           <p className="text-slate-400 text-xs">Aucun compte trouvé correspondant aux critères de recherche.</p>
         </div>
       ) : (
-        <ScrollableTableWrapper>
+        <ScrollableTableWrapper maxHeight="none">
           <table className="w-full table-fixed divide-y divide-slate-100 text-left text-xs" id="tbl-comptes-esr">
             <colgroup>
               <col className="w-[9%]" />
-              <col className="w-[18%]" />
-              <col className="w-[12%]" />
-              <col className="w-[12%]" />
-              <col className="w-[12%]" />
-              <col className="w-[14%]" />
+              <col className="w-[19%]" />
               <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[15%]" />
+              <col className="w-[14%]" />
               <col className="w-[10%]" />
+              <col className="w-[7%]" />
             </colgroup>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-[11px] leading-tight [&_th]:whitespace-normal [&_th]:break-words [&_th]:px-2 [&_th]:py-3">
               <tr>
                 <th className="py-3.5 px-4">Matricule</th>
                 <th className="py-3.5 px-4">Nom & Prénoms</th>
                 <th className="py-3.5 px-4 text-right">Primes payées (pp)</th>
-                <th className="py-3.5 px-4 text-right">Part unique (pu)</th>
                 <th className="py-3.5 px-4 text-right">Capital acquis</th>
                 <th className="py-3.5 px-4 text-right">Provision math. (pm)</th>
                 <th className="py-3.5 px-4 text-right">Valeur de rachat</th>
-                <th className="py-3.5 px-4 text-center">Date calcul / Version</th>
+                <th className="py-3.5 px-4 text-center">Date calcul</th>
+                <th className="py-3.5 px-2 text-center">Voir</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white text-slate-700 [&_td]:break-words [&_td]:px-2">
-              {comptes.map((c) => (
+              {paginatedComptes.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50/55 transition-colors">
                   <td className="py-4 px-4 font-bold text-slate-800 font-mono tracking-wide">
                     {c.matricule}
@@ -153,9 +158,6 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
                   </td>
                   <td className="py-4 px-4 text-right font-mono text-slate-600">
                     {formatFCFA(c.pp || 0)}
-                  </td>
-                  <td className="py-4 px-4 text-right font-mono text-slate-600">
-                    {formatFCFA(c.pu || 0)}
                   </td>
                   <td className="py-4 px-4 text-right font-bold font-mono text-teal-700">
                     {formatFCFA(c.capital_acquis || 0)}
@@ -167,34 +169,72 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
                     {formatFCFA(c.valeur_rachat || 0)}
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <div>
-                      <p className="font-semibold text-slate-600 font-mono text-xs">{formatDateFr(c.date_calcul)}</p>
-                      <p className="text-xs text-slate-400 font-mono mt-0.5">v.{c.version_calc || '1.0'}</p>
-                      <button
-                        onClick={() => handleAvisAnnuel(c)}
-                        className="mt-2 px-2 py-1 bg-slate-800 text-white rounded text-[9px] font-bold"
-                      >
-                        Avis annuel
-                      </button>
-                    </div>
+                    <p className="font-semibold text-slate-600 font-mono text-xs">{formatDateFr(c.date_calcul)}</p>
+                  </td>
+                  <td className="py-4 px-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => openFicheAdherent(c)}
+                      className="inline-flex items-center justify-center p-2 rounded-lg border border-blue-200 bg-blue-50 text-[#2b529f] hover:bg-[#2b529f] hover:text-white transition"
+                      title={`Voir la fiche de ${c.nom} ${c.prenoms}`}
+                      aria-label={`Voir la fiche individuelle de ${c.nom} ${c.prenoms} dans un nouvel onglet`}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/70">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+              <p className="text-xs font-semibold text-slate-500">
+                Affichage {(currentPage - 1) * rowsPerPage + 1} à{' '}
+                {Math.min(currentPage * rowsPerPage, comptes.length)} sur {comptes.length} comptes
+              </p>
+              <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
+                Lignes par page
+                <select
+                  value={rowsPerPage}
+                  onChange={(event) => {
+                    setRowsPerPage(Number(event.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
+                  aria-label="Nombre de comptes par page"
+                >
+                  {COMPTES_PER_PAGE_OPTIONS.map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex items-center gap-2" aria-label="Pagination des comptes individuels">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Page précédente"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="min-w-24 text-center text-xs font-bold text-slate-600">
+                Page {currentPage} sur {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Page suivante"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </ScrollableTableWrapper>
       )}
-
-      {/* Informative actuarial footnotes */}
-      <div className="bg-amber-50/60 border border-amber-200/60 rounded-2xl p-5 flex items-start gap-3 text-xs text-amber-900">
-        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-bold">Spécificité Légale des Provisions Mathématiques :</p>
-          <p className="text-amber-800 leading-relaxed font-light">
-            La provision mathématique correspond aux cotisations encaissées, capitalisées selon le taux technique en vigueur et leurs dates de valeur. Elle est actualisée à chaque fin de période de précompte. La table de mortalité CIMA F intervient ensuite dans les calculs viagers liés à la rente santé.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

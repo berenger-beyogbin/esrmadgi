@@ -4,7 +4,7 @@ import { cotisationService } from '../services/cotisationService';
 import type { RetourDgiResult } from '../services/cotisationService';
 import { adherentService } from '../services/adherentService';
 import { VPrecompteDetails, DBUser, GeneratePrecomptesResult, PeriodeMetier } from '../types';
-import { Download, FileCheck, Loader2, Play, Upload, X, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileCheck, Loader2, Play, Upload, X, CheckCircle2 } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
 
@@ -23,6 +23,8 @@ const STATUT_STYLES: Record<string, string> = {
   REPORTE: 'bg-slate-50 text-slate-600 border-slate-200',
   REGULARISE: 'bg-violet-50 text-violet-700 border-violet-200',
 };
+
+const PRECOMPTES_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 function normalizedRecord(record: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
@@ -125,6 +127,8 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   const [selectedRetourFile, setSelectedRetourFile] = useState<File | null>(null);
 
   const [statutFilter, setStatutFilter] = useState('TOUS');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [selectedRegularisation, setSelectedRegularisation] = useState<VPrecompteDetails | null>(null);
   const [montantRegul, setMontantRegul] = useState('');
@@ -411,10 +415,23 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   const filteredPrecomptes = statutFilter === 'TOUS'
     ? precomptes
     : precomptes.filter((p) => p.statut_precompte === statutFilter);
+  const totalPages = Math.max(1, Math.ceil(filteredPrecomptes.length / rowsPerPage));
+  const paginatedPrecomptes = filteredPrecomptes.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage,
+  );
   const statutsDisponibles = Array.from(new Set([
     ...Object.keys(STATUT_STYLES),
     ...precomptes.map((precompte) => precompte.statut_precompte).filter(Boolean),
   ]));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statutFilter, periodeGenerer]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   return (
     <div className="space-y-6" id="precomptes-container">
@@ -567,7 +584,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
           <p className="text-slate-400 text-sm">Aucun précompte trouvé.</p>
         </div>
       ) : (
-        <ScrollableTableWrapper>
+        <ScrollableTableWrapper maxHeight="none">
           <table className="w-full table-fixed divide-y divide-slate-100 text-xs text-left text-slate-700" id="tbl-precomptes">
             <colgroup>
               <col className="w-[9%]" />
@@ -612,7 +629,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
                     Aucun précompte avec le statut {statutFilter}.
                   </td>
                 </tr>
-              ) : filteredPrecomptes.map((p) => (
+              ) : paginatedPrecomptes.map((p) => (
                 <tr key={p.id_precompte} className="hover:bg-slate-50/50 transition">
                   <td className="py-2.5 px-2 font-bold font-mono text-slate-700 truncate">{p.matricule}</td>
                   <td className="py-2.5 px-2 font-semibold text-slate-800 uppercase leading-snug break-words">{p.nom} {p.prenoms}</td>
@@ -652,6 +669,55 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
               ))}
             </tbody>
           </table>
+          {filteredPrecomptes.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/70">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                <p className="text-xs font-semibold text-slate-500">
+                  Affichage {(currentPage - 1) * rowsPerPage + 1} à{' '}
+                  {Math.min(currentPage * rowsPerPage, filteredPrecomptes.length)} sur {filteredPrecomptes.length} précomptes
+                </p>
+                <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
+                  Lignes par page
+                  <select
+                    value={rowsPerPage}
+                    onChange={(event) => {
+                      setRowsPerPage(Number(event.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#2b529f]"
+                    aria-label="Nombre de lignes de précomptes par page"
+                  >
+                    {PRECOMPTES_PER_PAGE_OPTIONS.map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="flex items-center gap-2" aria-label="Pagination des précomptes">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Page précédente"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="min-w-24 text-center text-xs font-bold text-slate-600">
+                  Page {currentPage} sur {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Page suivante"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </ScrollableTableWrapper>
       )}
 

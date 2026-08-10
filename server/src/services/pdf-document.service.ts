@@ -175,3 +175,94 @@ export async function genererAvisAnnuelPdf(input: {
   });
   return pdf.save();
 }
+
+export async function genererReleveComptePdf(input: {
+  nom: string;
+  prenoms: string;
+  matricule: string;
+  dateCalcul: string;
+  capitalAcquis: number;
+  provisionMathematique: number;
+  valeurRachat: number;
+  cotisations: Array<{ periode: string; montant: number; dateValeur: string; source: string }>;
+}): Promise<Uint8Array> {
+  const pdf = await PDFDocument.create();
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const blue = rgb(0.17, 0.32, 0.62);
+  const slate = rgb(0.25, 0.3, 0.38);
+  const light = rgb(0.95, 0.97, 0.99);
+  const generatedAt = new Date().toISOString().slice(0, 10);
+  const totalCotise = input.cotisations.reduce((sum, row) => sum + Number(row.montant || 0), 0);
+
+  let pageNumber = 0;
+  let page = pdf.addPage([595.28, 841.89]);
+  let y = 0;
+
+  const drawHeader = (continuation = false) => {
+    pageNumber += 1;
+    page.drawText("MUTUELLE DES AGENTS DE LA DIRECTION GENERALE DES IMPOTS", { x: 82, y: 800, size: 11, font: bold, color: blue });
+    page.drawText("EPARGNE SANTE ET RETRAITE", { x: 205, y: 783, size: 9, font: bold, color: rgb(0.82, 0.48, 0.08) });
+    page.drawLine({ start: { x: 50, y: 768 }, end: { x: 545, y: 768 }, thickness: 1.4, color: blue });
+    page.drawText(continuation ? "RELEVE DE COMPTE - SUITE" : "RELEVE DE COMPTE INDIVIDUEL", { x: continuation ? 190 : 162, y: 738, size: 16, font: bold, color: slate });
+    page.drawText(`Page ${pageNumber}`, { x: 500, y: 30, size: 8, font: regular, color: slate });
+    page.drawText(`Document genere le ${generatedAt}`, { x: 50, y: 30, size: 8, font: regular, color: slate });
+    y = 705;
+  };
+
+  const drawTableHeader = () => {
+    page.drawRectangle({ x: 50, y: y - 5, width: 495, height: 26, color: blue });
+    const headers = [['Periode', 60], ['Date de valeur', 140], ['Origine', 260], ['Montant encaisse', 405]] as const;
+    for (const [label, x] of headers) page.drawText(label, { x, y: y + 4, size: 8, font: bold, color: rgb(1, 1, 1) });
+    y -= 30;
+  };
+
+  drawHeader();
+  page.drawRectangle({ x: 50, y: 628, width: 495, height: 65, color: light, borderColor: rgb(0.82, 0.85, 0.9), borderWidth: 0.7 });
+  page.drawText('Adherent', { x: 65, y: 670, size: 9, font: bold, color: blue });
+  page.drawText(`${safe(input.nom)} ${safe(input.prenoms)}`.slice(0, 62), { x: 150, y: 670, size: 10, font: regular });
+  page.drawText('Matricule', { x: 65, y: 647, size: 9, font: bold, color: blue });
+  page.drawText(safe(input.matricule), { x: 150, y: 647, size: 10, font: regular });
+  page.drawText('Date de situation', { x: 340, y: 647, size: 9, font: bold, color: blue });
+  page.drawText(safe(input.dateCalcul), { x: 445, y: 647, size: 10, font: regular });
+
+  page.drawText('SITUATION FINANCIERE', { x: 50, y: 595, size: 11, font: bold, color: blue });
+  const summary = [
+    ['Total des cotisations encaissees', totalCotise],
+    ['Capital acquis', input.capitalAcquis],
+    ['Provision mathematique', input.provisionMathematique],
+    ['Valeur de rachat estimative', input.valeurRachat],
+  ] as const;
+  y = 560;
+  for (const [label, amount] of summary) {
+    page.drawRectangle({ x: 50, y: y - 8, width: 495, height: 28, color: light, borderColor: rgb(0.86, 0.88, 0.92), borderWidth: 0.4 });
+    page.drawText(label, { x: 62, y, size: 9, font: regular, color: slate });
+    page.drawText(formatMoney(amount), { x: 402, y, size: 9, font: bold, color: blue });
+    y -= 34;
+  }
+
+  page.drawText('HISTORIQUE DES COTISATIONS EFFECTIVEMENT ENCAISSEES', { x: 50, y: y - 2, size: 10, font: bold, color: blue });
+  y -= 34;
+  drawTableHeader();
+
+  if (input.cotisations.length === 0) {
+    page.drawText('Aucune cotisation encaissee a la date du releve.', { x: 62, y, size: 9, font: regular, color: slate });
+  } else {
+    for (const [index, row] of input.cotisations.entries()) {
+      if (y < 70) {
+        page = pdf.addPage([595.28, 841.89]);
+        drawHeader(true);
+        drawTableHeader();
+      }
+      if (index % 2 === 0) page.drawRectangle({ x: 50, y: y - 7, width: 495, height: 24, color: light });
+      page.drawText(safe(row.periode), { x: 60, y, size: 8.5, font: regular });
+      page.drawText(safe(row.dateValeur) || '-', { x: 140, y, size: 8.5, font: regular });
+      page.drawText(safe(row.source).replace(/_/g, ' ').slice(0, 22), { x: 260, y, size: 8.5, font: regular });
+      page.drawText(formatMoney(Number(row.montant || 0)), { x: 405, y, size: 8.5, font: bold, color: slate });
+      y -= 25;
+    }
+  }
+
+  page.drawText('Seules les cotisations effectivement encaissees figurent sur ce releve.', { x: 50, y: 52, size: 8, font: regular, color: slate });
+  return pdf.save();
+}

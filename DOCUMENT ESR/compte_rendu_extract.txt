@@ -1,0 +1,44 @@
+COMPTE RENDU DE RÉUNION
+Présentation du logiciel ESR-MADGI
+OBJET : Présentation et revue des fonctionnalités du logiciel ESR-MADGI
+1. CONTEXTE ET OBJECTIFS
+Le mercredi 17 juin 2026, de 10h15 à 11h50, une réunion s'est tenue dans la salle Club House AKP, portant sur la présentation du logiciel ESR-MADGI par son concepteur, en présence du Consultant Actuaire.
+Cette rencontre avait pour objectif principal la prise de connaissance des fonctionnalités du logiciel ESR-MADGI, lequel est destiné à :
+• Automatiser les calculs actuariels : cotisations, provisions mathématiques et techniques, capital décès, rachats ;
+• Centraliser les données des adhérents et fiabiliser le suivi des prestations (rentes viagères, capital décès, capital invalidité) ;
+• Produire des états de reporting conformes aux obligations réglementaires et assurer une transparence de gestion (avis annuel automatisé).
+2. REVUE DES FONCTIONNALITÉS ET DILIGENCES IDENTIFIÉES
+Le tableau ci-dessous récapitule, pour chaque module du logiciel, les fonctionnalités présentées ainsi que les diligences et propositions de révision identifiées au cours de la séance.
+3. DÉCISION PRISE
+Il a été convenu que l'ensemble des vérifications et propositions de modifications devront être réalisées par le Chef de Service ESR, en concertation avec le Consultant Actuaire.
+Établi à Abidjan, le 18 juin 2026
+                                                                                                                                      Le Rapporteur
+Le Chef de Service ESR
+--- TABLE ---
+Date : | Mercredi 17 juin 2026 | Heure de début : | 10h15
+Lieu : | Salle de réunion Club House AKP | Heure de fin : | 11h50
+Participants : | Ensemble des participants (voir liste de présence jointe) | Ensemble des participants (voir liste de présence jointe) | Ensemble des participants (voir liste de présence jointe)
+Destinataire : | Ensemble des participants | Ensemble des participants | Ensemble des participants
+--- TABLE ---
+Module | Fonctionnalités | Diligences / Propositions de révision
+1. Tableau de bord | • Présentation des adhérents actifs
+• Provision mathématique des cotisations | • Vérifier les formules intégrées pour le calcul des provisions mathématiques
+2. Adhérents | • Suivi des adhérents | • Lier l'édition des données adhérents à la base de données de l'APS
+• Permettre l'impression des simulations par les gestionnaires, Modele
+3. Cotisations | • Gestion des précomptes
+• Régularisation des précomptes
+• Cotisation spontanée | • Mettre à disposition le fichier actuel des précomptes afin de conformer le fichier précompte ESR
+• Ajouter le numéro de téléphone des adhérents sur la liste des non-précomptés
+• Proposer un reçu pour les paiements spontanés modele
+• Mettre en place une procédure de validation des paiements par chèque. Workflow
+4. Prestations | • Consommation médicale des adhérents | • Recadrer le module en fonction des cotisations-maladie versées à l'APS (rente viagère) cotisation payer a l’APS CHAQUE TRIMESTRE VERSER PAR ESR ;
+5. Rachat | • Demande de rachat
+• Liquidation de rachat | RACHAT PAS DES PRESTATION, CALCUL RACHAT ET REMBOUSEMENT DES CAPITAL ; RESILIATION ; VOIR LE FICHIER VBA EXCEL ; RACHAT TOTAL A UN TEMPS T ;
+
+• Vérifier les formules de calcul et les procédures de validation
+6. Placement | • État de présentation et de suivi des placements
+• Liquidation de rachat | • Vérifier les formules de calcul et les procédures de validation
+
+Mettre cela en standby
+7. Reporting | • Proposition des états de reporting | • Vérifier la liste et valider les états pertinents
+• Proposer le format des états

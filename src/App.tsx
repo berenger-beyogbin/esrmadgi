@@ -172,6 +172,18 @@ export default function App() {
     );
   }
 
+  const ficheAdherentId = new URLSearchParams(window.location.search).get('fiche-adherent');
+  if (ficheAdherentId && currentUser.role !== 'ADHERENT') {
+    return (
+      <EspaceAdherent
+        currentUser={currentUser}
+        adherentIdOverride={ficheAdherentId}
+        previewMode
+        onSignOut={() => window.close()}
+      />
+    );
+  }
+
   if (currentUser.role === 'ADHERENT') {
     return <EspaceAdherent currentUser={currentUser} onSignOut={handleSignOut} />;
   }

@@ -113,6 +113,7 @@ export const cotisationsRepository = {
       .from('v_cotisations_details')
       .select('*')
       .eq('id_adherent', idAdherent)
+      .eq('statut_detail', 'ENCAISSEE')
       .order('date_valeur', { ascending: false });
 
     if (error) throw new Error(error.message);

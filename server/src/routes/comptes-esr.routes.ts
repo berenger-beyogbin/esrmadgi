@@ -3,6 +3,10 @@ import { comptesEsrController } from '../controllers/comptes-esr.controller';
 
 export const comptesEsrRouter = Router();
 
+comptesEsrRouter.get('/adherent/:adherentId/releve.pdf', (req, res, next) => {
+  comptesEsrController.releveCompte(req, res, next);
+});
+
 comptesEsrRouter.get('/adherent/:adherentId/avis-annuel.pdf', (req, res, next) => {
   comptesEsrController.avisAnnuel(req, res, next);
 });

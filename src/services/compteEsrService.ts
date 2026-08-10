@@ -1,4 +1,4 @@
-import { apiDownloadBlob, apiGet } from '../lib/apiClient';
+import { apiDownloadBlob, apiGet, apiPost } from '../lib/apiClient';
 import { VCompteEsrDetails } from '../types';
 
 type ApiResponse<T> = { data: T; error: string | null };
@@ -38,12 +38,29 @@ export const compteEsrService = {
     return { data: data?.data ? normalizeCompte(data.data) : null, error: toError(data?.error) };
   },
 
+  async recalculerCompte(adherentId: string, dateCalcul: string): Promise<{ data: VCompteEsrDetails | null; error: Error | null }> {
+    const { data, error } = await apiPost<ApiResponse<{ compte?: VCompteEsrDetails } & VCompteEsrDetails>>(
+      `/api/comptes-esr/adherent/${encodeURIComponent(adherentId)}/recalculer`,
+      { dateCalcul },
+    );
+    if (error) return { data: null, error: new Error(error) };
+    const compte = data?.data?.compte ?? data?.data ?? null;
+    return { data: compte ? normalizeCompte(compte) : null, error: toError(data?.error) };
+  },
+
   async telechargerAvisAnnuel(
     adherentId: string,
     annee: number,
   ): Promise<{ data: Blob | null; error: Error | null }> {
     const { data, error } = await apiDownloadBlob(
       `/api/comptes-esr/adherent/${encodeURIComponent(adherentId)}/avis-annuel.pdf?annee=${annee}`,
+    );
+    return { data, error: error ? new Error(error) : null };
+  },
+
+  async telechargerReleveCompte(adherentId: string): Promise<{ data: Blob | null; error: Error | null }> {
+    const { data, error } = await apiDownloadBlob(
+      `/api/comptes-esr/adherent/${encodeURIComponent(adherentId)}/releve.pdf`,
     );
     return { data, error: error ? new Error(error) : null };
   },

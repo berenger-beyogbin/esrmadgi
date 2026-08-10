@@ -75,4 +75,17 @@ export const comptesEsrController = {
       next(err);
     }
   },
+
+  async releveCompte(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsedId = idSchema.safeParse(req.params.adherentId);
+      if (!parsedId.success) throw new AppError(400, 'ID adherent invalide');
+      const pdf = await comptesEsrService.genererReleveCompte(requireUser(req), parsedId.data);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="releve-compte-esr.pdf"');
+      res.send(Buffer.from(pdf));
+    } catch (err) {
+      next(err);
+    }
+  },
 };
