@@ -241,7 +241,7 @@ export default function App() {
     },
     {
       id: 'REPORTING' as ModuleType,
-      label: 'Audit & Reporting',
+      label: 'Reporting',
       icon: BarChart,
       allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR', 'SUPERADMIN'],
     },
@@ -310,7 +310,7 @@ export default function App() {
       case 'UTILISATEURS':
         return <Utilisateurs currentUser={currentUser} />;
       case 'REPORTING':
-        return <Reporting currentUser={currentUser} />;
+        return <Reporting />;
       case 'AIDE':
         return (
           <div className="bg-white p-8 rounded-2xl border border-slate-150 shadow-xs max-w-4xl mx-auto space-y-6">

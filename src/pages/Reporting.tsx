@@ -1,10 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { DBUser } from '../types';
 import {
-  AdherentReportRow,
-  AgentDecedeReportRow,
   CimaC20Report,
-  RachatReportRow,
   exporterCimaC20,
   exporterTableauExcel,
   getAdherentsActifs,
@@ -12,22 +8,28 @@ import {
   getAdherentsRetraitesParStatut,
   getAgentsDecedes,
   getAgentsDecedesCapitalVerse,
+  getCapitalDecesInvalidite,
+  getCapitalRenteAdherents,
+  getCapitalRestantDuRetraites,
   getCimaC20,
+  getCotisationsPeriode,
   getListeAdherents,
+  getMouvementsFlux,
+  getProvisionsGlobales,
   getRachatsResiliations,
 } from '../services/reportingService';
 import { formatDateFr, formatFCFA } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
-import Audit from './Audit';
-import { Download, FileBarChart2, Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
-
-interface ReportingProps {
-  currentUser: DBUser;
-}
+import { Download, FileBarChart2, Loader2, RefreshCw } from 'lucide-react';
 
 const STATUT_STYLES: Record<string, string> = {
   A_JOUR: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   PAS_A_JOUR: 'bg-rose-50 text-rose-700 border-rose-200',
+};
+
+const SENS_STYLES: Record<string, string> = {
+  ENTREE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  SORTIE: 'bg-rose-50 text-rose-700 border-rose-200',
 };
 
 type EtatId =
@@ -63,18 +65,19 @@ const ETATS: EtatDef[] = [
   { id: 'AGENTS_DECEDES', label: 'Agents décédés', categorie: 'Listes', disponible: true },
   { id: 'AGENTS_DECEDES_CAPITAL', label: "Décès — capital versé aux ayants droit", categorie: 'Listes', disponible: true },
   { id: 'CIMA_C20', label: 'État CIMA C-20', categorie: 'Montants', disponible: true },
-  { id: 'COTISATIONS_PERIODE', label: 'Cotisations encaissées sur une période', categorie: 'Montants', disponible: false },
-  { id: 'CAPITAL_RENTE', label: 'Capital constitutif de rente par adhérent', categorie: 'Montants', disponible: false },
-  { id: 'CAPITAL_RESTANT_DU', label: 'Capital restant dû par retraité', categorie: 'Montants', disponible: false },
-  { id: 'CAPITAL_DECES', label: 'Capital décès/invalidité par adhérent', categorie: 'Montants', disponible: false },
-  { id: 'PROVISIONS_GLOBALES', label: 'Provisions globales & flux de rentes', categorie: 'Montants', disponible: false },
-  { id: 'MOUVEMENTS_FLUX', label: 'Mouvements de flux (entrants/sortants)', categorie: 'Montants', disponible: false },
+  { id: 'COTISATIONS_PERIODE', label: 'Cotisations encaissées sur une période', categorie: 'Montants', disponible: true },
+  { id: 'CAPITAL_RENTE', label: 'Capital constitutif de rente par adhérent', categorie: 'Montants', disponible: true },
+  { id: 'CAPITAL_RESTANT_DU', label: 'Capital restant dû par retraité', categorie: 'Montants', disponible: true },
+  { id: 'CAPITAL_DECES', label: 'Capital décès/invalidité par adhérent', categorie: 'Montants', disponible: true },
+  { id: 'PROVISIONS_GLOBALES', label: 'Provisions globales & flux de rentes', categorie: 'Montants', disponible: true },
+  { id: 'MOUVEMENTS_FLUX', label: 'Mouvements de flux (entrants/sortants)', categorie: 'Montants', disponible: true },
   { id: 'AVIS_ANNUEL', label: 'Avis annuel adhérents', categorie: 'Autres', disponible: false },
 ];
 
 const CATEGORIES: EtatDef['categorie'][] = ['Listes', 'Montants', 'Autres'];
+const ETATS_PERIODE: EtatId[] = ['COTISATIONS_PERIODE', 'MOUVEMENTS_FLUX'];
 
-type Ligne = AdherentReportRow | RachatReportRow | AgentDecedeReportRow;
+type Ligne = Record<string, unknown>;
 
 interface ColonneVue {
   header: string;
@@ -82,6 +85,16 @@ interface ColonneVue {
   format?: 'money' | 'date';
   width?: number;
 }
+
+interface Metrique {
+  label: string;
+  valeur: number;
+}
+
+const COLONNES_RESUME: ColonneVue[] = [
+  { header: 'Indicateur', key: 'label', width: 32 },
+  { header: 'Montant', key: 'valeur', format: 'money', width: 22 },
+];
 
 function colonnesPour(id: EtatId): ColonneVue[] {
   switch (id) {
@@ -153,29 +166,129 @@ function colonnesPour(id: EtatId): ColonneVue[] {
         { header: 'Montant payé', key: 'montantPaye', format: 'money', width: 18 },
         { header: 'Ayants droit', key: 'ayantsDroit', width: 32 },
       ];
+    case 'COTISATIONS_PERIODE':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Mouvements', key: 'nombreMouvements', width: 14 },
+        { header: 'Montant encaissé', key: 'montantEncaisse', format: 'money', width: 20 },
+      ];
+    case 'CAPITAL_RENTE':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Grade', key: 'grade', width: 16 },
+        { header: 'Capital constitutif de rente', key: 'capitalConstitutifRente', format: 'money', width: 24 },
+      ];
+    case 'CAPITAL_RESTANT_DU':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Grade', key: 'grade', width: 16 },
+        { header: 'Capital initial', key: 'capitalInitial', format: 'money', width: 20 },
+        { header: 'Montant restant dû', key: 'montantRestantDu', format: 'money', width: 20 },
+      ];
+    case 'CAPITAL_DECES':
+      return [
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 28 },
+        { header: 'Type', key: 'type', width: 14 },
+        { header: 'Statut', key: 'statut', width: 16 },
+        { header: 'Montant dû', key: 'montantDu', format: 'money', width: 18 },
+        { header: 'Montant payé', key: 'montantPaye', format: 'money', width: 18 },
+      ];
+    case 'MOUVEMENTS_FLUX':
+      return [
+        { header: 'Date', key: 'date', format: 'date', width: 14 },
+        { header: 'Sens', key: 'sens', width: 12 },
+        { header: 'Libellé', key: 'libelle', width: 24 },
+        { header: 'Matricule', key: 'matricule', width: 14 },
+        { header: 'Nom et Prénoms', key: 'nomPrenoms', width: 26 },
+        { header: 'Montant', key: 'montant', format: 'money', width: 18 },
+      ];
     default:
       return [];
   }
 }
 
-async function chargerLignes(id: EtatId): Promise<Ligne[]> {
+interface DonneesEtat {
+  lignes: Ligne[];
+  resume: Metrique[] | null;
+}
+
+async function chargerDonnees(id: EtatId, periode: { dateDebut: string; dateFin: string }): Promise<DonneesEtat> {
   switch (id) {
     case 'ADHERENTS':
-      return getListeAdherents();
+      return { lignes: (await getListeAdherents()) as unknown as Ligne[], resume: null };
     case 'ADHERENTS_ACTIFS':
-      return getAdherentsActifs();
+      return { lignes: (await getAdherentsActifs()) as unknown as Ligne[], resume: null };
     case 'ADHERENTS_RETRAITES':
-      return getAdherentsRetraites();
+      return { lignes: (await getAdherentsRetraites()) as unknown as Ligne[], resume: null };
     case 'ADHERENTS_RETRAITES_STATUT':
-      return getAdherentsRetraitesParStatut();
+      return { lignes: (await getAdherentsRetraitesParStatut()) as unknown as Ligne[], resume: null };
     case 'RACHATS':
-      return getRachatsResiliations();
+      return { lignes: (await getRachatsResiliations()) as unknown as Ligne[], resume: null };
     case 'AGENTS_DECEDES':
-      return getAgentsDecedes();
+      return { lignes: (await getAgentsDecedes()) as unknown as Ligne[], resume: null };
     case 'AGENTS_DECEDES_CAPITAL':
-      return getAgentsDecedesCapitalVerse();
+      return { lignes: (await getAgentsDecedesCapitalVerse()) as unknown as Ligne[], resume: null };
+    case 'COTISATIONS_PERIODE': {
+      const rapport = await getCotisationsPeriode(periode.dateDebut, periode.dateFin);
+      return {
+        lignes: rapport.lignes as unknown as Ligne[],
+        resume: [{ label: 'Total encaissé sur la période', valeur: rapport.total }],
+      };
+    }
+    case 'CAPITAL_RENTE': {
+      const rapport = await getCapitalRenteAdherents();
+      return {
+        lignes: rapport.lignes as unknown as Ligne[],
+        resume: [{ label: 'Total capital constitutif de rente', valeur: rapport.total }],
+      };
+    }
+    case 'CAPITAL_RESTANT_DU': {
+      const rapport = await getCapitalRestantDuRetraites();
+      return {
+        lignes: rapport.lignes as unknown as Ligne[],
+        resume: [{ label: 'Total restant dû', valeur: rapport.total }],
+      };
+    }
+    case 'CAPITAL_DECES': {
+      const rapport = await getCapitalDecesInvalidite();
+      return {
+        lignes: rapport.lignes as unknown as Ligne[],
+        resume: [
+          { label: 'Total dû', valeur: rapport.totalDu },
+          { label: 'Total payé', valeur: rapport.totalPaye },
+        ],
+      };
+    }
+    case 'PROVISIONS_GLOBALES': {
+      const rapport = await getProvisionsGlobales();
+      return {
+        lignes: [],
+        resume: [
+          { label: 'Provisions mathématiques', valeur: rapport.provisionsMathematiques },
+          { label: 'Capital acquis total', valeur: rapport.capitalAcquisTotal },
+          { label: 'Capital décès versé', valeur: rapport.capitalDecesVerse },
+          { label: 'Capital invalidité versé', valeur: rapport.capitalInvaliditeVerse },
+          { label: 'Flux de rentes versés', valeur: rapport.fluxRentesVerses },
+        ],
+      };
+    }
+    case 'MOUVEMENTS_FLUX': {
+      const rapport = await getMouvementsFlux(periode.dateDebut, periode.dateFin);
+      return {
+        lignes: rapport.mouvements as unknown as Ligne[],
+        resume: [
+          { label: 'Entrées', valeur: rapport.entrees },
+          { label: 'Sorties', valeur: rapport.sorties },
+          { label: 'Solde net', valeur: rapport.solde },
+        ],
+      };
+    }
     default:
-      return [];
+      return { lignes: [], resume: null };
   }
 }
 
@@ -186,19 +299,40 @@ function formaterCellule(valeur: unknown, format?: 'money' | 'date'): string {
   return String(valeur);
 }
 
-export default function Reporting({ currentUser }: ReportingProps) {
-  const peutVoirAudit = currentUser.role === 'ADMINISTRATEUR' || currentUser.role === 'SUPERADMIN';
-  const [ongletPrincipal, setOngletPrincipal] = useState<'ETATS' | 'AUDIT'>('ETATS');
+function premierJourAnnee(): string {
+  return `${new Date().getFullYear()}-01-01`;
+}
+
+function aujourdHuiIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+const GRILLE_RESUME_CLASSES: Record<number, string> = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-2',
+  3: 'grid-cols-2 md:grid-cols-3',
+  4: 'grid-cols-2 md:grid-cols-4',
+  5: 'grid-cols-2 md:grid-cols-5',
+};
+
+function classeGrilleResume(nombre: number): string {
+  return GRILLE_RESUME_CLASSES[Math.min(Math.max(nombre, 1), 5)] ?? 'grid-cols-2 md:grid-cols-4';
+}
+
+export default function Reporting() {
   const [etatActif, setEtatActif] = useState<EtatId>('ADHERENTS');
   const [lignes, setLignes] = useState<Ligne[]>([]);
+  const [resume, setResume] = useState<Metrique[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [annee, setAnnee] = useState<number>(new Date().getFullYear());
+  const [periode, setPeriode] = useState({ dateDebut: premierJourAnnee(), dateFin: aujourdHuiIso() });
   const [rapportCima, setRapportCima] = useState<CimaC20Report | null>(null);
   const [exportEnCours, setExportEnCours] = useState(false);
 
   const definition = useMemo(() => ETATS.find((e) => e.id === etatActif), [etatActif]);
   const colonnes = useMemo(() => colonnesPour(etatActif), [etatActif]);
+  const necessitePeriode = ETATS_PERIODE.includes(etatActif);
 
   const chargerCima = async () => {
     setIsLoading(true);
@@ -214,24 +348,31 @@ export default function Reporting({ currentUser }: ReportingProps) {
     }
   };
 
-  useEffect(() => {
-    if (ongletPrincipal !== 'ETATS') return;
-    if (!definition?.disponible) return;
+  const rafraichir = async () => {
     if (etatActif === 'CIMA_C20') {
-      chargerCima();
+      await chargerCima();
       return;
     }
     setIsLoading(true);
     setErreur(null);
-    chargerLignes(etatActif)
-      .then((rows) => setLignes(rows))
-      .catch((e: any) => {
-        setErreur(e?.message || "Erreur lors du chargement de l'état.");
-        setLignes([]);
-      })
-      .finally(() => setIsLoading(false));
+    try {
+      const donnees = await chargerDonnees(etatActif, periode);
+      setLignes(donnees.lignes);
+      setResume(donnees.resume);
+    } catch (e: any) {
+      setErreur(e?.message || "Erreur lors du chargement de l'état.");
+      setLignes([]);
+      setResume(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!definition?.disponible) return;
+    rafraichir();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [etatActif, ongletPrincipal, annee]);
+  }, [etatActif]);
 
   const handleExportExcel = async () => {
     if (!definition) return;
@@ -241,11 +382,13 @@ export default function Reporting({ currentUser }: ReportingProps) {
         await exporterCimaC20(annee);
         return;
       }
+      const colonnesExport = colonnes.length > 0 ? colonnes : COLONNES_RESUME;
+      const lignesExport = colonnes.length > 0 ? lignes : ((resume ?? []) as unknown as Ligne[]);
       await exporterTableauExcel({
         titre: definition.label.toUpperCase(),
         sousTitre: `Généré le ${formatDateFr(new Date().toISOString())}`,
-        colonnes: colonnes.map((c) => ({ header: c.header, key: c.key, width: c.width, format: c.format })),
-        lignes: lignes as unknown as Array<Record<string, unknown>>,
+        colonnes: colonnesExport.map((c) => ({ header: c.header, key: c.key, width: c.width, format: c.format })),
+        lignes: lignesExport as unknown as Array<Record<string, unknown>>,
         fichier: `${definition.label.replace(/[^a-zA-Z0-9]+/g, '_')}.xlsx`,
       });
     } catch (e: any) {
@@ -267,37 +410,9 @@ export default function Reporting({ currentUser }: ReportingProps) {
             États réglementaires et statistiques du module Épargne Santé Retraite.
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setOngletPrincipal('ETATS')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
-              ongletPrincipal === 'ETATS'
-                ? 'bg-[#2b529f] text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            États
-          </button>
-          {peutVoirAudit && (
-            <button
-              onClick={() => setOngletPrincipal('AUDIT')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition ${
-                ongletPrincipal === 'AUDIT'
-                  ? 'bg-[#2b529f] text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              Journal d'audit
-            </button>
-          )}
-        </div>
       </div>
 
-      {ongletPrincipal === 'AUDIT' ? (
-        <Audit currentUser={currentUser} />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-4">
             {CATEGORIES.map((categorie) => (
               <div key={categorie}>
@@ -330,7 +445,7 @@ export default function Reporting({ currentUser }: ReportingProps) {
           <div className="lg:col-span-3 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
               <h3 className="text-base font-bold text-slate-800">{definition?.label}</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {etatActif === 'CIMA_C20' && (
                   <input
                     type="number"
@@ -339,8 +454,25 @@ export default function Reporting({ currentUser }: ReportingProps) {
                     className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
                   />
                 )}
+                {necessitePeriode && (
+                  <>
+                    <input
+                      type="date"
+                      value={periode.dateDebut}
+                      onChange={(e) => setPeriode((p) => ({ ...p, dateDebut: e.target.value }))}
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                    />
+                    <span className="text-slate-400 text-xs">au</span>
+                    <input
+                      type="date"
+                      value={periode.dateFin}
+                      onChange={(e) => setPeriode((p) => ({ ...p, dateFin: e.target.value }))}
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                    />
+                  </>
+                )}
                 <button
-                  onClick={etatActif === 'CIMA_C20' ? chargerCima : () => chargerLignes(etatActif).then(setLignes)}
+                  onClick={rafraichir}
                   disabled={isLoading || !definition?.disponible}
                   className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition disabled:opacity-50"
                 >
@@ -415,51 +547,74 @@ export default function Reporting({ currentUser }: ReportingProps) {
                   </ScrollableTableWrapper>
                 </div>
               )
-            ) : lignes.length === 0 ? (
-              <div className="p-16 text-center bg-white rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-slate-400 text-sm">Aucune donnée pour cet état.</p>
-              </div>
             ) : (
-              <ScrollableTableWrapper>
-                <table className="min-w-full divide-y divide-slate-100 text-sm">
-                  <thead className="bg-slate-50">
-                    <tr className="text-left text-[11px] font-bold text-slate-500 uppercase">
-                      {colonnes.map((c) => (
-                        <th key={c.key} className="py-2.5 px-3 whitespace-nowrap">
-                          {c.header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {lignes.map((ligne, index) => (
-                      <tr key={`${(ligne as any).matricule ?? index}-${index}`} className="hover:bg-slate-50">
-                        {colonnes.map((c) => {
-                          const valeur = (ligne as Record<string, unknown>)[c.key];
-                          if (c.key === 'statut' && typeof valeur === 'string' && STATUT_STYLES[valeur]) {
-                            return (
-                              <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
-                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${STATUT_STYLES[valeur]}`}>
-                                  {valeur === 'A_JOUR' ? 'À jour' : 'Pas à jour'}
-                                </span>
-                              </td>
-                            );
-                          }
-                          return (
-                            <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
-                              {formaterCellule(valeur, c.format)}
-                            </td>
-                          );
-                        })}
-                      </tr>
+              <div className="space-y-4">
+                {resume && resume.length > 0 && (
+                  <div className={`grid ${classeGrilleResume(resume.length)} gap-4`}>
+                    {resume.map((m) => (
+                      <div key={m.label} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase">{m.label}</p>
+                        <p className="text-lg font-bold text-slate-800 mt-1">{formatFCFA(m.valeur)}</p>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </ScrollableTableWrapper>
+                  </div>
+                )}
+
+                {colonnes.length === 0 ? null : lignes.length === 0 ? (
+                  <div className="p-16 text-center bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <p className="text-slate-400 text-sm">Aucune donnée pour cet état.</p>
+                  </div>
+                ) : (
+                  <ScrollableTableWrapper>
+                    <table className="min-w-full divide-y divide-slate-100 text-sm">
+                      <thead className="bg-slate-50">
+                        <tr className="text-left text-[11px] font-bold text-slate-500 uppercase">
+                          {colonnes.map((c) => (
+                            <th key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                              {c.header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {lignes.map((ligne, index) => (
+                          <tr key={`${(ligne as any).matricule ?? index}-${index}`} className="hover:bg-slate-50">
+                            {colonnes.map((c) => {
+                              const valeur = ligne[c.key];
+                              if (c.key === 'statut' && typeof valeur === 'string' && STATUT_STYLES[valeur]) {
+                                return (
+                                  <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${STATUT_STYLES[valeur]}`}>
+                                      {valeur === 'A_JOUR' ? 'À jour' : 'Pas à jour'}
+                                    </span>
+                                  </td>
+                                );
+                              }
+                              if (c.key === 'sens' && typeof valeur === 'string' && SENS_STYLES[valeur]) {
+                                return (
+                                  <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${SENS_STYLES[valeur]}`}>
+                                      {valeur === 'ENTREE' ? 'Entrée' : 'Sortie'}
+                                    </span>
+                                  </td>
+                                );
+                              }
+                              return (
+                                <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                                  {formaterCellule(valeur, c.format)}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </ScrollableTableWrapper>
+                )}
+              </div>
             )}
           </div>
         </div>
-      )}
     </div>
   );
 }

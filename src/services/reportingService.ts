@@ -34,6 +34,62 @@ export interface AgentDecedeReportRow {
   ayantsDroit?: string;
 }
 
+export interface CotisationsPeriodeReport {
+  dateDebut: string;
+  dateFin: string;
+  total: number;
+  lignes: Array<{ matricule: string; nomPrenoms: string; nombreMouvements: number; montantEncaisse: number }>;
+}
+
+export interface CapitalRenteReport {
+  total: number;
+  lignes: Array<{ matricule: string; nomPrenoms: string; grade: string; capitalConstitutifRente: number }>;
+}
+
+export interface CapitalRestantDuReport {
+  total: number;
+  lignes: Array<{ matricule: string; nomPrenoms: string; grade: string; capitalInitial: number; montantRestantDu: number }>;
+}
+
+export interface CapitalDecesInvaliditeReport {
+  totalDu: number;
+  totalPaye: number;
+  lignes: Array<{
+    matricule: string;
+    nomPrenoms: string;
+    type: string;
+    statut: string;
+    montantDu: number;
+    montantPaye: number;
+  }>;
+}
+
+export interface ProvisionsGlobalesReport {
+  genereLe: string;
+  provisionsMathematiques: number;
+  capitalAcquisTotal: number;
+  capitalDecesVerse: number;
+  capitalInvaliditeVerse: number;
+  fluxRentesVerses: number;
+  nombreComptes: number;
+}
+
+export interface MouvementsFluxReport {
+  dateDebut: string;
+  dateFin: string;
+  entrees: number;
+  sorties: number;
+  solde: number;
+  mouvements: Array<{
+    date: string | null;
+    sens: 'ENTREE' | 'SORTIE';
+    libelle: string;
+    matricule: string;
+    nomPrenoms: string;
+    montant: number;
+  }>;
+}
+
 export interface CimaC20Report {
   etat: string;
   annee: number;
@@ -145,6 +201,27 @@ export const getAdherentsRetraitesParStatut = () => fetchReport<AdherentReportRo
 export const getRachatsResiliations = () => fetchReport<RachatReportRow>('rachats-resiliations');
 export const getAgentsDecedes = () => fetchReport<AgentDecedeReportRow>('agents-decedes');
 export const getAgentsDecedesCapitalVerse = () => fetchReport<AgentDecedeReportRow>('agents-decedes-capital-verse');
+
+async function fetchObjet<T>(path: string): Promise<T> {
+  const { data, error } = await apiGet<ApiResponse<T>>(`/api/reporting/${path}`);
+  if (error) throw new Error(error);
+  if (data?.error) throw new Error(data.error);
+  if (!data?.data) throw new Error('État indisponible.');
+  return data.data;
+}
+
+export const getCotisationsPeriode = (dateDebut: string, dateFin: string) =>
+  fetchObjet<CotisationsPeriodeReport>(
+    `cotisations-periode?dateDebut=${encodeURIComponent(dateDebut)}&dateFin=${encodeURIComponent(dateFin)}`,
+  );
+export const getCapitalRenteAdherents = () => fetchObjet<CapitalRenteReport>('capital-rente-adherents');
+export const getCapitalRestantDuRetraites = () => fetchObjet<CapitalRestantDuReport>('capital-restant-du-retraites');
+export const getCapitalDecesInvalidite = () => fetchObjet<CapitalDecesInvaliditeReport>('capital-deces-invalidite');
+export const getProvisionsGlobales = () => fetchObjet<ProvisionsGlobalesReport>('provisions-globales');
+export const getMouvementsFlux = (dateDebut: string, dateFin: string) =>
+  fetchObjet<MouvementsFluxReport>(
+    `mouvements-flux?dateDebut=${encodeURIComponent(dateDebut)}&dateFin=${encodeURIComponent(dateFin)}`,
+  );
 
 interface ColonneExport {
   header: string;

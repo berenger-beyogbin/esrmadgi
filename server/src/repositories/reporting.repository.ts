@@ -111,4 +111,66 @@ export const reportingRepository = {
     if (error) throw new Error(error.message);
     return data ?? [];
   },
+
+  async findAdherentsParIds(idsAdherents: number[]): Promise<any[]> {
+    if (idsAdherents.length === 0) return [];
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_adherents_complets')
+      .select('id_adherent,matricule,nom,prenoms,grade')
+      .in('id_adherent', idsAdherents);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findCotisationsPeriode(dateDebut: string, dateFin: string): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_cotisations_details')
+      .select('id_adherent,matricule,nom,prenoms,montant,date_valeur,source')
+      .eq('statut_detail', 'ENCAISSEE')
+      .not('date_valeur', 'is', null)
+      .gte('date_valeur', dateDebut)
+      .lte('date_valeur', dateFin)
+      .order('date_valeur', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findRachatsPeriode(dateDebut: string, dateFin: string): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_rachats_details')
+      .select('id_rachat,matricule,nom,prenoms,statut,montant_net,date_paiement')
+      .eq('statut', 'PAYE')
+      .gte('date_paiement', dateDebut)
+      .lte('date_paiement', dateFin);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findPrestationsPayeesPeriode(dateDebut: string, dateFin: string): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_prestations_details')
+      .select('id_prestation,matricule,nom,prenoms,type_prestation,montant_paye,date_paiement')
+      .eq('statut_prestation', 'PAYE')
+      .not('date_paiement', 'is', null)
+      .gte('date_paiement', dateDebut)
+      .lte('date_paiement', dateFin);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async findRenteVersementsPayes(dateDebut?: string, dateFin?: string): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    let query: any = supabase
+      .from('rente_versements')
+      .select('id_rente,montant,montant_a_payer,statut,date_paiement');
+    if (dateDebut) query = query.gte('date_paiement', dateDebut);
+    if (dateFin) query = query.lte('date_paiement', dateFin);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
 };

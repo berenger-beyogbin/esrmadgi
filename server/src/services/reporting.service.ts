@@ -127,6 +127,152 @@ export const reportingService = {
     }));
   },
 
+  async cotisationsPeriode(dateDebut: string, dateFin: string): Promise<unknown> {
+    const rows = await reportingRepository.findCotisationsPeriode(dateDebut, dateFin);
+    const parMatricule = groupBy(rows, (row) => row.matricule);
+    const lignes = Array.from(parMatricule.entries())
+      .map(([matricule, groupe]) => ({
+        matricule,
+        nomPrenoms: `${groupe[0].nom ?? ''} ${groupe[0].prenoms ?? ''}`.trim(),
+        nombreMouvements: groupe.length,
+        montantEncaisse: groupe.reduce((sum, row) => sum + Number(row.montant ?? 0), 0),
+      }))
+      .sort((a, b) => b.montantEncaisse - a.montantEncaisse);
+    const total = lignes.reduce((sum, row) => sum + row.montantEncaisse, 0);
+    return { dateDebut, dateFin, total, lignes };
+  },
+
+  async capitalRenteAdherents(): Promise<unknown> {
+    const adherents = await reportingRepository.findAdherents('TOUS');
+    const lignes = adherents
+      .map((row) => ({
+        matricule: row.matricule,
+        nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+        grade: row.grade ?? '',
+        capitalConstitutifRente: Number(row.capital_acquis ?? 0),
+      }))
+      .sort((a, b) => b.capitalConstitutifRente - a.capitalConstitutifRente);
+    const total = lignes.reduce((sum, row) => sum + row.capitalConstitutifRente, 0);
+    return { total, lignes };
+  },
+
+  async capitalRestantDuRetraites(): Promise<unknown> {
+    const rentes = (await reportingRepository.findRentesActives()).filter(
+      (row) => row.statut_rente === 'ACTIVE',
+    );
+    const idsAdherents = rentes.map((row) => Number(row.id_adherent));
+    const adherents = await reportingRepository.findAdherentsParIds(idsAdherents);
+    const parAdherent = new Map(adherents.map((row) => [row.id_adherent, row]));
+    const lignes = rentes
+      .map((rente) => {
+        const adherent = parAdherent.get(rente.id_adherent);
+        return {
+          matricule: adherent?.matricule ?? '',
+          nomPrenoms: adherent ? `${adherent.nom ?? ''} ${adherent.prenoms ?? ''}`.trim() : '',
+          grade: adherent?.grade ?? '',
+          capitalInitial: Number(rente.capital_initial ?? 0),
+          montantRestantDu: Number(rente.capital_restant ?? 0),
+        };
+      })
+      .sort((a, b) => b.montantRestantDu - a.montantRestantDu);
+    const total = lignes.reduce((sum, row) => sum + row.montantRestantDu, 0);
+    return { total, lignes };
+  },
+
+  async capitalDecesInvalidite(): Promise<unknown> {
+    const rows = await reportingRepository.findPrestationsParType(['DECES', 'INVALIDITE']);
+    const lignes = rows.map((row) => ({
+      matricule: row.matricule,
+      nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+      type: row.type_prestation,
+      statut: row.statut_prestation,
+      montantDu: Number(row.montant_du ?? 0),
+      montantPaye: Number(row.montant_paye ?? 0),
+    }));
+    const totalDu = lignes.reduce((sum, row) => sum + row.montantDu, 0);
+    const totalPaye = lignes.reduce((sum, row) => sum + row.montantPaye, 0);
+    return { totalDu, totalPaye, lignes };
+  },
+
+  async provisionsGlobales(): Promise<unknown> {
+    const comptes = await reportingRepository.findComptes();
+    const provisionsMathematiques = comptes.reduce((sum, row) => sum + Number(row.pm ?? 0), 0);
+    const capitalAcquisTotal = comptes.reduce((sum, row) => sum + Number(row.capital_acquis ?? 0), 0);
+
+    const deces = await reportingRepository.findPrestationsParType(['DECES']);
+    const capitalDecesVerse = deces
+      .filter((row) => row.statut_prestation === 'PAYE')
+      .reduce((sum, row) => sum + Number(row.montant_paye ?? 0), 0);
+
+    const invalidite = await reportingRepository.findPrestationsParType(['INVALIDITE']);
+    const capitalInvaliditeVerse = invalidite
+      .filter((row) => row.statut_prestation === 'PAYE')
+      .reduce((sum, row) => sum + Number(row.montant_paye ?? 0), 0);
+
+    const versements = await reportingRepository.findRenteVersementsPayes();
+    const fluxRentesVerses = versements
+      .filter((row) => row.statut === 'PAYEE')
+      .reduce((sum, row) => sum + Number(row.montant ?? row.montant_a_payer ?? 0), 0);
+
+    return {
+      genereLe: new Date().toISOString(),
+      provisionsMathematiques,
+      capitalAcquisTotal,
+      capitalDecesVerse,
+      capitalInvaliditeVerse,
+      fluxRentesVerses,
+      nombreComptes: comptes.length,
+    };
+  },
+
+  async mouvementsFlux(dateDebut: string, dateFin: string): Promise<unknown> {
+    const [cotisations, prestations, rachats, versements] = await Promise.all([
+      reportingRepository.findCotisationsPeriode(dateDebut, dateFin),
+      reportingRepository.findPrestationsPayeesPeriode(dateDebut, dateFin),
+      reportingRepository.findRachatsPeriode(dateDebut, dateFin),
+      reportingRepository.findRenteVersementsPayes(dateDebut, dateFin),
+    ]);
+
+    const entrees = cotisations.reduce((sum, row) => sum + Number(row.montant ?? 0), 0);
+    const sortiesPrestations = prestations.reduce((sum, row) => sum + Number(row.montant_paye ?? 0), 0);
+    const sortiesRachats = rachats.reduce((sum, row) => sum + Number(row.montant_net ?? 0), 0);
+    const sortiesRentes = versements
+      .filter((row) => row.statut === 'PAYEE')
+      .reduce((sum, row) => sum + Number(row.montant ?? row.montant_a_payer ?? 0), 0);
+    const sorties = sortiesPrestations + sortiesRachats + sortiesRentes;
+
+    const mouvements = [
+      ...cotisations.map((row) => ({
+        date: row.date_valeur,
+        sens: 'ENTREE' as const,
+        libelle: `Cotisation ${row.source ?? ''}`.trim(),
+        matricule: row.matricule,
+        nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+        montant: Number(row.montant ?? 0),
+      })),
+      ...prestations
+        .filter((row) => Number(row.montant_paye ?? 0) > 0)
+        .map((row) => ({
+          date: row.date_paiement,
+          sens: 'SORTIE' as const,
+          libelle: `Prestation ${row.type_prestation ?? ''}`.trim(),
+          matricule: row.matricule,
+          nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+          montant: Number(row.montant_paye ?? 0),
+        })),
+      ...rachats.map((row) => ({
+        date: row.date_paiement,
+        sens: 'SORTIE' as const,
+        libelle: 'Rachat / résiliation',
+        matricule: row.matricule,
+        nomPrenoms: `${row.nom ?? ''} ${row.prenoms ?? ''}`.trim(),
+        montant: Number(row.montant_net ?? 0),
+      })),
+    ].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+
+    return { dateDebut, dateFin, entrees, sorties, solde: entrees - sorties, mouvements };
+  },
+
   async getCimaC20(annee: number): Promise<unknown> {
     const [cotisations, comptes, prestations] = await Promise.all([
       reportingRepository.findCotisationsAnnee(annee),

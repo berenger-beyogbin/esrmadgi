@@ -34,3 +34,27 @@ reportingRouter.get('/agents-decedes', (req, res, next) => {
 reportingRouter.get('/agents-decedes-capital-verse', (req, res, next) => {
   reportingController.agentsDecedesCapitalVerse(req, res, next);
 });
+
+reportingRouter.get('/cotisations-periode', (req, res, next) => {
+  reportingController.cotisationsPeriode(req, res, next);
+});
+
+reportingRouter.get('/capital-rente-adherents', (req, res, next) => {
+  reportingController.capitalRenteAdherents(req, res, next);
+});
+
+reportingRouter.get('/capital-restant-du-retraites', (req, res, next) => {
+  reportingController.capitalRestantDuRetraites(req, res, next);
+});
+
+reportingRouter.get('/capital-deces-invalidite', (req, res, next) => {
+  reportingController.capitalDecesInvalidite(req, res, next);
+});
+
+reportingRouter.get('/provisions-globales', (req, res, next) => {
+  reportingController.provisionsGlobales(req, res, next);
+});
+
+reportingRouter.get('/mouvements-flux', (req, res, next) => {
+  reportingController.mouvementsFlux(req, res, next);
+});
