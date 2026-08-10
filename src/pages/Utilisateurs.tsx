@@ -486,7 +486,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
         </div>
       ) : (
         <ScrollableTableWrapper>
-          <table className="min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-utilisateurs">
+          <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-utilisateurs">
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
               <tr>
                 <th className="py-3.5 px-4">Matricule</th>
@@ -501,14 +501,14 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
             <tbody className="divide-y divide-slate-100 bg-white">
               {users.map((user) => (
                 <tr key={user.id_utilisateur} className="hover:bg-slate-50/50 transition">
-                  <td className="py-3.5 px-4 font-bold font-mono text-slate-800">{user.matricule}</td>
-                  <td className="py-3.5 px-4">
+                  <td data-label="Matricule" className="py-3.5 px-4 font-bold font-mono text-slate-800">{user.matricule}</td>
+                  <td data-label="Profil" className="py-3.5 px-4">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs border ${roleBadge(user.profil)}`}>
                       <ShieldCheck className="w-3.5 h-3.5" />
                       {roleLabel(user.profil)}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-center">
+                  <td data-label="Statut" className="py-3.5 px-4 text-center">
                     {user.user_actif ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs">
                         <CheckCircle2 className="w-3.5 h-3.5" />
@@ -521,20 +521,20 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
                       </span>
                     )}
                   </td>
-                  <td className="py-3.5 px-4 text-center">
+                  <td data-label="Connexion" className="py-3.5 px-4 text-center">
                     {user.email_confirme ? (
                       <span className="text-emerald-700 font-semibold text-xs">Pret</span>
                     ) : (
                       <span className="text-amber-700 font-semibold text-xs">A verifier</span>
                     )}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-mono text-xs text-slate-500">
+                  <td data-label="Derniere connexion" className="py-3.5 px-4 text-center font-mono text-xs text-slate-500">
                     {formatDate(user.derniere_connexion)}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-mono text-xs text-slate-600">
+                  <td data-label="Rattachement" className="py-3.5 px-4 text-center font-mono text-xs text-slate-600">
                     {user.id_adherent ?? '-'}
                   </td>
-                  <td className="py-3.5 px-4 text-right">
+                  <td data-label="Actions" className="py-3.5 px-4 text-right">
                     <button
                       id={`btn-edit-user-${user.id_utilisateur}`}
                       onClick={() => openEdit(user)}

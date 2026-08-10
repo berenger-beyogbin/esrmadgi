@@ -43,3 +43,93 @@
     font-size: 0.875rem;
   }
 }
+
+/*
+ * Tableaux responsives : au-dela de 1024px (desktop), aucune regle ci-dessous
+ * ne s'applique donc le rendu desktop existant reste strictement identique.
+ * En dessous de 1024px (mobile/tablette), les tableaux marques `.rtable`
+ * se transforment en cartes empilees : chaque <tr> devient une carte, chaque
+ * <td> devient une ligne "libelle: valeur" via l'attribut data-label.
+ */
+@media (max-width: 1023px) {
+  .rtable, .rtable tbody, .rtable tr {
+    display: block;
+    width: 100%;
+  }
+
+  .rtable {
+    border: none !important;
+  }
+
+  .rtable thead {
+    display: block;
+  }
+
+  .rtable thead tr {
+    display: block;
+  }
+
+  /* Les libelles de colonnes texte sont masques (redondants avec data-label) */
+  .rtable thead th {
+    display: none;
+  }
+
+  /* Exception : un th contenant un controle interactif (filtre) reste visible */
+  .rtable thead th.th-mobile-filter {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .rtable thead th.th-mobile-filter select,
+  .rtable thead th.th-mobile-filter input {
+    width: 100%;
+  }
+
+  .rtable tbody tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background: #fff;
+  }
+
+  .rtable tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .rtable td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: right;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    white-space: normal !important;
+  }
+
+  .rtable td:last-child {
+    border-bottom: none !important;
+  }
+
+  .rtable td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #64748b;
+    text-align: left;
+    margin-right: auto;
+    white-space: nowrap;
+  }
+
+  /* Une cellule sans data-label (ex: message "aucun resultat") reste en bloc simple */
+  .rtable td:not([data-label]) {
+    display: block;
+    text-align: left;
+  }
+}

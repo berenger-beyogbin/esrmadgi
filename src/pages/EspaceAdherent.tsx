@@ -296,7 +296,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                 <h3 className="text-xl sm:text-2xl mb-1">Historique des cotisations</h3>
                 <p className="text-sm text-slate-500 mb-5">Les 8 opérations les plus récentes enregistrées sur votre compte.</p>
 
-                <div className="md:hidden space-y-3">
+                <div className="lg:hidden space-y-3">
                   {displayedCotisations.length === 0 ? (
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-400">
                       Aucune cotisation trouvée.
@@ -326,7 +326,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                   })}
                 </div>
 
-                <div className="hidden md:block overflow-x-auto">
+                <div className="hidden lg:block overflow-x-auto">
                   <table className="min-w-full text-sm">
                     <thead className="bg-slate-100 text-slate-800">
                       <tr>
@@ -368,7 +368,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                     <InfoGrid adherent={adherent} />
                   ) : (
                     <>
-                    <div className="md:hidden space-y-3">
+                    <div className="lg:hidden space-y-3">
                       {beneficiaires.length === 0 ? (
                         <div className="rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-400">Aucun bénéficiaire renseigné.</div>
                       ) : beneficiaires.map((benef) => {
@@ -392,7 +392,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                         );
                       })}
                     </div>
-                    <div className="hidden md:block overflow-x-auto">
+                    <div className="hidden lg:block overflow-x-auto">
                     <table className="min-w-full text-sm">
                       <thead className="bg-slate-100">
                         <tr>

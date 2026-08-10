@@ -232,7 +232,7 @@ export default function Cotisations({ currentUser, openSpontaneeSignal, activeVi
         </div>
       ) : (
         <ScrollableTableWrapper>
-          <table className="min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-cotisations-details">
+          <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-cotisations-details">
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
               <tr>
                 <th className="py-3.5 px-4">Adhérent</th>
@@ -251,19 +251,19 @@ export default function Cotisations({ currentUser, openSpontaneeSignal, activeVi
                   className="hover:bg-slate-50/50 transition cursor-pointer"
                   onClick={() => loadAdherentHistory(cot.matricule, `${cot.prenoms} ${cot.nom} (${cot.matricule})`)}
                 >
-                  <td className="py-3.5 px-4 font-bold text-slate-800 uppercase">
+                  <td data-label="Adhérent" className="py-3.5 px-4 font-bold text-slate-800 uppercase">
                     {cot.nom} {cot.prenoms}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-bold text-slate-700 font-mono">
+                  <td data-label="Matricule" className="py-3.5 px-4 text-center font-bold text-slate-700 font-mono">
                     {cot.matricule}
                   </td>
-                  <td className="py-3.5 px-4 font-semibold font-mono text-slate-600">
+                  <td data-label="Période" className="py-3.5 px-4 font-semibold font-mono text-slate-600">
                     {cot.periode}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-mono text-slate-500">
+                  <td data-label="Date valeur" className="py-3.5 px-4 text-center font-mono text-slate-500">
                     {formatDateFr(cot.date_valeur || cot.date_cotisation || '')}
                   </td>
-                  <td className="py-3.5 px-4 font-semibold text-slate-600">
+                  <td data-label="Source" className="py-3.5 px-4 font-semibold text-slate-600">
                     <span className={`px-2.5 py-1 rounded text-xs ${
                       cot.source === 'PRECOMPTE'
                         ? 'bg-blue-50 text-blue-700 border border-blue-100'
@@ -272,10 +272,10 @@ export default function Cotisations({ currentUser, openSpontaneeSignal, activeVi
                       {cot.source || '-'}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-slate-600 text-sm">
+                  <td data-label="Mode" className="py-3.5 px-4 text-slate-600 text-sm">
                     {cot.mode || '-'}
                   </td>
-                  <td className="py-3.5 px-4 text-right font-extrabold font-mono text-slate-800">
+                  <td data-label="Montant" className="py-3.5 px-4 text-right font-extrabold font-mono text-slate-800">
                     {formatFCFA(cot.montant)}
                   </td>
                 </tr>
@@ -309,7 +309,7 @@ export default function Cotisations({ currentUser, openSpontaneeSignal, activeVi
               </div>
             ) : (
               <div className="overflow-y-auto flex-1 border border-slate-100 rounded-xl">
-                <table className="min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-history-adherent">
+                <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-history-adherent">
                   <thead className="bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
                     <tr>
                       <th className="py-3.5 px-4">Période</th>
@@ -327,11 +327,11 @@ export default function Cotisations({ currentUser, openSpontaneeSignal, activeVi
                     ) : (
                       adherentHistory.map((h, i) => (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="py-3 px-4 font-bold font-mono text-slate-800">{h.periode}</td>
-                          <td className="py-3 px-4 font-mono text-slate-500">{formatDateFr(h.date_valeur || h.date_cotisation || '')}</td>
-                          <td className="py-3 px-4 font-semibold text-slate-600">{h.source || '-'}</td>
-                          <td className="py-3 px-4 text-slate-600 text-sm">{h.mode || '-'}</td>
-                          <td className="py-3 px-4 text-right font-extrabold font-mono text-slate-800">{formatFCFA(h.montant)}</td>
+                          <td data-label="Période" className="py-3 px-4 font-bold font-mono text-slate-800">{h.periode}</td>
+                          <td data-label="Date valeur" className="py-3 px-4 font-mono text-slate-500">{formatDateFr(h.date_valeur || h.date_cotisation || '')}</td>
+                          <td data-label="Source" className="py-3 px-4 font-semibold text-slate-600">{h.source || '-'}</td>
+                          <td data-label="Mode" className="py-3 px-4 text-slate-600 text-sm">{h.mode || '-'}</td>
+                          <td data-label="Montant versé" className="py-3 px-4 text-right font-extrabold font-mono text-slate-800">{formatFCFA(h.montant)}</td>
                         </tr>
                       ))
                     )}

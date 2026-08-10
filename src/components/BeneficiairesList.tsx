@@ -315,7 +315,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
         </div>
       ) : (
         <div className="overflow-x-auto border border-slate-100 rounded-2xl">
-          <table className="min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-beneficiaires">
+          <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-beneficiaires">
             <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold">
               <tr>
                 <th className="py-3 px-4">Bénéficiaire</th>
@@ -327,18 +327,18 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
             <tbody className="divide-y divide-slate-100 bg-white">
               {beneficiaires.map(b => (
                 <tr key={b.id_beneficiaire} className="hover:bg-slate-50 text-slate-700">
-                  <td className="py-3 px-4 font-semibold uppercase">
+                  <td data-label="Bénéficiaire" className="py-3 px-4 font-semibold uppercase">
                     {b.prenoms_benef} {b.nom_benef}
                   </td>
-                  <td className="py-3 px-4">
+                  <td data-label="Lien de parenté" className="py-3 px-4">
                     <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium text-xs">
                       {b.lien}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-center font-bold text-slate-800 font-mono">
+                  <td data-label="Part attribuée" className="py-3 px-4 text-center font-bold text-slate-800 font-mono">
                     {b.pourcentage}%
                   </td>
-                  <td className="py-3 px-4 text-right space-x-2">
+                  <td data-label="Actions" className="py-3 px-4 text-right space-x-2">
                     <button
                       id={`btn-edit-ben-${b.id_beneficiaire}`}
                       onClick={() => startEdit(b)}

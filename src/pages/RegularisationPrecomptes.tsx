@@ -212,7 +212,7 @@ export default function RegularisationPrecomptes({ currentUser }: Regularisation
         </div>
       ) : (
         <ScrollableTableWrapper>
-          <table className="min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-regularisation">
+          <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-regularisation">
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
               <tr>
                 <th className="py-3.5 px-4">Matricule</th>
@@ -227,21 +227,21 @@ export default function RegularisationPrecomptes({ currentUser }: Regularisation
             <tbody className="divide-y divide-slate-100 bg-white">
               {lignes.map((l) => (
                 <tr key={l.id_precompte} className="hover:bg-slate-50/50 transition">
-                  <td className="py-3 px-4 font-bold font-mono text-slate-700">{l.matricule}</td>
-                  <td className="py-3 px-4 font-semibold text-slate-800 uppercase">{l.nom} {l.prenoms}</td>
-                  <td className="py-3 px-4 font-bold font-mono text-slate-700">{l.telephone || '-'}</td>
-                  <td className="py-3 px-4 text-right font-semibold font-mono text-slate-700">
+                  <td data-label="Matricule" className="py-3 px-4 font-bold font-mono text-slate-700">{l.matricule}</td>
+                  <td data-label="Adhérent" className="py-3 px-4 font-semibold text-slate-800 uppercase">{l.nom} {l.prenoms}</td>
+                  <td data-label="Contact" className="py-3 px-4 font-bold font-mono text-slate-700">{l.telephone || '-'}</td>
+                  <td data-label="Montant Départ" className="py-3 px-4 text-right font-semibold font-mono text-slate-700">
                     {formatFCFA(l.montant_depart)}
                   </td>
-                  <td className="py-3 px-4 text-center font-mono text-slate-500">
+                  <td data-label="Date Départ" className="py-3 px-4 text-center font-mono text-slate-500">
                     {formatDateFr(l.date_generation)}
                   </td>
-                  <td className="py-3 px-4">
+                  <td data-label="Statut" className="py-3 px-4">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs border ${STATUT_STYLES[l.statut_precompte] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
                       {l.statut_precompte === 'NON_PRECOMPTE' ? 'NON PRECOMPTE' : l.statut_precompte}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td data-label="Actions" className="py-3 px-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button
                         id={`btn-payer-${l.id_precompte}`}

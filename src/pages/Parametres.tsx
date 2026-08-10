@@ -573,7 +573,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
               <div className="py-10 text-center text-sm text-slate-400">Aucune période enregistrée.</div>
             ) : (
               <ScrollableTableWrapper>
-                <table className="min-w-full text-sm">
+                <table className="rtable min-w-full text-sm">
                   <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr>
                     <th className="px-6 py-3 text-left">Période</th><th className="px-6 py-3 text-left">Année</th>
                     <th className="px-6 py-3 text-left">Trimestre</th><th className="px-6 py-3 text-left">Statut</th>
@@ -581,10 +581,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                   </tr></thead>
                   <tbody className="divide-y divide-slate-100">
                     {periodes.map((item) => <tr key={item.periode} className="hover:bg-slate-50/60">
-                      <td className="px-6 py-3 font-mono font-bold text-slate-800">{item.periode}</td>
-                      <td className="px-6 py-3 text-slate-600">{item.annee}</td><td className="px-6 py-3 text-slate-600">T{item.trimestre}</td>
-                      <td className="px-6 py-3"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${item.statut === 'OUVERTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>{item.statut}</span></td>
-                      <td className="px-6 py-3 text-xs text-slate-500">{item.date_cloture ? new Date(item.date_cloture).toLocaleString('fr-FR') : '—'}</td>
+                      <td data-label="Période" className="px-6 py-3 font-mono font-bold text-slate-800">{item.periode}</td>
+                      <td data-label="Année" className="px-6 py-3 text-slate-600">{item.annee}</td><td data-label="Trimestre" className="px-6 py-3 text-slate-600">T{item.trimestre}</td>
+                      <td data-label="Statut" className="px-6 py-3"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${item.statut === 'OUVERTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>{item.statut}</span></td>
+                      <td data-label="Date de clôture" className="px-6 py-3 text-xs text-slate-500">{item.date_cloture ? new Date(item.date_cloture).toLocaleString('fr-FR') : '—'}</td>
                     </tr>)}
                   </tbody>
                 </table>
@@ -617,7 +617,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
             </div>
           ) : (
             <ScrollableTableWrapper className="text-xs">
-              <table className="min-w-full divide-y divide-slate-100 text-left" id="tbl-parametres-generaux">
+              <table className="rtable min-w-full divide-y divide-slate-100 text-left" id="tbl-parametres-generaux">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                   <tr>
                     <th className="py-3 px-4">Code</th>
@@ -635,8 +635,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                     <tr key={pg.id_parametre_generaux} className="hover:bg-slate-50/50">
                       {editingPGId === pg.id_parametre_generaux ? (
                         <>
-                          <td className="py-3 px-4 font-bold font-mono text-indigo-700 uppercase">{pg.code ?? '—'}</td>
-                          <td className="py-3 px-4">
+                          <td data-label="Code" className="py-3 px-4 font-bold font-mono text-indigo-700 uppercase">{pg.code ?? '—'}</td>
+                          <td data-label="Libellé" className="py-3 px-4">
                             <input
                               type="text"
                               value={pgEditForm.libelle}
@@ -645,7 +645,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               placeholder="Libellé"
                             />
                           </td>
-                          <td className="py-3 px-4">
+                          <td data-label="Valeur" className="py-3 px-4">
                             <input
                               type={pg.code && percentageParameterCodes.has(pg.code) ? 'number' : 'text'}
                               min={pg.code && percentageParameterCodes.has(pg.code) ? 0 : undefined}
@@ -656,7 +656,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400"
                             />
                           </td>
-                          <td className="py-3 px-4">
+                          <td data-label="Description" className="py-3 px-4">
                             <input
                               type="text"
                               value={pgEditForm.description}
@@ -665,7 +665,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               placeholder="Description (optionnel)"
                             />
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Actif" className="py-3 px-4 text-center">
                             <input
                               type="checkbox"
                               checked={pgEditForm.actif}
@@ -673,7 +673,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-4 h-4 accent-emerald-600 cursor-pointer"
                             />
                           </td>
-                          <td className="py-3 px-4">
+                          <td data-label="Date début" className="py-3 px-4">
                             <input
                               type="date"
                               value={pgEditForm.date_debut}
@@ -681,7 +681,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400"
                             />
                           </td>
-                          <td className="py-3 px-4">
+                          <td data-label="Date fin" className="py-3 px-4">
                             <input
                               type="date"
                               value={pgEditForm.date_fin}
@@ -689,7 +689,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400"
                             />
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td data-label="Actions" className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-1.5">
                               <button
                                 onClick={() => handleSavePG(pg.id_parametre_generaux)}
@@ -709,23 +709,23 @@ export default function Parametres({ currentUser }: ParametresProps) {
                         </>
                       ) : (
                         <>
-                          <td className="py-3 px-4 font-bold font-mono text-indigo-700 uppercase">{pg.code ?? <span className="text-slate-300 italic">—</span>}</td>
-                          <td className="py-3 px-4 font-semibold text-slate-700">{pg.libelle}</td>
-                          <td className="py-3 px-4 font-extrabold font-mono text-slate-800">
+                          <td data-label="Code" className="py-3 px-4 font-bold font-mono text-indigo-700 uppercase">{pg.code ?? <span className="text-slate-300 italic">—</span>}</td>
+                          <td data-label="Libellé" className="py-3 px-4 font-semibold text-slate-700">{pg.libelle}</td>
+                          <td data-label="Valeur" className="py-3 px-4 font-extrabold font-mono text-slate-800">
                             {pg.valeur ?? <span className="text-slate-300 italic">—</span>}
                             {pg.valeur != null && pg.code && percentageParameterCodes.has(pg.code) ? ' %' : ''}
                           </td>
-                          <td className="py-3 px-4 text-slate-500">{pg.description ?? <span className="text-slate-300 italic">—</span>}</td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Description" className="py-3 px-4 text-slate-500">{pg.description ?? <span className="text-slate-300 italic">—</span>}</td>
+                          <td data-label="Actif" className="py-3 px-4 text-center">
                             <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                               pg.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
                             }`}>
                               {pg.actif ? 'OUI' : 'NON'}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-mono text-slate-400">{pg.date_debut ?? '—'}</td>
-                          <td className="py-3 px-4 font-mono text-slate-400">{pg.date_fin ?? '—'}</td>
-                          <td className="py-3 px-4 text-right">
+                          <td data-label="Date début" className="py-3 px-4 font-mono text-slate-400">{pg.date_debut ?? '—'}</td>
+                          <td data-label="Date fin" className="py-3 px-4 font-mono text-slate-400">{pg.date_fin ?? '—'}</td>
+                          <td data-label="Actions" className="py-3 px-4 text-right">
                             {canAdmin && (
                               <button
                                 onClick={() => handleStartEditPG(pg)}
@@ -833,7 +833,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
             </div>
           ) : (
             <ScrollableTableWrapper className="text-xs">
-              <table className="min-w-full divide-y divide-slate-100 text-left" id="tbl-grades">
+              <table className="rtable min-w-full divide-y divide-slate-100 text-left" id="tbl-grades">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                   <tr>
                     <th className="py-2.5 px-4">ID</th>
@@ -849,8 +849,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                     <tr key={gr.id_grade} className="hover:bg-slate-50/50">
                       {editingGradeId === gr.id_grade ? (
                         <>
-                          <td className="py-3 px-4 font-mono text-slate-400">{gr.id_grade}</td>
-                          <td className="py-3 px-4">
+                          <td data-label="ID" className="py-3 px-4 font-mono text-slate-400">{gr.id_grade}</td>
+                          <td data-label="Libellé Grade" className="py-3 px-4">
                             <input
                               type="text"
                               value={gradeEditForm.libelle_grade}
@@ -858,7 +858,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400 uppercase"
                             />
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Âge Retraite" className="py-3 px-4 text-center">
                             <input
                               type="number"
                               value={gradeEditForm.age_retraite}
@@ -866,7 +866,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-center focus:outline-none focus:ring-2 focus:ring-emerald-400"
                             />
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td data-label="Cotisation Annuelle" className="py-3 px-4 text-right">
                             <input
                               type="number"
                               value={gradeEditForm.cotisation_annuelle}
@@ -874,7 +874,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-36 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-emerald-400"
                             />
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Actif" className="py-3 px-4 text-center">
                             <input
                               type="checkbox"
                               checked={gradeEditForm.actif}
@@ -882,7 +882,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-4 h-4 accent-emerald-600 cursor-pointer"
                             />
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td data-label="Actions" className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-1.5">
                               <button
                                 onClick={() => handleSaveGrade(gr.id_grade)}
@@ -901,20 +901,20 @@ export default function Parametres({ currentUser }: ParametresProps) {
                         </>
                       ) : (
                         <>
-                          <td className="py-3 px-4 font-mono text-slate-400">{gr.id_grade}</td>
-                          <td className="py-3 px-4 font-bold font-mono text-slate-800">{gr.libelle_grade}</td>
-                          <td className="py-3 px-4 text-center font-semibold font-mono text-slate-600">{gr.age_retraite} ans</td>
-                          <td className="py-3 px-4 text-right font-extrabold font-mono text-slate-800">
+                          <td data-label="ID" className="py-3 px-4 font-mono text-slate-400">{gr.id_grade}</td>
+                          <td data-label="Libellé Grade" className="py-3 px-4 font-bold font-mono text-slate-800">{gr.libelle_grade}</td>
+                          <td data-label="Âge Retraite" className="py-3 px-4 text-center font-semibold font-mono text-slate-600">{gr.age_retraite} ans</td>
+                          <td data-label="Cotisation Annuelle" className="py-3 px-4 text-right font-extrabold font-mono text-slate-800">
                             {gr.cotisation_annuelle.toLocaleString('fr-FR')} FCFA
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Actif" className="py-3 px-4 text-center">
                             <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                               gr.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
                             }`}>
                               {gr.actif ? 'OUI' : 'NON'}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td data-label="Actions" className="py-3 px-4 text-right">
                             {currentUser.role !== 'ADHERENT' && (
                               <button
                                 onClick={() => handleStartEditGrade(gr)}
@@ -943,7 +943,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
             <div className="text-center py-6"><RotateCw className="w-6 h-6 animate-spin mx-auto text-slate-400" /></div>
           ) : (
             <ScrollableTableWrapper className="text-xs">
-              <table className="min-w-full divide-y divide-slate-100 text-left" id="tbl-versions">
+              <table className="rtable min-w-full divide-y divide-slate-100 text-left" id="tbl-versions">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                   <tr>
                     <th className="py-3 px-4">Code Paramètre</th>
@@ -957,12 +957,12 @@ export default function Parametres({ currentUser }: ParametresProps) {
                 <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
                   {versions.map((vr) => (
                     <tr key={vr.id} className="hover:bg-slate-50/50">
-                      <td className="py-3.5 px-4 font-bold font-mono text-slate-800 uppercase">{vr.code}</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-600">{vr.nom}</td>
-                      <td className="py-3.5 px-4 font-extrabold text-indigo-700 font-mono">{vr.valeur}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-550">{vr.date_debut}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-400">{vr.date_fin || 'Indéterminée (Courante)'}</td>
-                      <td className="py-3.5 px-4">
+                      <td data-label="Code Paramètre" className="py-3.5 px-4 font-bold font-mono text-slate-800 uppercase">{vr.code}</td>
+                      <td data-label="Intititule" className="py-3.5 px-4 font-semibold text-slate-600">{vr.nom}</td>
+                      <td data-label="Valeur Appliquée" className="py-3.5 px-4 font-extrabold text-indigo-700 font-mono">{vr.valeur}</td>
+                      <td data-label="Date de début d'application" className="py-3.5 px-4 font-mono text-slate-550">{vr.date_debut}</td>
+                      <td data-label="Date de fin d'effet" className="py-3.5 px-4 font-mono text-slate-400">{vr.date_fin || 'Indéterminée (Courante)'}</td>
+                      <td data-label="État d'activité" className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                           vr.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-450'
                         }`}>
@@ -1083,7 +1083,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
             </div>
           ) : (
             <ScrollableTableWrapper className="text-xs">
-              <table className="min-w-full divide-y divide-slate-100 text-left" id="tbl-repartitions">
+              <table className="rtable min-w-full divide-y divide-slate-100 text-left" id="tbl-repartitions">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                   <tr>
                     <th className="py-3 px-4">ID</th>
@@ -1100,8 +1100,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                     <tr key={rp.id_param_repartition} className="hover:bg-slate-50/50">
                       {editingRepartitionId === rp.id_param_repartition ? (
                         <>
-                          <td className="py-3 px-4 font-mono text-slate-400">{rp.id_param_repartition}</td>
-                          <td className="py-3 px-4">
+                          <td data-label="ID" className="py-3 px-4 font-mono text-slate-400">{rp.id_param_repartition}</td>
+                          <td data-label="Date effet" className="py-3 px-4">
                             <input
                               type="date"
                               value={repartitionEditForm.date_effet}
@@ -1109,7 +1109,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400"
                             />
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Taux santé (%)" className="py-3 px-4 text-center">
                             <input
                               type="number"
                               min="0"
@@ -1120,7 +1120,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-center focus:outline-none focus:ring-2 focus:ring-emerald-400"
                             />
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Taux retraite (%)" className="py-3 px-4 text-center">
                             <input
                               type="number"
                               min="0"
@@ -1131,7 +1131,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono text-center focus:outline-none focus:ring-2 focus:ring-emerald-400"
                             />
                           </td>
-                          <td className="py-3 px-4 text-center font-mono">
+                          <td data-label="Total (%)" className="py-3 px-4 text-center font-mono">
                             {(() => {
                               const s = parseFloat(repartitionEditForm.taux_sante);
                               const r = parseFloat(repartitionEditForm.taux_retraite);
@@ -1140,7 +1140,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               return <span className={Math.abs(total - 100) > 0.001 ? 'text-rose-600 font-bold' : 'text-slate-800 font-bold'}>{total.toFixed(2)}%</span>;
                             })()}
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Actif" className="py-3 px-4 text-center">
                             <input
                               type="checkbox"
                               checked={repartitionEditForm.taux_actif}
@@ -1148,7 +1148,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               className="w-4 h-4 accent-emerald-600 cursor-pointer"
                             />
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td data-label="Actions" className="py-3 px-4 text-right">
                             <div className="flex flex-col items-end gap-1">
                               {repartitionEditError && (
                                 <span className="text-rose-600 text-[9px] font-semibold text-right">{repartitionEditError}</span>
@@ -1172,29 +1172,29 @@ export default function Parametres({ currentUser }: ParametresProps) {
                         </>
                       ) : (
                         <>
-                          <td className="py-3 px-4 font-mono text-slate-400">{rp.id_param_repartition}</td>
-                          <td className="py-3 px-4 font-mono text-slate-700">{rp.date_effet}</td>
-                          <td className="py-3 px-4 text-center font-bold text-emerald-600 font-mono">
+                          <td data-label="ID" className="py-3 px-4 font-mono text-slate-400">{rp.id_param_repartition}</td>
+                          <td data-label="Date effet" className="py-3 px-4 font-mono text-slate-700">{rp.date_effet}</td>
+                          <td data-label="Taux santé (%)" className="py-3 px-4 text-center font-bold text-emerald-600 font-mono">
                             {rp.taux_sante !== null ? `${rp.taux_sante}%` : '—'}
                           </td>
-                          <td className="py-3 px-4 text-center font-bold text-sky-600 font-mono">
+                          <td data-label="Taux retraite (%)" className="py-3 px-4 text-center font-bold text-sky-600 font-mono">
                             {rp.taux_retraite !== null ? `${rp.taux_retraite}%` : '—'}
                           </td>
-                          <td className="py-3 px-4 text-center font-bold font-mono">
+                          <td data-label="Total (%)" className="py-3 px-4 text-center font-bold font-mono">
                             {rp.taux_sante !== null && rp.taux_retraite !== null ? (
                               <span className={Math.abs(rp.taux_sante + rp.taux_retraite - 100) > 0.001 ? 'text-rose-600' : 'text-slate-800'}>
                                 {(rp.taux_sante + rp.taux_retraite)}%
                               </span>
                             ) : '—'}
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td data-label="Actif" className="py-3 px-4 text-center">
                             <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                               rp.taux_actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
                             }`}>
                               {rp.taux_actif ? 'OUI' : 'NON'}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td data-label="Actions" className="py-3 px-4 text-right">
                             {currentUser.role !== 'ADHERENT' && (
                               <button
                                 onClick={() => handleStartEditRepartition(rp)}
@@ -1295,7 +1295,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                 ) : (
                   <div className="rounded-xl border border-slate-100 bg-white overflow-hidden text-xs">
                     <div className="overflow-auto max-h-[350px]">
-                    <table className="min-w-full divide-y divide-slate-100">
+                    <table className="rtable min-w-full divide-y divide-slate-100">
                       <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                         <tr>
                           <th className="py-2 px-4">ID</th>
@@ -1309,8 +1309,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                           <tr key={civ.id_civilite} className="hover:bg-slate-50/50">
                             {editingCivId === civ.id_civilite ? (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{civ.id_civilite}</td>
-                                <td className="py-2 px-4">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{civ.id_civilite}</td>
+                                <td data-label="Libellé" className="py-2 px-4">
                                   <input
                                     type="text"
                                     value={civEditForm.libelle_civilite}
@@ -1318,10 +1318,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                                     className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                                   />
                                 </td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <input type="checkbox" checked={civEditForm.actif} onChange={(e) => setCivEditForm({ ...civEditForm, actif: e.target.checked })} className="accent-emerald-600" />
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   <div className="flex justify-end gap-1.5">
                                     <button
                                       onClick={async () => {
@@ -1339,14 +1339,14 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               </>
                             ) : (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{civ.id_civilite}</td>
-                                <td className="py-2 px-4 font-semibold">{civ.libelle_civilite}</td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{civ.id_civilite}</td>
+                                <td data-label="Libellé" className="py-2 px-4 font-semibold">{civ.libelle_civilite}</td>
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${civ.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>
                                     {civ.actif ? 'OUI' : 'NON'}
                                   </span>
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   {currentUser.role !== 'ADHERENT' && (
                                     <button
                                       onClick={() => { setEditingCivId(civ.id_civilite); setCivEditForm({ libelle_civilite: civ.libelle_civilite, actif: civ.actif ?? true }); setCivError(null); }}
@@ -1418,7 +1418,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                 ) : (
                   <div className="rounded-xl border border-slate-100 bg-white overflow-hidden text-xs">
                     <div className="overflow-auto max-h-[350px]">
-                    <table className="min-w-full divide-y divide-slate-100">
+                    <table className="rtable min-w-full divide-y divide-slate-100">
                       <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                         <tr>
                           <th className="py-2 px-4">ID</th>
@@ -1432,8 +1432,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                           <tr key={sit.id_situation_matrimoniale} className="hover:bg-slate-50/50">
                             {editingSitId === sit.id_situation_matrimoniale ? (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{sit.id_situation_matrimoniale}</td>
-                                <td className="py-2 px-4">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{sit.id_situation_matrimoniale}</td>
+                                <td data-label="Libellé" className="py-2 px-4">
                                   <input
                                     type="text"
                                     value={sitEditForm.libelle_situation}
@@ -1441,10 +1441,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                                     className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                                   />
                                 </td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <input type="checkbox" checked={sitEditForm.actif} onChange={(e) => setSitEditForm({ ...sitEditForm, actif: e.target.checked })} className="accent-emerald-600" />
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   <div className="flex justify-end gap-1.5">
                                     <button
                                       onClick={async () => {
@@ -1462,14 +1462,14 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               </>
                             ) : (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{sit.id_situation_matrimoniale}</td>
-                                <td className="py-2 px-4 font-semibold">{sit.libelle_situation}</td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{sit.id_situation_matrimoniale}</td>
+                                <td data-label="Libellé" className="py-2 px-4 font-semibold">{sit.libelle_situation}</td>
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${sit.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>
                                     {sit.actif ? 'OUI' : 'NON'}
                                   </span>
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   {currentUser.role !== 'ADHERENT' && (
                                     <button
                                       onClick={() => { setEditingSitId(sit.id_situation_matrimoniale); setSitEditForm({ libelle_situation: sit.libelle_situation, actif: sit.actif ?? true }); setSitError(null); }}
@@ -1541,7 +1541,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                 ) : (
                   <div className="rounded-xl border border-slate-100 bg-white overflow-hidden text-xs">
                     <div className="overflow-auto max-h-[350px]">
-                    <table className="min-w-full divide-y divide-slate-100">
+                    <table className="rtable min-w-full divide-y divide-slate-100">
                       <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                         <tr>
                           <th className="py-2 px-4">ID</th>
@@ -1555,8 +1555,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                           <tr key={emp.id_emploi} className="hover:bg-slate-50/50">
                             {editingEmpId === emp.id_emploi ? (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{emp.id_emploi}</td>
-                                <td className="py-2 px-4">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{emp.id_emploi}</td>
+                                <td data-label="Libellé" className="py-2 px-4">
                                   <input
                                     type="text"
                                     value={empEditForm.libelle_emploi}
@@ -1564,10 +1564,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                                     className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                                   />
                                 </td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <input type="checkbox" checked={empEditForm.actif} onChange={(e) => setEmpEditForm({ ...empEditForm, actif: e.target.checked })} className="accent-emerald-600" />
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   <div className="flex justify-end gap-1.5">
                                     <button
                                       onClick={async () => {
@@ -1585,14 +1585,14 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               </>
                             ) : (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{emp.id_emploi}</td>
-                                <td className="py-2 px-4 font-semibold">{emp.libelle_emploi}</td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{emp.id_emploi}</td>
+                                <td data-label="Libellé" className="py-2 px-4 font-semibold">{emp.libelle_emploi}</td>
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${emp.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>
                                     {emp.actif ? 'OUI' : 'NON'}
                                   </span>
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   {currentUser.role !== 'ADHERENT' && (
                                     <button
                                       onClick={() => { setEditingEmpId(emp.id_emploi); setEmpEditForm({ libelle_emploi: emp.libelle_emploi, actif: emp.actif ?? true }); setEmpError(null); }}
@@ -1664,7 +1664,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                 ) : (
                   <div className="rounded-xl border border-slate-100 bg-white overflow-hidden text-xs">
                     <div className="overflow-auto max-h-[350px]">
-                    <table className="min-w-full divide-y divide-slate-100">
+                    <table className="rtable min-w-full divide-y divide-slate-100">
                       <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                         <tr>
                           <th className="py-2 px-4">ID</th>
@@ -1678,8 +1678,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                           <tr key={lien.id_lien_beneficiaire} className="hover:bg-slate-50/50">
                             {editingLienId === lien.id_lien_beneficiaire ? (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{lien.id_lien_beneficiaire}</td>
-                                <td className="py-2 px-4">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{lien.id_lien_beneficiaire}</td>
+                                <td data-label="Libellé" className="py-2 px-4">
                                   <input
                                     type="text"
                                     value={lienEditForm.libelle_lien}
@@ -1687,10 +1687,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                                     className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                                   />
                                 </td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <input type="checkbox" checked={lienEditForm.actif} onChange={(e) => setLienEditForm({ ...lienEditForm, actif: e.target.checked })} className="accent-emerald-600" />
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   <div className="flex justify-end gap-1.5">
                                     <button
                                       onClick={async () => {
@@ -1708,14 +1708,14 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               </>
                             ) : (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{lien.id_lien_beneficiaire}</td>
-                                <td className="py-2 px-4 font-semibold">{lien.libelle_lien}</td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{lien.id_lien_beneficiaire}</td>
+                                <td data-label="Libellé" className="py-2 px-4 font-semibold">{lien.libelle_lien}</td>
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${lien.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>
                                     {lien.actif ? 'OUI' : 'NON'}
                                   </span>
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   {currentUser.role !== 'ADHERENT' && (
                                     <button
                                       onClick={() => { setEditingLienId(lien.id_lien_beneficiaire); setLienEditForm({ libelle_lien: lien.libelle_lien, actif: lien.actif ?? true }); setLienError(null); }}
@@ -1787,7 +1787,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                 ) : (
                   <div className="rounded-xl border border-slate-100 bg-white overflow-hidden text-xs">
                     <div className="overflow-auto max-h-[350px]">
-                    <table className="min-w-full divide-y divide-slate-100">
+                    <table className="rtable min-w-full divide-y divide-slate-100">
                       <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                         <tr>
                           <th className="py-2 px-4">ID</th>
@@ -1801,8 +1801,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                           <tr key={fn.id_fonction} className="hover:bg-slate-50/50">
                             {editingFonctionId === fn.id_fonction ? (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{fn.id_fonction}</td>
-                                <td className="py-2 px-4">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{fn.id_fonction}</td>
+                                <td data-label="Libellé" className="py-2 px-4">
                                   <input
                                     type="text"
                                     value={fonctionEditForm.libelle_fonction}
@@ -1810,10 +1810,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                                     className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                                   />
                                 </td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <input type="checkbox" checked={fonctionEditForm.actif} onChange={(e) => setFonctionEditForm({ ...fonctionEditForm, actif: e.target.checked })} className="accent-emerald-600" />
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   <div className="flex justify-end gap-1.5">
                                     <button
                                       onClick={async () => {
@@ -1831,14 +1831,14 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               </>
                             ) : (
                               <>
-                                <td className="py-2 px-4 font-mono text-slate-400">{fn.id_fonction}</td>
-                                <td className="py-2 px-4 font-semibold">{fn.libelle_fonction}</td>
-                                <td className="py-2 px-4 text-center">
+                                <td data-label="ID" className="py-2 px-4 font-mono text-slate-400">{fn.id_fonction}</td>
+                                <td data-label="Libellé" className="py-2 px-4 font-semibold">{fn.libelle_fonction}</td>
+                                <td data-label="Actif" className="py-2 px-4 text-center">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${fn.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>
                                     {fn.actif ? 'OUI' : 'NON'}
                                   </span>
                                 </td>
-                                <td className="py-2 px-4 text-right">
+                                <td data-label="Actions" className="py-2 px-4 text-right">
                                   {currentUser.role !== 'ADHERENT' && (
                                     <button
                                       onClick={() => { setEditingFonctionId(fn.id_fonction); setFonctionEditForm({ libelle_fonction: fn.libelle_fonction, actif: fn.actif ?? true }); setFonctionError(null); }}
@@ -1904,7 +1904,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
             </div>
           ) : (
             <ScrollableTableWrapper className="text-[11px]">
-              <table className="min-w-full divide-y divide-slate-100 text-left text-slate-700" id="tbl-mortalite">
+              <table className="rtable min-w-full divide-y divide-slate-100 text-left text-slate-700" id="tbl-mortalite">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase font-bold text-xs">
                   <tr>
                     <th className="py-2.5 px-4 text-center">Âge (x)</th>
@@ -1919,10 +1919,10 @@ export default function Parametres({ currentUser }: ParametresProps) {
                     : mortalites
                   ).map((m) => (
                     <tr key={m.age_mort} className="hover:bg-slate-50/40">
-                      <td className="py-2 px-4 text-center font-bold text-slate-800 font-mono">{m.age_mort} ans</td>
-                      <td className="py-2 px-4 text-right font-mono font-semibold">{Number(m.lx).toLocaleString('fr-FR')}</td>
-                      <td className="py-2 px-4 text-right font-mono text-slate-550">{Number(m.dx).toLocaleString('fr-FR')}</td>
-                      <td className="py-2 px-4 text-right font-mono font-bold text-indigo-700">{m.qx}</td>
+                      <td data-label="Âge (x)" className="py-2 px-4 text-center font-bold text-slate-800 font-mono">{m.age_mort} ans</td>
+                      <td data-label="Nombre Vivants (lx)" className="py-2 px-4 text-right font-mono font-semibold">{Number(m.lx).toLocaleString('fr-FR')}</td>
+                      <td data-label="Nombre Décès attendus (dx)" className="py-2 px-4 text-right font-mono text-slate-550">{Number(m.dx).toLocaleString('fr-FR')}</td>
+                      <td data-label="Taux de mortalité (qx)" className="py-2 px-4 text-right font-mono font-bold text-indigo-700">{m.qx}</td>
                     </tr>
                   ))}
                 </tbody>

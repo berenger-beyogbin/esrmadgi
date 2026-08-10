@@ -392,7 +392,7 @@ export default function Prestations({ currentUser }: PrestationsProps) {
             </div>
           ) : (
             <ScrollableTableWrapper>
-              <table className="min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-prestations-details">
+              <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-prestations-details">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
                   <tr>
                     <th className="py-3.5 px-4">Adhérent</th>
@@ -407,13 +407,13 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                 <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
                   {prestations.map(p => (
                     <tr key={p.id} className="hover:bg-slate-55/40 transition">
-                      <td className="py-3.5 px-4 font-bold text-slate-800 uppercase">
+                      <td data-label="Adhérent" className="py-3.5 px-4 font-bold text-slate-800 uppercase">
                         {p.nom} {p.prenoms}
                       </td>
-                      <td className="py-3.5 px-4 text-center font-bold text-slate-705 font-mono">
+                      <td data-label="Matricule" className="py-3.5 px-4 text-center font-bold text-slate-705 font-mono">
                         {p.matricule}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td data-label="Type" className="py-3.5 px-4">
                         <span className={`px-2.5 py-1 rounded text-[10px] font-bold ${
                           p.type_prestation === 'RETRAITE'
                             ? 'bg-blue-50 text-blue-700 border border-blue-100'
@@ -424,10 +424,10 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                           {p.type_prestation}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-center font-mono text-slate-500">
+                      <td data-label="Date demande" className="py-3.5 px-4 text-center font-mono text-slate-500">
                         {formatDateFr(p.date_demande)}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td data-label="Statut" className="py-3.5 px-4">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                           p.statut_prestation === 'PAYE'
                             ? 'bg-emerald-50 text-emerald-700'
@@ -438,10 +438,10 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                           {p.statut_prestation}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-extrabold font-mono text-slate-800">
+                      <td data-label="Montant" className="py-3.5 px-4 text-right font-extrabold font-mono text-slate-800">
                         {formatFCFA(p.montant)}
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td data-label="Actions" className="py-3.5 px-4 text-right">
                         <div className="flex justify-end gap-2">
                           {!['PAYE', 'ANNULE'].includes(p.statut_prestation) && (
                             <button
@@ -490,7 +490,7 @@ export default function Prestations({ currentUser }: PrestationsProps) {
               <p className="text-slate-400 text-xs text-center py-6">Aucune rente enregistrée.</p>
             ) : (
               <div className="overflow-x-auto border border-slate-100 rounded-xl">
-                <table className="min-w-full divide-y divide-slate-100 text-xs text-left" id="tbl-rentes">
+                <table className="rtable min-w-full divide-y divide-slate-100 text-xs text-left" id="tbl-rentes">
                   <thead className="bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
                     <tr>
                       <th className="py-3 px-3">Adhérent</th>
@@ -510,11 +510,11 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                           selectedRente?.id === r.id ? 'bg-emerald-50/30 border-l-4 border-l-emerald-600 text-slate-900' : 'text-slate-700'
                         }`}
                       >
-                        <td className="py-3.5 px-3 font-bold uppercase">{r.nom} {r.prenoms}</td>
-                        <td className="py-3.5 px-3 text-center font-bold text-slate-800 font-mono">{r.matricule}</td>
-                        <td className="py-3.5 px-3 text-right font-mono font-medium">{formatFCFA(r.capital_initial)}</td>
-                        <td className="py-3.5 px-3 text-right font-bold font-mono text-emerald-600">{formatFCFA(r.capital_restant)}</td>
-                        <td className="py-3.5 px-3">
+                        <td data-label="Adhérent" className="py-3.5 px-3 font-bold uppercase">{r.nom} {r.prenoms}</td>
+                        <td data-label="Matricule" className="py-3.5 px-3 text-center font-bold text-slate-800 font-mono">{r.matricule}</td>
+                        <td data-label="Capital initial" className="py-3.5 px-3 text-right font-mono font-medium">{formatFCFA(r.capital_initial)}</td>
+                        <td data-label="Capital restant" className="py-3.5 px-3 text-right font-bold font-mono text-emerald-600">{formatFCFA(r.capital_restant)}</td>
+                        <td data-label="Statut" className="py-3.5 px-3">
                           <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] ${
                             r.statut_rente === 'ACTIVE' 
                               ? 'bg-emerald-100 text-emerald-800' 
@@ -620,7 +620,7 @@ export default function Prestations({ currentUser }: PrestationsProps) {
           </div>
 
           <ScrollableTableWrapper>
-            <table className="min-w-full divide-y divide-slate-100 text-sm bg-white">
+            <table className="rtable min-w-full divide-y divide-slate-100 text-sm bg-white">
               <thead className="bg-slate-100 text-xs uppercase text-slate-600">
                 <tr>
                   <th className="p-3 text-left">Retraité</th><th className="p-3">Matricule</th>
@@ -635,13 +635,13 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                   <tr><td colSpan={7} className="p-10 text-center text-slate-400">Aucune échéance pour cette période.</td></tr>
                 ) : echeances.map((e) => (
                   <tr key={e.id}>
-                    <td className="p-3 font-bold uppercase">{e.nom} {e.prenoms}</td>
-                    <td className="p-3 text-center font-mono">{e.matricule}</td>
-                    <td className="p-3 text-center font-bold">{e.periode}</td>
-                    <td className="p-3 text-right font-bold text-emerald-700">{formatFCFA(e.montant_versement)}</td>
-                    <td className="p-3 text-center">{e.date_echeance ? formatDateFr(e.date_echeance) : '—'}</td>
-                    <td className="p-3 text-center"><span className="px-2 py-1 bg-slate-100 rounded-full text-[10px] font-bold">{e.statut}</span></td>
-                    <td className="p-3 text-center">
+                    <td data-label="Retraité" className="p-3 font-bold uppercase">{e.nom} {e.prenoms}</td>
+                    <td data-label="Matricule" className="p-3 text-center font-mono">{e.matricule}</td>
+                    <td data-label="Période" className="p-3 text-center font-bold">{e.periode}</td>
+                    <td data-label="Montant APS" className="p-3 text-right font-bold text-emerald-700">{formatFCFA(e.montant_versement)}</td>
+                    <td data-label="Échéance" className="p-3 text-center">{e.date_echeance ? formatDateFr(e.date_echeance) : '—'}</td>
+                    <td data-label="Statut" className="p-3 text-center"><span className="px-2 py-1 bg-slate-100 rounded-full text-[10px] font-bold">{e.statut}</span></td>
+                    <td data-label="Action" className="p-3 text-center">
                       {currentUser.role !== 'ADHERENT' && ['GENEREE', 'EN_CONTROLE', 'VALIDEE'].includes(e.statut || '') && (
                         <button onClick={() => handleAvancerEcheance(e)} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-[10px] font-bold">
                           {e.statut === 'GENEREE' ? 'Contrôler' : e.statut === 'EN_CONTROLE' ? 'Valider' : 'Payer APS'}

@@ -124,7 +124,7 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
         </div>
       ) : (
         <ScrollableTableWrapper maxHeight="none">
-          <table className="w-full table-fixed divide-y divide-slate-100 text-left text-xs" id="tbl-comptes-esr">
+          <table className="rtable w-full table-fixed divide-y divide-slate-100 text-left text-xs" id="tbl-comptes-esr">
             <colgroup>
               <col className="w-[9%]" />
               <col className="w-[19%]" />
@@ -150,28 +150,28 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
             <tbody className="divide-y divide-slate-100 bg-white text-slate-700 [&_td]:break-words [&_td]:px-2">
               {paginatedComptes.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50/55 transition-colors">
-                  <td className="py-4 px-4 font-bold text-slate-800 font-mono tracking-wide">
+                  <td data-label="Matricule" className="py-4 px-4 font-bold text-slate-800 font-mono tracking-wide">
                     {c.matricule}
                   </td>
-                  <td className="py-4 px-4 font-semibold uppercase text-slate-800">
+                  <td data-label="Nom & Prénoms" className="py-4 px-4 font-semibold uppercase text-slate-800">
                     {c.nom} {c.prenoms}
                   </td>
-                  <td className="py-4 px-4 text-right font-mono text-slate-600">
+                  <td data-label="Primes payées (pp)" className="py-4 px-4 text-right font-mono text-slate-600">
                     {formatFCFA(c.pp || 0)}
                   </td>
-                  <td className="py-4 px-4 text-right font-bold font-mono text-teal-700">
+                  <td data-label="Capital acquis" className="py-4 px-4 text-right font-bold font-mono text-teal-700">
                     {formatFCFA(c.capital_acquis || 0)}
                   </td>
-                  <td className="py-4 px-4 text-right font-bold font-mono text-indigo-700">
+                  <td data-label="Provision math. (pm)" className="py-4 px-4 text-right font-bold font-mono text-indigo-700">
                     {formatFCFA(c.pm || 0)}
                   </td>
-                  <td className="py-4 px-4 text-right font-bold font-mono text-amber-700">
+                  <td data-label="Valeur de rachat" className="py-4 px-4 text-right font-bold font-mono text-amber-700">
                     {formatFCFA(c.valeur_rachat || 0)}
                   </td>
-                  <td className="py-4 px-4 text-center">
+                  <td data-label="Date calcul" className="py-4 px-4 text-center">
                     <p className="font-semibold text-slate-600 font-mono text-xs">{formatDateFr(c.date_calcul)}</p>
                   </td>
-                  <td className="py-4 px-2 text-center">
+                  <td data-label="Voir" className="py-4 px-2 text-center">
                     <button
                       type="button"
                       onClick={() => openFicheAdherent(c)}

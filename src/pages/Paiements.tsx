@@ -325,7 +325,7 @@ export default function Paiements({ currentUser }: PaiementsProps) {
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-paiements">
+              <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-paiements">
                 <thead className="bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
                   <tr>
                     <th className="py-3.5 px-4">Adhérent</th>
@@ -343,30 +343,30 @@ export default function Paiements({ currentUser }: PaiementsProps) {
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {paiements.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50/50 transition">
-                      <td className="py-4 px-4 font-bold text-slate-800 uppercase">
+                      <td data-label="Adhérent" className="py-4 px-4 font-bold text-slate-800 uppercase">
                         {p.nom_adherent} {p.prenoms_adherent}
                       </td>
-                      <td className="py-4 px-4 text-center font-bold font-mono text-slate-700">
+                      <td data-label="Matricule" className="py-4 px-4 text-center font-bold font-mono text-slate-700">
                         {p.matricule}
                       </td>
-                      <td className="py-4 px-4 text-center font-mono text-slate-500">
+                      <td data-label="Date règlement" className="py-4 px-4 text-center font-mono text-slate-500">
                         {formatDateFr(p.date_paiement)}
                       </td>
-                      <td className="py-4 px-4 text-center font-mono text-[11px] text-teal-650">
+                      <td data-label="Date valeur" className="py-4 px-4 text-center font-mono text-[11px] text-teal-650">
                         {formatDateFr(p.date_valeur)}
                       </td>
-                      <td className="py-4 px-4">
+                      <td data-label="Moyen" className="py-4 px-4">
                         <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-650 font-semibold text-[9px] border">
                           {p.moyen}
                         </span>
                       </td>
-                      <td className="py-4 px-4 font-medium text-slate-600 font-sans truncate max-w-xs" title={p.origine_paiement}>
+                      <td data-label="Établissement / Référence" className="py-4 px-4 font-medium text-slate-600 font-sans truncate max-w-xs" title={p.origine_paiement}>
                         {p.origine_paiement}
                       </td>
-                      <td className="py-4 px-4 text-slate-500 truncate max-w-xxs" title={p.observation_dgi}>
+                      <td data-label="Observation" className="py-4 px-4 text-slate-500 truncate max-w-xxs" title={p.observation_dgi}>
                         {p.observation_dgi || '-'}
                       </td>
-                      <td className="py-4 px-4 text-center">
+                      <td data-label="Workflow" className="py-4 px-4 text-center">
                         <span className={`px-2 py-1 rounded-full text-[9px] font-bold ${
                           p.statut_workflow === 'ENCAISSE' ? 'bg-emerald-100 text-emerald-800'
                           : p.statut_workflow === 'REJETE' ? 'bg-rose-100 text-rose-700'
@@ -376,10 +376,10 @@ export default function Paiements({ currentUser }: PaiementsProps) {
                           {p.statut_workflow || 'SAISI'}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-right font-extrabold font-mono text-emerald-700 text-xs">
+                      <td data-label="Montant payé" className="py-4 px-4 text-right font-extrabold font-mono text-emerald-700 text-xs">
                         {formatFCFA(p.montant_paiement)}
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td data-label="Actions" className="py-4 px-4 text-right">
                         <div className="flex justify-end gap-1">
                           {(p.statut_workflow || 'SAISI') === 'SAISI' && (
                             <button

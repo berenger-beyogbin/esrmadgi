@@ -677,7 +677,7 @@ export default function Reporting() {
                     ))}
                   </div>
                   <ScrollableTableWrapper>
-                    <table className="min-w-full divide-y divide-slate-100 text-sm">
+                    <table className="rtable min-w-full divide-y divide-slate-100 text-sm">
                       <thead className="bg-slate-50">
                         <tr className="text-left text-[11px] font-bold text-slate-500 uppercase">
                           <th className="py-2.5 px-3">Période</th>
@@ -690,11 +690,11 @@ export default function Reporting() {
                       <tbody className="divide-y divide-slate-100">
                         {rapportCima.trimestres.map((t) => (
                           <tr key={t.periode}>
-                            <td className="py-2.5 px-3 font-medium">{t.periode}</td>
-                            <td className="py-2.5 px-3">{t.nombreAdherents}</td>
-                            <td className="py-2.5 px-3">{t.nombreMouvements}</td>
-                            <td className="py-2.5 px-3">{formatFCFA(t.cotisationsPrevues)}</td>
-                            <td className="py-2.5 px-3">{formatFCFA(t.cotisationsEncaissees)}</td>
+                            <td data-label="Période" className="py-2.5 px-3 font-medium">{t.periode}</td>
+                            <td data-label="Adhérents" className="py-2.5 px-3">{t.nombreAdherents}</td>
+                            <td data-label="Mouvements" className="py-2.5 px-3">{t.nombreMouvements}</td>
+                            <td data-label="Cotisations prévues" className="py-2.5 px-3">{formatFCFA(t.cotisationsPrevues)}</td>
+                            <td data-label="Cotisations encaissées" className="py-2.5 px-3">{formatFCFA(t.cotisationsEncaissees)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -721,7 +721,7 @@ export default function Reporting() {
                   </div>
                 ) : (
                   <ScrollableTableWrapper>
-                    <table className="min-w-full divide-y divide-slate-100 text-sm">
+                    <table className="rtable min-w-full divide-y divide-slate-100 text-sm">
                       <thead className="bg-slate-50">
                         <tr className="text-left text-[11px] font-bold text-slate-500 uppercase">
                           {colonnes.map((c) => (
@@ -741,7 +741,7 @@ export default function Reporting() {
                               const valeur = ligne[c.key];
                               if (c.key === 'statut' && typeof valeur === 'string' && STATUT_STYLES[valeur]) {
                                 return (
-                                  <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                                  <td key={c.key} data-label={c.header} className="py-2.5 px-3 whitespace-nowrap">
                                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${STATUT_STYLES[valeur]}`}>
                                       {valeur === 'A_JOUR' ? 'À jour' : 'Pas à jour'}
                                     </span>
@@ -750,7 +750,7 @@ export default function Reporting() {
                               }
                               if (c.key === 'sens' && typeof valeur === 'string' && SENS_STYLES[valeur]) {
                                 return (
-                                  <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                                  <td key={c.key} data-label={c.header} className="py-2.5 px-3 whitespace-nowrap">
                                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${SENS_STYLES[valeur]}`}>
                                       {valeur === 'ENTREE' ? 'Entrée' : 'Sortie'}
                                     </span>
@@ -758,13 +758,13 @@ export default function Reporting() {
                                 );
                               }
                               return (
-                                <td key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                                <td key={c.key} data-label={c.header} className="py-2.5 px-3 whitespace-nowrap">
                                   {formaterCellule(valeur, c.format)}
                                 </td>
                               );
                             })}
                             {etatActif === 'AVIS_ANNUEL' && (
-                              <td className="py-2.5 px-3 whitespace-nowrap">
+                              <td data-label="Action" className="py-2.5 px-3 whitespace-nowrap">
                                 <button
                                   onClick={() =>
                                     handleTelechargerAvisAnnuel(

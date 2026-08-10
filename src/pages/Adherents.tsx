@@ -285,7 +285,7 @@ export default function Adherents({ currentUser }: AdherentsProps) {
           ) : (
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-adherents-complets">
+                <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left" id="tbl-adherents-complets">
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
                   <tr>
                     <th className="py-3.5 px-4">Matricule</th>
@@ -301,10 +301,10 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {paginatedAdherents.map((ad) => (
                     <tr key={ad.id} className="hover:bg-slate-50 transition-colors duration-150">
-                      <td className="py-4 px-4 font-bold text-slate-800 font-mono tracking-wide">
+                      <td data-label="Matricule" className="py-4 px-4 font-bold text-slate-800 font-mono tracking-wide">
                         {ad.matricule}
                       </td>
-                      <td className="py-4 px-4">
+                      <td data-label="Adhérent" className="py-4 px-4">
                         <div>
                           <p className="font-semibold text-slate-800 uppercase">
                             {ad.civilite} {ad.nom}
@@ -314,13 +314,13 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                           </p>
                         </div>
                       </td>
-                      <td className="py-4 px-4">
+                      <td data-label="Grade" className="py-4 px-4">
                         <div>
                           <p className="font-semibold text-slate-700">{ad.grade_code}</p>
                           <p className="text-slate-500 text-xs">{ad.grade_libelle || 'Grade non spécifié'}</p>
                         </div>
                       </td>
-                      <td className="py-4 px-4">
+                      <td data-label="Statut" className="py-4 px-4">
                         <span className={`px-2.5 py-1 rounded-full font-bold text-xs ${
                           ad.decede === true
                             ? 'bg-rose-50 text-rose-700 border border-rose-200'
@@ -333,16 +333,16 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                           {ad.decede ? 'DECEDE' : ad.retraite ? 'RETRAITE' : (ad.statut === true || ad.statut === 'ACTIF') ? 'ACTIF' : String(ad.statut || 'INACTIF')}
                         </span>
                       </td>
-                      <td className="py-4 px-4 font-mono text-slate-600">
+                      <td data-label="Date d'effet" className="py-4 px-4 font-mono text-slate-600">
                         {formatDateFr(ad.date_effet)}
                       </td>
-                      <td className="py-4 px-4 text-right font-bold text-slate-800 font-mono">
+                      <td data-label="Cotisation annuelle" className="py-4 px-4 text-right font-bold text-slate-800 font-mono">
                         {formatFCFA(ad.cotisation_annuelle)}
                       </td>
-                      <td className="py-4 px-4 text-center font-semibold text-slate-600 font-mono">
+                      <td data-label="Trimestres" className="py-4 px-4 text-center font-semibold text-slate-600 font-mono">
                         {ad.nb_trimestre || 0}
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td data-label="Actions" className="py-4 px-4 text-right">
                         <div className="flex justify-end gap-2">
                           <button
                             id={`btn-voir-adh-${ad.id}`}

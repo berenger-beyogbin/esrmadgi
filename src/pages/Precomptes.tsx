@@ -585,7 +585,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
         </div>
       ) : (
         <ScrollableTableWrapper maxHeight="none">
-          <table className="w-full table-fixed divide-y divide-slate-100 text-xs text-left text-slate-700" id="tbl-precomptes">
+          <table className="rtable w-full table-fixed divide-y divide-slate-100 text-xs text-left text-slate-700" id="tbl-precomptes">
             <colgroup>
               <col className="w-[9%]" />
               <col className="w-[15%]" />
@@ -606,7 +606,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
                 <th className="py-3 px-2 text-center">Date génération</th>
                 <th className="py-3 px-2 text-right">Montant retour</th>
                 <th className="py-3 px-2 text-center">Date retour</th>
-                <th className="py-3 px-2 text-center">
+                <th className="th-mobile-filter py-3 px-2 text-center">
                   <select
                     id="filter-statut-precompte"
                     value={statutFilter}
@@ -631,28 +631,28 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
                 </tr>
               ) : paginatedPrecomptes.map((p) => (
                 <tr key={p.id_precompte} className="hover:bg-slate-50/50 transition">
-                  <td className="py-2.5 px-2 font-bold font-mono text-slate-700 truncate">{p.matricule}</td>
-                  <td className="py-2.5 px-2 font-semibold text-slate-800 uppercase leading-snug break-words">{p.nom} {p.prenoms}</td>
-                  <td className="py-2.5 px-2 font-mono text-slate-600 whitespace-nowrap">{p.periode}</td>
-                  <td className="py-2.5 px-2 text-right font-semibold font-mono text-slate-700 whitespace-nowrap">
+                  <td data-label="Matricule" className="py-2.5 px-2 font-bold font-mono text-slate-700 truncate">{p.matricule}</td>
+                  <td data-label="Adhérent" className="py-2.5 px-2 font-semibold text-slate-800 uppercase leading-snug break-words">{p.nom} {p.prenoms}</td>
+                  <td data-label="Période" className="py-2.5 px-2 font-mono text-slate-600 whitespace-nowrap">{p.periode}</td>
+                  <td data-label="Montant départ" className="py-2.5 px-2 text-right font-semibold font-mono text-slate-700 whitespace-nowrap">
                     {formatFCFA(p.montant_depart)}
                   </td>
-                  <td className="py-2.5 px-2 text-center font-mono text-slate-500 whitespace-nowrap">
+                  <td data-label="Date génération" className="py-2.5 px-2 text-center font-mono text-slate-500 whitespace-nowrap">
                     {formatDateFr(p.date_generation)}
                   </td>
-                  <td className="py-2.5 px-2 text-right font-bold font-mono text-slate-800 whitespace-nowrap">
+                  <td data-label="Montant retour" className="py-2.5 px-2 text-right font-bold font-mono text-slate-800 whitespace-nowrap">
                     {p.montant_retour > 0 ? formatFCFA(p.montant_retour) : '-'}
                   </td>
-                  <td className="py-2.5 px-2 text-center font-mono text-slate-500 whitespace-nowrap">
+                  <td data-label="Date retour" className="py-2.5 px-2 text-center font-mono text-slate-500 whitespace-nowrap">
                     {formatDateFr(p.date_retour)}
                   </td>
-                  <td className="py-2.5 px-2 text-center">
+                  <td data-label="Statut" className="py-2.5 px-2 text-center">
                     <span className={`inline-flex max-w-full items-center gap-1 px-2 py-1 rounded-full font-bold text-[10px] whitespace-nowrap border ${STATUT_STYLES[p.statut_precompte] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
                       {p.statut_precompte === 'ENCAISSE' && <FileCheck className="w-3 h-3" />}
                       {p.statut_precompte}
                     </span>
                   </td>
-                  <td className="py-2.5 px-2 text-right">
+                  <td data-label="Actions" className="py-2.5 px-2 text-right">
                     <div className="flex justify-end items-center gap-2">
                       {p.statut_precompte === 'NON_PRECOMPTE' && (
                         <button
