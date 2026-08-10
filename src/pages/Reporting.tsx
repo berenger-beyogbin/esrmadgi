@@ -31,7 +31,7 @@ import {
 import { compteEsrService } from '../services/compteEsrService';
 import { formatDateFr, formatFCFA } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
-import { Download, FileBarChart2, FileDown, Loader2, RefreshCw } from 'lucide-react';
+import { ChevronDown, Download, FileBarChart2, FileDown, Loader2, RefreshCw } from 'lucide-react';
 
 const STATUT_STYLES: Record<string, string> = {
   A_JOUR: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -436,6 +436,7 @@ function classeGrilleResume(nombre: number): string {
 
 export default function Reporting() {
   const [etatActif, setEtatActif] = useState<EtatId>('ADHERENTS');
+  const [categorieOuverte, setCategorieOuverte] = useState<EtatDef['categorie'] | null>('Listes');
   const [lignes, setLignes] = useState<Ligne[]>([]);
   const [resume, setResume] = useState<Metrique[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -487,6 +488,7 @@ export default function Reporting() {
 
   useEffect(() => {
     if (!definition?.disponible) return;
+    setCategorieOuverte(definition.categorie);
     rafraichir();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [etatActif]);
@@ -551,13 +553,27 @@ export default function Reporting() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+          <div className="lg:col-span-1 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-2 self-start">
             {CATEGORIES.map((categorie) => (
-              <div key={categorie}>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide px-2 mb-1">
-                  {categorie}
-                </p>
-                <div className="space-y-1">
+              <div key={categorie} className="rounded-xl border border-slate-100 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setCategorieOuverte((ouverte) => ouverte === categorie ? null : categorie)}
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-3 text-left transition ${
+                    categorieOuverte === categorie ? 'bg-slate-100 text-[#2b529f]' : 'bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                  aria-expanded={categorieOuverte === categorie}
+                >
+                  <span className="text-xs font-black uppercase tracking-wide">{categorie}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="min-w-6 rounded-full bg-white border border-slate-200 px-1.5 py-0.5 text-center text-[10px] font-bold text-slate-500">
+                      {ETATS.filter((e) => e.categorie === categorie).length}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${categorieOuverte === categorie ? 'rotate-180' : ''}`} />
+                  </span>
+                </button>
+                {categorieOuverte === categorie && (
+                <div className="space-y-1 p-2 border-t border-slate-100">
                   {ETATS.filter((e) => e.categorie === categorie).map((e) => (
                     <button
                       key={e.id}
@@ -576,6 +592,7 @@ export default function Reporting() {
                     </button>
                   ))}
                 </div>
+                )}
               </div>
             ))}
           </div>
