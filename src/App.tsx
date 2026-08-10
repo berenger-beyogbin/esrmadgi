@@ -20,7 +20,7 @@ import CloturePeriode from './pages/CloturePeriode';
 import Prestations from './pages/Prestations';
 import Rachats from './pages/Rachats';
 import Parametres from './pages/Parametres';
-import Audit from './pages/Audit';
+import Reporting from './pages/Reporting';
 import Utilisateurs from './pages/Utilisateurs';
 import HeaderBanner from './components/HeaderBanner';
 
@@ -243,7 +243,7 @@ export default function App() {
       id: 'REPORTING' as ModuleType,
       label: 'Audit & Reporting',
       icon: BarChart,
-      allowed: ['ADMINISTRATEUR', 'SUPERADMIN'],
+      allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR', 'SUPERADMIN'],
     },
     {
       id: 'PARAMETRES' as ModuleType,
@@ -310,7 +310,7 @@ export default function App() {
       case 'UTILISATEURS':
         return <Utilisateurs currentUser={currentUser} />;
       case 'REPORTING':
-        return <Audit currentUser={currentUser} />; // audit logs serves reporting purposes
+        return <Reporting currentUser={currentUser} />;
       case 'AIDE':
         return (
           <div className="bg-white p-8 rounded-2xl border border-slate-150 shadow-xs max-w-4xl mx-auto space-y-6">

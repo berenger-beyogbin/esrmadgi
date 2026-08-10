@@ -1,5 +1,39 @@
 import { apiGet } from '../lib/apiClient';
 
+export interface AdherentReportRow {
+  matricule: string;
+  nomPrenoms: string;
+  grade: string;
+  dateAdhesion: string | null;
+  datePremierPrecompte?: string | null;
+  primeTrimestrielle: number;
+  dateDepartRetraite?: string | null;
+  montantRestantDu?: number;
+  statut?: string;
+}
+
+export interface RachatReportRow {
+  matricule: string;
+  nomPrenoms: string;
+  dateDemande: string | null;
+  statut: string;
+  capitalVerse: number;
+  penalite: number;
+  montantNet: number;
+}
+
+export interface AgentDecedeReportRow {
+  matricule: string;
+  nomPrenoms: string;
+  dateEvenement: string | null;
+  dateDemande?: string | null;
+  datePaiement?: string | null;
+  statut?: string;
+  montantDu?: number;
+  montantPaye: number;
+  ayantsDroit?: string;
+}
+
 export interface CimaC20Report {
   etat: string;
   annee: number;
@@ -96,3 +130,71 @@ export async function exporterCimaC20(annee: number): Promise<void> {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+async function fetchReport<T>(path: string): Promise<T[]> {
+  const { data, error } = await apiGet<ApiResponse<T[]>>(`/api/reporting/${path}`);
+  if (error) throw new Error(error);
+  if (data?.error) throw new Error(data.error);
+  return data?.data ?? [];
+}
+
+export const getListeAdherents = () => fetchReport<AdherentReportRow>('adherents');
+export const getAdherentsActifs = () => fetchReport<AdherentReportRow>('adherents-actifs');
+export const getAdherentsRetraites = () => fetchReport<AdherentReportRow>('adherents-retraites');
+export const getAdherentsRetraitesParStatut = () => fetchReport<AdherentReportRow>('adherents-retraites-statut');
+export const getRachatsResiliations = () => fetchReport<RachatReportRow>('rachats-resiliations');
+export const getAgentsDecedes = () => fetchReport<AgentDecedeReportRow>('agents-decedes');
+export const getAgentsDecedesCapitalVerse = () => fetchReport<AgentDecedeReportRow>('agents-decedes-capital-verse');
+
+interface ColonneExport {
+  header: string;
+  key: string;
+  width?: number;
+  format?: 'money' | 'date';
+}
+
+export async function exporterTableauExcel(params: {
+  titre: string;
+  sousTitre: string;
+  colonnes: ColonneExport[];
+  lignes: Array<Record<string, unknown>>;
+  fichier: string;
+}): Promise<void> {
+  const { titre, sousTitre, colonnes, lignes, fichier } = params;
+  const ExcelJS = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('État');
+  sheet.addRow(['MADGI - ÉPARGNE SANTÉ RETRAITE']);
+  sheet.addRow([titre]);
+  sheet.addRow([sousTitre]);
+  sheet.addRow([]);
+  sheet.addRow(colonnes.map((c) => c.header));
+  lignes.forEach((ligne) => {
+    sheet.addRow(colonnes.map((c) => (ligne[c.key] ?? '') as CellValueLike));
+  });
+  const lastCol = String.fromCharCode(65 + colonnes.length - 1);
+  sheet.mergeCells(`A1:${lastCol}1`);
+  sheet.mergeCells(`A2:${lastCol}2`);
+  sheet.mergeCells(`A3:${lastCol}3`);
+  sheet.getRow(1).font = { bold: true, size: 16, color: { argb: 'FF17365D' } };
+  sheet.getRow(2).font = { bold: true, size: 13 };
+  sheet.getRow(3).font = { italic: true, size: 10, color: { argb: 'FF64748B' } };
+  sheet.getRow(5).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  sheet.getRow(5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF17365D' } };
+  sheet.columns = colonnes.map((c) => ({ width: c.width ?? 20 }));
+  colonnes.forEach((c, index) => {
+    if (c.format === 'money') sheet.getColumn(index + 1).numFmt = '#,##0';
+  });
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fichier;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+type CellValueLike = string | number | null;
