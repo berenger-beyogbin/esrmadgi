@@ -7,6 +7,7 @@ import { VPrecompteDetails, DBUser, GeneratePrecomptesResult, PeriodeMetier } fr
 import { ChevronLeft, ChevronRight, Download, FileCheck, Loader2, Play, Upload, X, CheckCircle2 } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
+import RecuVersement, { RecuVersementData } from '../components/RecuVersement';
 
 interface PrecomptesProps {
   currentUser: DBUser;
@@ -137,6 +138,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   const [dateRegul, setDateRegul] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmittingRegul, setIsSubmittingRegul] = useState(false);
   const [regulError, setRegulError] = useState<string | null>(null);
+  const [recuData, setRecuData] = useState<RecuVersementData | null>(null);
 
   useEffect(() => {
     setShowRetourSection(false);
@@ -403,7 +405,8 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
     }
 
     setIsSubmittingRegul(true);
-    const { error } = await cotisationService.createCotisationSpontanee({
+    const regularisation = selectedRegularisation;
+    const { data, error } = await cotisationService.createCotisationSpontanee({
       id_adherent: String(selectedRegularisation.id_adherent),
       matricule: selectedRegularisation.matricule,
       mode: modeRegul,
@@ -416,6 +419,19 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
     if (error) {
       setRegulError(error.message);
       return;
+    }
+    if (modeRegul === 'ESPECES') {
+      setRecuData({
+        reference: data?.entete?.reference ?? `RG-${regularisation.id_precompte}`,
+        nom: regularisation.nom ?? '',
+        prenoms: regularisation.prenoms ?? '',
+        matricule: regularisation.matricule,
+        montant: montantNum,
+        date_versement: dateRegul,
+        nature_recette: 'Régularisation de précompte',
+        periode_couverture: regularisation.periode,
+        mode: modeRegul,
+      });
     }
     setSelectedRegularisation(null);
     await fetchPrecomptes();
@@ -831,6 +847,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
           </div>
         </div>
       )}
+      {recuData && <RecuVersement open onClose={() => setRecuData(null)} data={recuData} />}
     </div>
   );
 }

@@ -133,7 +133,7 @@ export const cotisationsService = {
       }
       await periodesRepository.ensureOuverte(String(precompte.periode));
       try {
-        return await cotisationsRepository.regulariserPrecompte({
+        const regularisation = await cotisationsRepository.regulariserPrecompte({
           idPrecompte: payload.id_precompte,
           idAdherent: payload.id_adherent,
           mode: payload.mode,
@@ -144,6 +144,22 @@ export const cotisationsService = {
           montant: payload.montant,
           reference: reference.replace(/^SP/, 'RG'),
         });
+        const resultat = regularisation as Record<string, unknown>;
+        return {
+          ...resultat,
+          entete: {
+            id_cotisation_entete: Number(resultat.id_cotisation_entete ?? 0),
+            reference: reference.replace(/^SP/, 'RG'),
+          },
+          detail: {
+            id_cotisation_detail: Number(resultat.id_cotisation_detail ?? 0),
+            periode: String(precompte.periode),
+            date_valeur: payload.date,
+            montant: payload.montant,
+            source: 'REGULARISATION_PRECOMPTE',
+            statut: 'ENCAISSEE',
+          },
+        };
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (!/regulariser_precompte_esr|schema cache/i.test(message)) throw err;

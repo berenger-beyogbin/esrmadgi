@@ -4,6 +4,7 @@ import { VPrecompteDetails, DBUser, PeriodeMetier } from '../types';
 import { Loader2, X, CheckCircle2 } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
+import RecuVersement, { RecuVersementData } from '../components/RecuVersement';
 
 interface RegularisationPrecomptesProps {
   currentUser: DBUser;
@@ -44,6 +45,7 @@ export default function RegularisationPrecomptes({ currentUser }: Regularisation
   const [dateEmissionCheque, setDateEmissionCheque] = useState(todayISO());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [recuData, setRecuData] = useState<RecuVersementData | null>(null);
 
   useEffect(() => {
     async function loadPeriodes() {
@@ -141,6 +143,19 @@ export default function RegularisationPrecomptes({ currentUser }: Regularisation
     }
     if (data?.en_attente_validation) {
       setErrorMsg(`Cheque #${data.paiement?.id ?? ''} en attente de validation bancaire. Le precompte ne sera regularise qu'apres encaissement.`);
+    }
+    if (mode === 'ESPECES') {
+      setRecuData({
+        reference: data?.entete?.reference ?? `RG-${selected.id_precompte}`,
+        nom: selected.nom ?? '',
+        prenoms: selected.prenoms ?? '',
+        matricule: selected.matricule,
+        montant: montantNum,
+        date_versement: date,
+        nature_recette: 'Régularisation de précompte',
+        periode_couverture: selected.periode,
+        mode,
+      });
     }
     setSelected(null);
     await fetchLignes(periode);
@@ -380,6 +395,7 @@ export default function RegularisationPrecomptes({ currentUser }: Regularisation
           </div>
         </div>
       )}
+      {recuData && <RecuVersement open onClose={() => setRecuData(null)} data={recuData} />}
     </div>
   );
 }
