@@ -512,8 +512,8 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
                 <button
                   id="btn-generer-fichier"
                   onClick={handleExportGenere}
-                  disabled={isExportingGenere || !periodeGenerer}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#2b529f] hover:bg-blue-50 text-[#2b529f] rounded-xl text-sm font-bold transition disabled:opacity-50 shrink-0"
+                  disabled={isExportingGenere || !periodeGenerer || isSelectedPeriodeCloturee}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#2b529f] hover:bg-blue-50 text-[#2b529f] rounded-xl text-sm font-bold transition disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed disabled:hover:bg-slate-100 shrink-0"
                 >
                   {isExportingGenere ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   Générer le fichier
@@ -521,8 +521,8 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
                 <button
                   id="btn-retour-precompte"
                   onClick={handleAllerRetourPrecompte}
-                  disabled={!periodeGenerer}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-amber-400 hover:bg-amber-50 text-amber-600 rounded-xl text-sm font-bold transition disabled:opacity-50 shrink-0"
+                  disabled={!periodeGenerer || isSelectedPeriodeCloturee}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-amber-400 hover:bg-amber-50 text-amber-600 rounded-xl text-sm font-bold transition disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed disabled:hover:bg-slate-100 shrink-0"
                 >
                   <Upload className="w-4 h-4" />
                   Retour précompte
