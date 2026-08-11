@@ -128,7 +128,7 @@ export const cotisationsService = {
     if (payload.id_precompte) {
       const precompte = await precomptesRepository.findById(payload.id_precompte);
       if (!precompte) throw new AppError(404, 'Precompte a regulariser introuvable.');
-      if (Number(precompte.id_adherent) !== payload.id_adherent) {
+      if (String(precompte.matricule ?? '').trim().toUpperCase() !== adherent.matricule.trim().toUpperCase()) {
         throw new AppError(409, "Le precompte n'appartient pas a cet adherent.");
       }
       await periodesRepository.ensureOuverte(String(precompte.periode));
