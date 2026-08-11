@@ -190,17 +190,53 @@ let publicReferentielsRequest: Promise<unknown> | null = null;
 
 export const adhesionsEnLigneService = {
   async searchAgent(matricule: string, dateNaissance: string) {
-    const result = await agentsService.searchByMatricule(matricule.trim().toUpperCase());
-    if (!result.found || !result.data) return result;
+    const normalizedMatricule = matricule.trim().toUpperCase();
+    const result = await agentsService.searchByMatricule(normalizedMatricule);
+    if (!result.found || !result.data) {
+      return {
+        ...result,
+        found: false,
+        data: null,
+        error: result.error || 'Matricule incorrect ou introuvable.',
+      };
+    }
 
     const expectedDate = dateKey(result.data.date_naissance);
     const submittedDate = dateKey(dateNaissance);
-    if (!expectedDate || !submittedDate || expectedDate !== submittedDate) {
+    if (!expectedDate) {
       return {
         found: false,
         data: null,
-        error: 'Matricule ou date de naissance incorrect.',
+        error: 'La date de naissance est absente du référentiel pour ce matricule. Veuillez contacter la MADGI ESR.',
       };
+    }
+    if (!submittedDate || expectedDate !== submittedDate) {
+      return {
+        found: false,
+        data: null,
+        error: 'La date de naissance ne correspond pas à ce matricule.',
+      };
+    }
+
+    // Le contrôle est effectué après validation du couple matricule/date de
+    // naissance afin de ne pas révéler publiquement l'existence d'un adhérent.
+    const existing = (await adhesionsEnLigneRepository.findByMatricule(normalizedMatricule)) as AnyRow | null;
+    if (existing) {
+      if (existing.adhesion_en_ligne === true && existing.statut_demande === 'EN_ATTENTE') {
+        return {
+          found: false,
+          data: null,
+          error: 'Une demande d’adhésion en ligne existe déjà pour ce matricule et est en attente de validation.',
+        };
+      }
+
+      if (existing.adhesion_en_ligne !== true || existing.statut_demande === 'VALIDE') {
+        return {
+          found: false,
+          data: null,
+          error: 'Ce matricule est déjà adhérent à la MADGI ESR.',
+        };
+      }
     }
 
     const safeAgent = { ...result.data };
