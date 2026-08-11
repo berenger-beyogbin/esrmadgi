@@ -721,16 +721,22 @@ export default function Reporting() {
                   </div>
                 ) : (
                   <ScrollableTableWrapper>
-                    <table className="rtable min-w-full divide-y divide-slate-100 text-sm">
+                    <table className="rtable w-full table-fixed divide-y divide-slate-100 text-xs xl:text-sm">
+                      <colgroup>
+                        {colonnes.map((c) => (
+                          <col key={c.key} style={{ width: `${c.width ?? 16}%` }} />
+                        ))}
+                        {etatActif === 'AVIS_ANNUEL' && <col style={{ width: '12%' }} />}
+                      </colgroup>
                       <thead className="bg-slate-50">
                         <tr className="text-left text-[11px] font-bold text-slate-500 uppercase">
                           {colonnes.map((c) => (
-                            <th key={c.key} className="py-2.5 px-3 whitespace-nowrap">
+                            <th key={c.key} className="py-2.5 px-2 xl:px-3 leading-tight break-words">
                               {c.header}
                             </th>
                           ))}
                           {etatActif === 'AVIS_ANNUEL' && (
-                            <th className="py-2.5 px-3 whitespace-nowrap">Action</th>
+                            <th className="py-2.5 px-2 xl:px-3">Action</th>
                           )}
                         </tr>
                       </thead>
@@ -741,7 +747,7 @@ export default function Reporting() {
                               const valeur = ligne[c.key];
                               if (c.key === 'statut' && typeof valeur === 'string' && STATUT_STYLES[valeur]) {
                                 return (
-                                  <td key={c.key} data-label={c.header} className="py-2.5 px-3 whitespace-nowrap">
+                                  <td key={c.key} data-label={c.header} className="py-2.5 px-2 xl:px-3 whitespace-nowrap overflow-hidden">
                                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${STATUT_STYLES[valeur]}`}>
                                       {valeur === 'A_JOUR' ? 'À jour' : 'Pas à jour'}
                                     </span>
@@ -750,7 +756,7 @@ export default function Reporting() {
                               }
                               if (c.key === 'sens' && typeof valeur === 'string' && SENS_STYLES[valeur]) {
                                 return (
-                                  <td key={c.key} data-label={c.header} className="py-2.5 px-3 whitespace-nowrap">
+                                  <td key={c.key} data-label={c.header} className="py-2.5 px-2 xl:px-3 whitespace-nowrap overflow-hidden">
                                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${SENS_STYLES[valeur]}`}>
                                       {valeur === 'ENTREE' ? 'Entrée' : 'Sortie'}
                                     </span>
@@ -758,13 +764,13 @@ export default function Reporting() {
                                 );
                               }
                               return (
-                                <td key={c.key} data-label={c.header} className="py-2.5 px-3 whitespace-nowrap">
+                                <td key={c.key} data-label={c.header} className="py-2.5 px-2 xl:px-3 break-words overflow-hidden">
                                   {formaterCellule(valeur, c.format)}
                                 </td>
                               );
                             })}
                             {etatActif === 'AVIS_ANNUEL' && (
-                              <td data-label="Action" className="py-2.5 px-3 whitespace-nowrap">
+                              <td data-label="Action" className="py-2.5 px-2 xl:px-3 whitespace-nowrap overflow-hidden">
                                 <button
                                   onClick={() =>
                                     handleTelechargerAvisAnnuel(

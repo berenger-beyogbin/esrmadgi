@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CalendarRange, CheckCircle2, CircleDollarSign, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import { getDashboardStats } from '../services/dashboardService';
+import { periodeService } from '../services/periodeService';
 import { CimaC20Report, getCimaC20 } from '../services/reportingService';
 import { DashboardStats, DBUser } from '../types';
 import { formatDateFr, formatFCFA } from '../utils/formatters';
@@ -30,6 +31,33 @@ export default function DashboardV2({ currentUser }: DashboardV2Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [periodeInitialisee, setPeriodeInitialisee] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const initialiserPeriode = async () => {
+      try {
+        const { data } = await periodeService.list();
+        if (!active) return;
+
+        const periodeOuverte = data
+          .filter((periode) => periode.statut === 'OUVERTE')
+          .sort((a, b) => b.periode.localeCompare(a.periode))[0];
+
+        if (periodeOuverte) {
+          setAnnee(periodeOuverte.annee);
+          setTrimestre(periodeOuverte.trimestre);
+          setMode('TRIMESTRE');
+        }
+      } finally {
+        if (active) setPeriodeInitialisee(true);
+      }
+    };
+
+    initialiserPeriode();
+    return () => { active = false; };
+  }, []);
 
   const load = async () => {
     setIsLoading(true);
@@ -46,7 +74,14 @@ export default function DashboardV2({ currentUser }: DashboardV2Props) {
     }
   };
 
-  useEffect(() => { load(); }, [annee]);
+  useEffect(() => {
+    if (periodeInitialisee) load();
+  }, [annee, periodeInitialisee]);
+
+  const anneesDisponibles = useMemo(
+    () => Array.from(new Set([...Array.from({ length: 6 }, (_, index) => currentYear - 4 + index), annee])).sort((a, b) => a - b),
+    [annee, currentYear],
+  );
 
   const selectedRows = useMemo(() => {
     if (!cima) return [];
@@ -86,7 +121,7 @@ export default function DashboardV2({ currentUser }: DashboardV2Props) {
             </div>
             <label className="text-xs font-bold text-blue-100">Année
               <select value={annee} onChange={(e) => setAnnee(Number(e.target.value))} className="block mt-1 h-10 rounded-xl border border-white/30 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm">
-                {Array.from({ length: 6 }, (_, index) => currentYear - 4 + index).map((year) => <option key={year}>{year}</option>)}
+                {anneesDisponibles.map((year) => <option key={year}>{year}</option>)}
               </select>
             </label>
             {mode === 'TRIMESTRE' && <label className="text-xs font-bold text-blue-100">Trimestre
