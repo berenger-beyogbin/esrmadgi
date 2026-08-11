@@ -8,7 +8,7 @@ import {
   utilisateursRepository,
 } from '../repositories/utilisateurs.repository';
 import { normalizeRole, toStoredProfile } from '../utils/roles';
-import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
+import { generateTemporaryPassword, isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
 
 export interface UtilisateurDto {
   id: string;
@@ -35,6 +35,18 @@ export interface CreateUtilisateurPayload {
   telephone?: string | null;
   user_actif?: boolean;
   id_adherent?: number | null;
+}
+
+export interface EnsureAdherentAccessInput {
+  matricule: string;
+  idAdherent: number;
+  telephone?: string | null;
+}
+
+export interface EnsureAdherentAccessResult {
+  login: string;
+  email: string;
+  must_change_password: true;
 }
 
 export interface UpdateUtilisateurPayload {
@@ -117,6 +129,87 @@ async function findAuthUserByEmail(email: string): Promise<User | null> {
 }
 
 export const utilisateursService = {
+  // Cree (ou repare) l'acces premiere connexion d'un adherent : compte utilisateurs
+  // profil ADHERENT + compte Supabase Auth avec mot de passe temporaire aleatoire que
+  // personne ne voit jamais, must_change_password force l'adherent a le definir lui-meme
+  // via le flux SMS de premiere connexion. Utilise a la validation d'une adhesion en ligne
+  // et a l'activation d'un adherent sans acces existant.
+  async ensureAdherentAccess(
+    user: AuthenticatedUser,
+    input: EnsureAdherentAccessInput,
+  ): Promise<EnsureAdherentAccessResult> {
+    const matricule = normalizeMatricule(input.matricule);
+    const email = `${matricule.toLowerCase()}@madgi.ci`;
+    const temporaryPassword = generateTemporaryPassword(matricule);
+    const auditUserId = actorId(user);
+    const existingRow = await utilisateursRepository.findByMatricule(matricule);
+
+    let authUser = existingRow?.auth_user_id
+      ? await utilisateursRepository
+          .updateAuthUser(existingRow.auth_user_id, {
+            email,
+            password: temporaryPassword,
+            matricule,
+            profil: 'ADHERENT',
+            must_change_password: true,
+          })
+          .catch(() => null)
+      : null;
+
+    if (!authUser) {
+      authUser = await findAuthUserByEmail(email);
+      authUser = authUser
+        ? await utilisateursRepository.updateAuthUser(authUser.id, {
+            email,
+            password: temporaryPassword,
+            matricule,
+            profil: 'ADHERENT',
+            must_change_password: true,
+          })
+        : await utilisateursRepository.createAuthUser({
+            email,
+            password: temporaryPassword,
+            matricule,
+            profil: 'ADHERENT',
+            must_change_password: true,
+          });
+    }
+
+    if (existingRow) {
+      await utilisateursRepository.update(existingRow.id_utilisateur, {
+        auth_user_id: authUser.id,
+        email,
+        telephone: input.telephone ?? null,
+        user_actif: true,
+        profil: 'ADHERENT',
+        id_adherent: input.idAdherent,
+        auditUserId,
+      });
+    } else {
+      await utilisateursRepository.create({
+        auth_user_id: authUser.id,
+        matricule,
+        email,
+        telephone: input.telephone ?? null,
+        user_actif: true,
+        profil: 'ADHERENT',
+        id_adherent: input.idAdherent,
+        auditUserId,
+      });
+    }
+
+    await auditService
+      .logEvent(user, {
+        action: existingRow ? 'REPARATION_ACCES_PREMIERE_CONNEXION' : 'CREATION_ACCES_PREMIERE_CONNEXION',
+        objetAudit: 'utilisateurs',
+        idObjet: input.idAdherent,
+        details: `Acces premiere connexion cree pour l'adherent ${matricule}.`,
+      })
+      .catch(() => undefined);
+
+    return { login: matricule, email, must_change_password: true };
+  },
+
   async getAll(filters?: UtilisateurFilters): Promise<UtilisateurDto[]> {
     const roleFilter =
       filters?.profil && filters.profil !== 'TOUS' ? normalizeRole(filters.profil) : null;

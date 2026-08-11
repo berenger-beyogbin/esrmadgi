@@ -246,6 +246,16 @@ export const adherentsService = {
         user_actif: payload.action === 'ACTIVER',
         auditUserId: Number.isInteger(Number(user.id_utilisateur)) ? Number(user.id_utilisateur) : null,
       });
+    } else if (!linkedUser && payload.action === 'ACTIVER' && existing.matricule && existing.id_adherent) {
+      await utilisateursService
+        .ensureAdherentAccess(user, {
+          matricule: String(existing.matricule),
+          idAdherent: Number(existing.id_adherent),
+          telephone: existing.telephone ?? null,
+        })
+        .catch((err) => {
+          console.error('[adherents] ensureAdherentAccess:', err instanceof Error ? err.message : err);
+        });
     }
 
     await auditService

@@ -4,8 +4,7 @@ import { adherentsRepository } from '../repositories/adherents.repository';
 import { agentsService } from './agents.service';
 import { auditService } from './audit.service';
 import { parametresRepository } from '../repositories/parametres.repository';
-import { utilisateursRepository } from '../repositories/utilisateurs.repository';
-import { generateTemporaryPassword } from '../utils/passwordPolicy';
+import { utilisateursService } from './utilisateurs.service';
 import {
   OnlineAdhesionFilters,
   OnlineAdhesionPayload,
@@ -17,19 +16,6 @@ type AnyRow = Record<string, any>;
 
 function actor(user: AuthenticatedUser): string {
   return user.email || user.matricule || user.id_utilisateur;
-}
-
-function actorId(user: AuthenticatedUser): number | null {
-  const value = Number(user.id_utilisateur);
-  return Number.isInteger(value) ? value : null;
-}
-
-function loginEmailFromMatricule(matricule: string): string {
-  return `${matricule.trim().toLowerCase()}@madgi.ci`;
-}
-
-function temporaryPasswordFor(matricule: string): string {
-  return generateTemporaryPassword(matricule.trim().toUpperCase());
 }
 
 function calculateDateEffetFromPrecompte(datePrecompte: string | null | undefined): string | null {
@@ -44,11 +30,6 @@ function calculateDateEffetFromPrecompte(datePrecompte: string | null | undefine
   return `${nextQuarterYear}-${String(nextQuarterMonth).padStart(2, '0')}-01`;
 }
 
-async function findAuthUserByEmail(email: string) {
-  const users = await utilisateursRepository.listAuthUsers();
-  return users.find((user) => user.email?.toLowerCase() === email.toLowerCase()) ?? null;
-}
-
 async function ensureFirstLoginAccess(user: AuthenticatedUser, adhesion: AnyRow) {
   const matricule = String(adhesion.matricule ?? '').trim().toUpperCase();
   const idAdherent = Number(adhesion.id_adherent ?? adhesion.id);
@@ -56,83 +37,11 @@ async function ensureFirstLoginAccess(user: AuthenticatedUser, adhesion: AnyRow)
     throw new AppError(500, 'Impossible de creer l acces utilisateur : adherent incomplet.');
   }
 
-  const email = loginEmailFromMatricule(matricule);
-  const telephone = adhesion.telephone ? String(adhesion.telephone) : null;
-  const temporaryPassword = temporaryPasswordFor(matricule);
-  const auditUserId = actorId(user);
-  const existingRow = await utilisateursRepository.findByMatricule(matricule);
-
-  let authUser =
-    existingRow?.auth_user_id
-      ? await utilisateursRepository
-          .updateAuthUser(existingRow.auth_user_id, {
-            email,
-            password: temporaryPassword,
-            matricule,
-            profil: 'ADHERENT',
-            must_change_password: true,
-          })
-          .catch(() => null)
-      : null;
-
-  if (!authUser) {
-    authUser = await findAuthUserByEmail(email);
-    if (authUser) {
-      authUser = await utilisateursRepository.updateAuthUser(authUser.id, {
-        email,
-        password: temporaryPassword,
-        matricule,
-        profil: 'ADHERENT',
-        must_change_password: true,
-      });
-    } else {
-      authUser = await utilisateursRepository.createAuthUser({
-        email,
-        password: temporaryPassword,
-        matricule,
-        profil: 'ADHERENT',
-        must_change_password: true,
-      });
-    }
-  }
-
-  if (existingRow) {
-    await utilisateursRepository.update(existingRow.id_utilisateur, {
-      auth_user_id: authUser.id,
-      email,
-      telephone,
-      user_actif: true,
-      profil: 'ADHERENT',
-      id_adherent: idAdherent,
-      auditUserId,
-    });
-  } else {
-    await utilisateursRepository.create({
-      auth_user_id: authUser.id,
-      matricule,
-      email,
-      telephone,
-      user_actif: true,
-      profil: 'ADHERENT',
-      id_adherent: idAdherent,
-      auditUserId,
-    });
-  }
-
-  await auditService
-    .logEvent(user, {
-      action: existingRow ? 'REPARATION_ACCES_PREMIERE_CONNEXION' : 'CREATION_ACCES_PREMIERE_CONNEXION',
-      objetAudit: 'utilisateurs',
-      idObjet: idAdherent,
-      details: `Acces premiere connexion cree pour l'adherent ${matricule}.`,
-    })
-    .catch(() => undefined);
-
-  return {
-    login: matricule,
-    email,
-    must_change_password: true,
-  };
+  return utilisateursService.ensureAdherentAccess(user, {
+    matricule,
+    idAdherent,
+    telephone: adhesion.telephone ? String(adhesion.telephone) : null,
+  });
 }
 
 function normalizePayload(payload: OnlineAdhesionPayload): OnlineAdhesionPayload {
