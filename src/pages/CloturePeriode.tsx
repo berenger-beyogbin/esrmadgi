@@ -69,7 +69,8 @@ export default function CloturePeriode({ currentUser }: CloturePeriodeProps) {
   const checks = controle ? [
     [controle.controles.cotisationsToutesEncaissees, 'Toutes les cotisations prévues ont été encaissées', "Certaines cotisations prévues n'ont pas été encaissées"],
     [controle.controles.paiementsAvecDateValeur, 'Toutes les cotisations encaissées ont une date de valeur', "Certaines cotisations encaissées n'ont pas de date de valeur"],
-    [controle.controles.precomptesTousTraites, 'Tous les précomptes ont été effectués', "Certains précomptes n'ont pas été effectués"],
+    [controle.controles.precomptesTousTraites, 'Tous les retours de précompte ont été traités', "Certains retours de précompte n'ont pas encore été traités"],
+    [controle.controles.datesValeurCompatibles, "Toutes les dates de valeur sont compatibles avec la date d'arrêté", "Certaines dates de valeur sont postérieures à la date d'arrêté"],
   ] as const : [];
 
   return (

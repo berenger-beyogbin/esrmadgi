@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { Settings, Plus, RotateCw, Save, Layers, HeartPulse, BookOpen, X, CalendarDays } from 'lucide-react';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
+import { formatDateFr } from '../utils/formatters';
 
 interface ParametresProps {
   currentUser: DBUser;
@@ -723,8 +724,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                               {pg.actif ? 'OUI' : 'NON'}
                             </span>
                           </td>
-                          <td data-label="Date début" className="py-3 px-4 font-mono text-slate-400">{pg.date_debut ?? '—'}</td>
-                          <td data-label="Date fin" className="py-3 px-4 font-mono text-slate-400">{pg.date_fin ?? '—'}</td>
+                          <td data-label="Date début" className="py-3 px-4 font-mono text-slate-400">{pg.date_debut ? formatDateFr(pg.date_debut) : '—'}</td>
+                          <td data-label="Date fin" className="py-3 px-4 font-mono text-slate-400">{pg.date_fin ? formatDateFr(pg.date_fin) : '—'}</td>
                           <td data-label="Actions" className="py-3 px-4 text-right">
                             {canAdmin && (
                               <button
@@ -960,8 +961,8 @@ export default function Parametres({ currentUser }: ParametresProps) {
                       <td data-label="Code Paramètre" className="py-3.5 px-4 font-bold font-mono text-slate-800 uppercase">{vr.code}</td>
                       <td data-label="Intititule" className="py-3.5 px-4 font-semibold text-slate-600">{vr.nom}</td>
                       <td data-label="Valeur Appliquée" className="py-3.5 px-4 font-extrabold text-indigo-700 font-mono">{vr.valeur}</td>
-                      <td data-label="Date de début d'application" className="py-3.5 px-4 font-mono text-slate-550">{vr.date_debut}</td>
-                      <td data-label="Date de fin d'effet" className="py-3.5 px-4 font-mono text-slate-400">{vr.date_fin || 'Indéterminée (Courante)'}</td>
+                      <td data-label="Date de début d'application" className="py-3.5 px-4 font-mono text-slate-550">{formatDateFr(vr.date_debut)}</td>
+                      <td data-label="Date de fin d'effet" className="py-3.5 px-4 font-mono text-slate-400">{vr.date_fin ? formatDateFr(vr.date_fin) : 'Indéterminée (Courante)'}</td>
                       <td data-label="État d'activité" className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                           vr.actif ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-450'
@@ -1173,7 +1174,7 @@ export default function Parametres({ currentUser }: ParametresProps) {
                       ) : (
                         <>
                           <td data-label="ID" className="py-3 px-4 font-mono text-slate-400">{rp.id_param_repartition}</td>
-                          <td data-label="Date effet" className="py-3 px-4 font-mono text-slate-700">{rp.date_effet}</td>
+                          <td data-label="Date effet" className="py-3 px-4 font-mono text-slate-700">{formatDateFr(rp.date_effet)}</td>
                           <td data-label="Taux santé (%)" className="py-3 px-4 text-center font-bold text-emerald-600 font-mono">
                             {rp.taux_sante !== null ? `${rp.taux_sante}%` : '—'}
                           </td>
