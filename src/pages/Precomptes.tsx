@@ -125,6 +125,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   const [retourError, setRetourError] = useState<string | null>(null);
   const [retourResult, setRetourResult] = useState<RetourDgiResult | null>(null);
   const [selectedRetourFile, setSelectedRetourFile] = useState<File | null>(null);
+  const [showRetourSection, setShowRetourSection] = useState(false);
 
   const [statutFilter, setStatutFilter] = useState('TOUS');
   const [currentPage, setCurrentPage] = useState(1);
@@ -136,6 +137,10 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   const [dateRegul, setDateRegul] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmittingRegul, setIsSubmittingRegul] = useState(false);
   const [regulError, setRegulError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setShowRetourSection(false);
+  }, [periodeGenerer]);
 
   const canGenerate =
     currentUser.role === 'GESTIONNAIRE' ||
@@ -270,7 +275,10 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
   };
 
   const handleAllerRetourPrecompte = () => {
-    retourSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setShowRetourSection(true);
+    window.requestAnimationFrame(() => {
+      retourSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const handleCloturerPeriode = async () => {
@@ -358,6 +366,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
       if (error) throw error;
       setRetourResult(result);
       await fetchPrecomptes();
+      setShowRetourSection(false);
     } catch (error: any) {
       setRetourError(error?.message || 'Erreur pendant le traitement du retour DGI.');
     } finally {
@@ -523,7 +532,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
       )}
 
       {/* Filtre et actualisation */}
-      {canGenerate && dejaGenere && (
+      {canGenerate && dejaGenere && showRetourSection && (
         <div ref={retourSectionRef} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
           <div>
             <p className="text-xs font-bold text-slate-600 uppercase tracking-wide font-mono">
