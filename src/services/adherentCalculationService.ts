@@ -102,18 +102,17 @@ export const adherentCalculationService = {
     if (!Number.isInteger(adhesionYear)) return [];
     const adhesionMonth = Number(isoDateAdhesion.split('-')[1]);
     if (!Number.isInteger(adhesionMonth) || adhesionMonth < 1 || adhesionMonth > 12) return [];
-    const currentQuarterStartMonth = Math.floor((adhesionMonth - 1) / 3) * 3 + 1;
-    const currentQuarterStart = `${adhesionYear}-${String(currentQuarterStartMonth).padStart(2, '0')}-01`;
+    const currentQuarter = Math.floor((adhesionMonth - 1) / 3) + 1;
 
     const options: PremierPrecompteTrimestreOption[] = [adhesionYear, adhesionYear + 1].flatMap((year) => [
-      { trimestre: 1, date: `${year}-01-01`, label: `1er trimestre ${year}` },
-      { trimestre: 2, date: `${year}-04-01`, label: `2e trimestre ${year}` },
-      { trimestre: 3, date: `${year}-07-01`, label: `3e trimestre ${year}` },
-      { trimestre: 4, date: `${year}-10-01`, label: `4e trimestre ${year}` },
+      { trimestre: 1, date: `${year}-03-31`, label: `1er trimestre ${year}` },
+      { trimestre: 2, date: `${year}-06-30`, label: `2e trimestre ${year}` },
+      { trimestre: 3, date: `${year}-09-30`, label: `3e trimestre ${year}` },
+      { trimestre: 4, date: `${year}-12-31`, label: `4e trimestre ${year}` },
     ]);
 
     return onlyOnOrAfterAdhesion
-      ? options.filter((option) => option.date >= currentQuarterStart)
+      ? options.filter((option) => option.date >= `${adhesionYear}-${String(currentQuarter * 3).padStart(2, '0')}-01`)
       : options;
   },
 
@@ -121,6 +120,19 @@ export const adherentCalculationService = {
     const options = this.getPremierPrecompteTrimestreOptions(dateAdhesion, true);
     const selectedIso = toIsoDate(selectedDate);
     if (selectedIso && options.some((option) => option.date === selectedIso)) return selectedIso;
+    if (selectedIso) {
+      const [year, month] = selectedIso.split('-').map(Number);
+      if (Number.isInteger(year) && Number.isInteger(month)) {
+        const quarter = Math.floor((month - 1) / 3) + 1;
+        const converted = [
+          `${year}-03-31`,
+          `${year}-06-30`,
+          `${year}-09-30`,
+          `${year}-12-31`,
+        ][quarter - 1];
+        if (converted && options.some((option) => option.date === converted)) return converted;
+      }
+    }
     return '';
   },
 
@@ -187,8 +199,9 @@ export const adherentCalculationService = {
       const [year, month] = parts;
       const currentQuarter = Math.floor((month - 1) / 3) + 1;
       const nextQuarterYear = currentQuarter === 4 ? year + 1 : year;
-      const nextQuarterMonth = currentQuarter === 4 ? 1 : currentQuarter * 3 + 1;
-      return `${nextQuarterYear}-${String(nextQuarterMonth).padStart(2, '0')}-01`;
+      const nextQuarter = currentQuarter === 4 ? 1 : currentQuarter + 1;
+      const nextQuarterEnd = ['03-31', '06-30', '09-30', '12-31'][nextQuarter - 1];
+      return `${nextQuarterYear}-${nextQuarterEnd}`;
     } catch (e) {
       console.error('Erreur calculateDateEffet:', e);
       return '';
