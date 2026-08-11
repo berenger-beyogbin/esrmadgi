@@ -120,10 +120,7 @@ export const cotisationsService = {
     const adherent = normalizeActiveAdherent(
       await cotisationsRepository.findActiveAdherentById(payload.id_adherent),
     );
-    const parsed = parseDateQuarter(payload.date);
-    const periode = `${parsed.annee}T${parsed.trimestre}`;
-    await periodesRepository.ensureOuverte(periode);
-    const reference = buildReference('SP', parsed.annee, parsed.trimestre, adherent.matricule);
+    const parsedDateVersement = parseDateQuarter(payload.date);
 
     if (payload.id_precompte) {
       const precompte = await precomptesRepository.findById(payload.id_precompte);
@@ -131,29 +128,38 @@ export const cotisationsService = {
       if (String(precompte.matricule ?? '').trim().toUpperCase() !== adherent.matricule.trim().toUpperCase()) {
         throw new AppError(409, "Le precompte n'appartient pas a cet adherent.");
       }
-      await periodesRepository.ensureOuverte(String(precompte.periode));
+      const periodePrecompte = String(precompte.periode).trim().toUpperCase();
+      const parsedPrecompte = parsePeriodeTrimestre(periodePrecompte);
+      if (!parsedPrecompte) throw new AppError(409, 'Periode du precompte invalide.');
+      await periodesRepository.ensureOuverte(periodePrecompte);
+      const referenceRegularisation = buildReference(
+        'SP',
+        parsedPrecompte.annee,
+        parsedPrecompte.trimestre,
+        adherent.matricule,
+      ).replace(/^SP/, 'RG');
       try {
         const regularisation = await cotisationsRepository.regulariserPrecompte({
           idPrecompte: payload.id_precompte,
           idAdherent: payload.id_adherent,
           mode: payload.mode,
-          periode,
-          periodeDeb: parsed.periodeDeb,
-          periodeFin: parsed.periodeFin,
+          periode: periodePrecompte,
+          periodeDeb: parsedPrecompte.periodeDeb,
+          periodeFin: parsedPrecompte.periodeFin,
           dateValeur: payload.date,
           montant: payload.montant,
-          reference: reference.replace(/^SP/, 'RG'),
+          reference: referenceRegularisation,
         });
         const resultat = regularisation as Record<string, unknown>;
         return {
           ...resultat,
           entete: {
             id_cotisation_entete: Number(resultat.id_cotisation_entete ?? 0),
-            reference: reference.replace(/^SP/, 'RG'),
+            reference: referenceRegularisation,
           },
           detail: {
             id_cotisation_detail: Number(resultat.id_cotisation_detail ?? 0),
-            periode: String(precompte.periode),
+            periode: periodePrecompte,
             date_valeur: payload.date,
             montant: payload.montant,
             source: 'REGULARISATION_PRECOMPTE',
@@ -169,15 +175,15 @@ export const cotisationsService = {
         const entete = await cotisationsRepository.createCotisationEntete({
           id_adherent: payload.id_adherent,
           mode: payload.mode,
-          periode_deb: parsed.periodeDeb,
-          periode_fin: parsed.periodeFin,
-          reference: reference.replace(/^SP/, 'RG'),
+          periode_deb: parsedPrecompte.periodeDeb,
+          periode_fin: parsedPrecompte.periodeFin,
+          reference: referenceRegularisation,
           statut: 'OUVERT',
         });
         try {
           const detail = await cotisationsRepository.createCotisationDetail({
             id_cotisation_entete: entete.id_cotisation_entete,
-            periode,
+            periode: periodePrecompte,
             date_valeur: payload.date,
             montant: payload.montant,
             source: 'SPONTANEE',
@@ -198,11 +204,20 @@ export const cotisationsService = {
       }
     }
 
+    const periode = `${parsedDateVersement.annee}T${parsedDateVersement.trimestre}`;
+    await periodesRepository.ensureOuverte(periode);
+    const reference = buildReference(
+      'SP',
+      parsedDateVersement.annee,
+      parsedDateVersement.trimestre,
+      adherent.matricule,
+    );
+
     const entete = await cotisationsRepository.createCotisationEntete({
       id_adherent: payload.id_adherent,
       mode: payload.mode,
-      periode_deb: parsed.periodeDeb,
-      periode_fin: parsed.periodeFin,
+      periode_deb: parsedDateVersement.periodeDeb,
+      periode_fin: parsedDateVersement.periodeFin,
       reference,
       statut: 'OUVERT',
     });
