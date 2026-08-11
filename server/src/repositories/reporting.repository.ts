@@ -11,6 +11,16 @@ export const reportingRepository = {
     return data ?? [];
   },
 
+  async findPrecomptesAnnee(annee: number): Promise<any[]> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('precomptes')
+      .select('matricule,periode,montant_depart,montant_retour,statut_precompte')
+      .like('periode', `${annee}T%`);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
   async findComptes(): Promise<any[]> {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase

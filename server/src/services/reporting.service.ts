@@ -387,8 +387,9 @@ export const reportingService = {
   },
 
   async getCimaC20(annee: number): Promise<unknown> {
-    const [cotisations, comptes, prestations] = await Promise.all([
+    const [cotisations, precomptes, comptes, prestations] = await Promise.all([
       reportingRepository.findCotisationsAnnee(annee),
+      reportingRepository.findPrecomptesAnnee(annee),
       reportingRepository.findComptes(),
       reportingRepository.findPrestationsAnnee(annee),
     ]);
@@ -397,13 +398,24 @@ export const reportingService = {
       const periode = `${annee}T${trimestre}`;
       const rows = cotisations.filter((row) => row.periode === periode);
       const encaissees = rows.filter((row) => row.statut_detail === 'ENCAISSEE');
-      const adherents = new Set(encaissees.map((row) => String(row.id_adherent)));
+      const precomptesPeriode = precomptes.filter((row) => row.periode === periode);
+      const utiliserPrecomptes = precomptesPeriode.length > 0;
+      const precomptesEncaisses = precomptesPeriode.filter((row) => Number(row.montant_retour ?? 0) > 0);
+      const adherents = new Set(
+        utiliserPrecomptes
+          ? precomptesEncaisses.map((row) => String(row.matricule))
+          : encaissees.map((row) => String(row.id_adherent)),
+      );
       return {
         periode,
         nombreAdherents: adherents.size,
-        cotisationsPrevues: rows.reduce((sum, row) => sum + Number(row.montant ?? 0), 0),
-        cotisationsEncaissees: encaissees.reduce((sum, row) => sum + Number(row.montant ?? 0), 0),
-        nombreMouvements: encaissees.length,
+        cotisationsPrevues: utiliserPrecomptes
+          ? precomptesPeriode.reduce((sum, row) => sum + Number(row.montant_depart ?? 0), 0)
+          : rows.reduce((sum, row) => sum + Number(row.montant ?? 0), 0),
+        cotisationsEncaissees: utiliserPrecomptes
+          ? precomptesEncaisses.reduce((sum, row) => sum + Number(row.montant_retour ?? 0), 0)
+          : encaissees.reduce((sum, row) => sum + Number(row.montant ?? 0), 0),
+        nombreMouvements: utiliserPrecomptes ? precomptesEncaisses.length : encaissees.length,
       };
     });
 
