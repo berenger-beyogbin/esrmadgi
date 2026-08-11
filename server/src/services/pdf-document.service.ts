@@ -8,6 +8,12 @@ function safe(value: unknown): string {
   return String(value ?? '').trim();
 }
 
+function formatDateFr(value: unknown): string {
+  const raw = safe(value);
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : raw;
+}
+
 export async function genererRecuPaiementPdf(input: {
   numero: string;
   nom: string;
@@ -192,7 +198,7 @@ export async function genererReleveComptePdf(input: {
   const blue = rgb(0.17, 0.32, 0.62);
   const slate = rgb(0.25, 0.3, 0.38);
   const light = rgb(0.95, 0.97, 0.99);
-  const generatedAt = new Date().toISOString().slice(0, 10);
+  const generatedAt = formatDateFr(new Date().toISOString().slice(0, 10));
   const totalCotise = input.cotisations.reduce((sum, row) => sum + Number(row.montant || 0), 0);
 
   let pageNumber = 0;
@@ -224,7 +230,7 @@ export async function genererReleveComptePdf(input: {
   page.drawText('Matricule', { x: 65, y: 647, size: 9, font: bold, color: blue });
   page.drawText(safe(input.matricule), { x: 150, y: 647, size: 10, font: regular });
   page.drawText('Date de situation', { x: 340, y: 647, size: 9, font: bold, color: blue });
-  page.drawText(safe(input.dateCalcul), { x: 445, y: 647, size: 10, font: regular });
+  page.drawText(formatDateFr(input.dateCalcul), { x: 445, y: 647, size: 10, font: regular });
 
   page.drawText('SITUATION FINANCIERE', { x: 50, y: 595, size: 11, font: bold, color: blue });
   const summary = [
@@ -256,7 +262,7 @@ export async function genererReleveComptePdf(input: {
       }
       if (index % 2 === 0) page.drawRectangle({ x: 50, y: y - 7, width: 495, height: 24, color: light });
       page.drawText(safe(row.periode), { x: 60, y, size: 8.5, font: regular });
-      page.drawText(safe(row.dateValeur) || '-', { x: 140, y, size: 8.5, font: regular });
+      page.drawText(formatDateFr(row.dateValeur) || '-', { x: 140, y, size: 8.5, font: regular });
       page.drawText(safe(row.source).replace(/_/g, ' ').slice(0, 22), { x: 260, y, size: 8.5, font: regular });
       page.drawText(formatMoney(Number(row.montant || 0)), { x: 405, y, size: 8.5, font: bold, color: slate });
       y -= 25;
