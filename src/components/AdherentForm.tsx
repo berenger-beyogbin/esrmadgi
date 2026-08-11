@@ -470,7 +470,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
 
     if (alreadyAdherent) {
       setAgentSearchStatus('already_adherent');
-      setAgentSearchMessage(`Le matricule ${mat} est déjà adhérent à la MADGI.`);
+      setAgentSearchMessage(`Le matricule ${mat} est déjà adhérent à la MADGI ESR.`);
       return;
     }
 

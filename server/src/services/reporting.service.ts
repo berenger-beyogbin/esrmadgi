@@ -14,7 +14,7 @@ function groupBy<T, K>(rows: T[], key: (row: T) => K): Map<K, T[]> {
 function statutPrecompteActuel(rows: Array<{ annee: number; trimestre: number; statut_precompte: string }>): string {
   if (rows.length === 0) return 'PAS_A_JOUR';
   const dernier = [...rows].sort((a, b) => b.annee - a.annee || b.trimestre - a.trimestre)[0];
-  return dernier.statut_precompte === 'ENCAISSE' ? 'A_JOUR' : 'PAS_A_JOUR';
+  return ['ENCAISSE', 'REGULARISE'].includes(dernier.statut_precompte) ? 'A_JOUR' : 'PAS_A_JOUR';
 }
 
 function statutRenteActuel(rows: Array<{ annee: number; trimestre: number; statut: string }>): string {
