@@ -3,6 +3,8 @@
 // Secrets requis (à configurer dans le Dashboard Supabase > Project Settings > Edge Functions > Secrets) :
 //   MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
 //   SIAPS_BASE_URL, SIAPS_SLUG, SIAPS_EMAIL, SIAPS_PASSWORD
+// SUPABASE_URL, SUPABASE_ANON_KEY et SUPABASE_SERVICE_ROLE_KEY sont fournis
+// automatiquement par le runtime Edge Functions.
 
 import mysql from 'npm:mysql2/promise';
 
@@ -10,6 +12,15 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rôles internes autorisés à rechercher le matricule de n'importe quel adhérent.
+// Un adhérent (profil ADHERENT) ne peut consulter que son propre matricule.
+const STAFF_ROLES = new Set(['GESTIONNAIRE', 'ADMINISTRATEUR', 'SUPERADMIN', 'SUPER_ADMIN']);
+
+interface CallerProfile {
+  matricule: string;
+  profil: string;
+}
 
 interface ExternalAgentInfo {
   matricule: string;
@@ -27,16 +38,21 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-async function requireAuthenticatedRequest(req: Request): Promise<Response | null> {
+// Authentifie l'appelant puis charge son profil metier (matricule + role) afin
+// de pouvoir restreindre l'acces : un ADHERENT ne doit consulter que son propre
+// matricule ; seuls les profils internes (gestionnaire/administrateur/superadmin)
+// peuvent rechercher un matricule arbitraire.
+async function resolveCallerProfile(req: Request): Promise<{ error: Response } | { caller: CallerProfile }> {
   const authorization = req.headers.get('authorization') ?? '';
   if (!authorization.toLowerCase().startsWith('bearer ')) {
-    return jsonResponse({ found: false, data: null, error: 'Authentification requise' }, 401);
+    return { error: jsonResponse({ found: false, data: null, error: 'Authentification requise' }, 401) };
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return jsonResponse({ found: false, data: null, error: 'Configuration Supabase incomplete' }, 500);
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
+    return { error: jsonResponse({ found: false, data: null, error: 'Configuration Supabase incomplete' }, 500) };
   }
 
   const authRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
@@ -48,10 +64,47 @@ async function requireAuthenticatedRequest(req: Request): Promise<Response | nul
   });
 
   if (!authRes.ok) {
-    return jsonResponse({ found: false, data: null, error: 'Session invalide ou expiree' }, 401);
+    return { error: jsonResponse({ found: false, data: null, error: 'Session invalide ou expiree' }, 401) };
   }
 
-  return null;
+  const authUser = await authRes.json().catch(() => null);
+  const userId = authUser?.id;
+  if (!userId) {
+    return { error: jsonResponse({ found: false, data: null, error: 'Session invalide ou expiree' }, 401) };
+  }
+
+  const profileRes = await fetch(
+    `${supabaseUrl}/rest/v1/utilisateurs?auth_user_id=eq.${encodeURIComponent(userId)}&select=matricule,profil,user_actif`,
+    {
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+      signal: AbortSignal.timeout(5000),
+    },
+  );
+
+  if (!profileRes.ok) {
+    return { error: jsonResponse({ found: false, data: null, error: 'Erreur lecture profil utilisateur' }, 500) };
+  }
+
+  const rows = await profileRes.json().catch(() => null);
+  const profile = Array.isArray(rows) ? rows[0] : null;
+  if (!profile || profile.user_actif !== true) {
+    return { error: jsonResponse({ found: false, data: null, error: 'Profil metier introuvable ou desactive' }, 403) };
+  }
+
+  return {
+    caller: {
+      matricule: String(profile.matricule ?? '').trim().toUpperCase(),
+      profil: String(profile.profil ?? '').trim().toUpperCase(),
+    },
+  };
+}
+
+function isAuthorizedForMatricule(caller: CallerProfile, requestedMatricule: string): boolean {
+  if (STAFF_ROLES.has(caller.profil)) return true;
+  return caller.matricule !== '' && caller.matricule === requestedMatricule;
 }
 
 // --- Source 1 : MySQL externe ---
@@ -176,8 +229,8 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ found: false, data: null, error: 'Méthode non autorisée' }, 405);
   }
 
-  const authError = await requireAuthenticatedRequest(req);
-  if (authError) return authError;
+  const callerResult = await resolveCallerProfile(req);
+  if ('error' in callerResult) return callerResult.error;
 
   let matricule: string;
   try {
@@ -189,6 +242,10 @@ Deno.serve(async (req: Request) => {
 
   if (!matricule || matricule.length < 2 || matricule.length > 20) {
     return jsonResponse({ found: false, data: null, error: 'Matricule invalide (vide ou longueur hors norme)' }, 400);
+  }
+
+  if (!isAuthorizedForMatricule(callerResult.caller, matricule)) {
+    return jsonResponse({ found: false, data: null, error: 'Acces refuse pour ce matricule' }, 403);
   }
 
   try {

@@ -181,17 +181,20 @@ async function findFirstLoginUser(rawMatricule: string): Promise<{
 }
 
 export const passwordResetService = {
+  // Repond toujours 200 avec la meme forme, que le matricule existe ou non, soit actif ou non,
+  // et quel que soit le profil : seul un compte adherent avec must_change_password=true
+  // declenche le parcours premiere connexion. Cela evite qu'un appelant non authentifie
+  // puisse enumerer les matricules valides via des codes HTTP/erreurs distincts.
   async checkFirstLogin(rawMatricule: string): Promise<{ firstLogin: boolean }> {
     const matricule = normalizeMatricule(rawMatricule);
     const row = await utilisateursRepository.findByMatricule(matricule);
-    if (!row?.auth_user_id) throw new AppError(404, NO_ACCESS_MESSAGE);
-    ensureActive(row);
+    if (!row?.auth_user_id || row.user_actif !== true) return { firstLogin: false };
 
     const role = normalizeRole(row.profil);
     if (role !== 'ADHERENT') return { firstLogin: false };
 
     const authUser = await utilisateursRepository.getAuthUserById(row.auth_user_id);
-    if (!authUser?.email) throw new AppError(404, NO_ACCESS_MESSAGE);
+    if (!authUser?.email) return { firstLogin: false };
 
     return { firstLogin: Boolean(authUser.user_metadata?.must_change_password) };
   },
@@ -286,10 +289,22 @@ export const passwordResetService = {
     return { login: matricule, email: loginEmail };
   },
 
-  async requestPasswordReset(rawMatricule: string): Promise<{ maskedEmail: string }> {
+  // Repond toujours 200 avec la meme forme (maskedEmail eventuellement absent) que le
+  // matricule existe ou non, soit actif ou non, ait un email de contact ou non : seules
+  // les erreurs serveur inattendues (5xx) remontent. Le frontend affiche deja un message
+  // generique de repli quand maskedEmail est absent (voir Login.tsx). Cela evite qu'un
+  // appelant non authentifie puisse enumerer les matricules valides.
+  async requestPasswordReset(rawMatricule: string): Promise<{ maskedEmail: string | null }> {
     const matricule = normalizeMatricule(rawMatricule);
-    const { row, loginEmail } = await findAccessibleUser(matricule);
-    const maskedEmail = await sendResetLink(matricule, row, loginEmail);
-    return { maskedEmail };
+    try {
+      const { row, loginEmail } = await findAccessibleUser(matricule);
+      const maskedEmail = await sendResetLink(matricule, row, loginEmail);
+      return { maskedEmail };
+    } catch (err) {
+      if (err instanceof AppError && err.statusCode < 500) {
+        return { maskedEmail: null };
+      }
+      throw err;
+    }
   },
 };
