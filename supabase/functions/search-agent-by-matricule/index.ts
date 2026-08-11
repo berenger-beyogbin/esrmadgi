@@ -8,10 +8,30 @@
 
 import mysql from 'npm:mysql2/promise';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Origines autorisees a appeler cette fonction depuis un navigateur.
+// (meme logique que isAllowedCorsOrigin dans server/src/index.ts : allowlist stricte
+// + localhost pour le developpement).
+const ALLOWED_ORIGINS = ['https://madgi-esr-web.onrender.com'];
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  try {
+    const { hostname } = new URL(origin);
+    return ['localhost', '127.0.0.1'].includes(hostname);
+  } catch {
+    return false;
+  }
+}
+
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin');
+  return {
+    'Access-Control-Allow-Origin': isAllowedOrigin(origin) ? (origin as string) : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
+  };
+}
 
 // Rôles internes autorisés à rechercher le matricule de n'importe quel adhérent.
 // Un adhérent (profil ADHERENT) ne peut consulter que son propre matricule.
@@ -31,10 +51,10 @@ interface ExternalAgentInfo {
   found: boolean;
 }
 
-function jsonResponse(body: unknown, status = 200): Response {
+function jsonResponse(req: Request, body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
   });
 }
 
@@ -45,14 +65,14 @@ function jsonResponse(body: unknown, status = 200): Response {
 async function resolveCallerProfile(req: Request): Promise<{ error: Response } | { caller: CallerProfile }> {
   const authorization = req.headers.get('authorization') ?? '';
   if (!authorization.toLowerCase().startsWith('bearer ')) {
-    return { error: jsonResponse({ found: false, data: null, error: 'Authentification requise' }, 401) };
+    return { error: jsonResponse(req, { found: false, data: null, error: 'Authentification requise' }, 401) };
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
-    return { error: jsonResponse({ found: false, data: null, error: 'Configuration Supabase incomplete' }, 500) };
+    return { error: jsonResponse(req, { found: false, data: null, error: 'Configuration Supabase incomplete' }, 500) };
   }
 
   const authRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
@@ -64,13 +84,13 @@ async function resolveCallerProfile(req: Request): Promise<{ error: Response } |
   });
 
   if (!authRes.ok) {
-    return { error: jsonResponse({ found: false, data: null, error: 'Session invalide ou expiree' }, 401) };
+    return { error: jsonResponse(req, { found: false, data: null, error: 'Session invalide ou expiree' }, 401) };
   }
 
   const authUser = await authRes.json().catch(() => null);
   const userId = authUser?.id;
   if (!userId) {
-    return { error: jsonResponse({ found: false, data: null, error: 'Session invalide ou expiree' }, 401) };
+    return { error: jsonResponse(req, { found: false, data: null, error: 'Session invalide ou expiree' }, 401) };
   }
 
   const profileRes = await fetch(
@@ -85,13 +105,13 @@ async function resolveCallerProfile(req: Request): Promise<{ error: Response } |
   );
 
   if (!profileRes.ok) {
-    return { error: jsonResponse({ found: false, data: null, error: 'Erreur lecture profil utilisateur' }, 500) };
+    return { error: jsonResponse(req, { found: false, data: null, error: 'Erreur lecture profil utilisateur' }, 500) };
   }
 
   const rows = await profileRes.json().catch(() => null);
   const profile = Array.isArray(rows) ? rows[0] : null;
   if (!profile || profile.user_actif !== true) {
-    return { error: jsonResponse({ found: false, data: null, error: 'Profil metier introuvable ou desactive' }, 403) };
+    return { error: jsonResponse(req, { found: false, data: null, error: 'Profil metier introuvable ou desactive' }, 403) };
   }
 
   return {
@@ -222,11 +242,11 @@ async function searchSiaps(matricule: string): Promise<ExternalAgentInfo | null>
 // --- Handler principal ---
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: CORS_HEADERS });
+    return new Response('ok', { headers: corsHeaders(req) });
   }
 
   if (req.method !== 'POST') {
-    return jsonResponse({ found: false, data: null, error: 'Méthode non autorisée' }, 405);
+    return jsonResponse(req, { found: false, data: null, error: 'Méthode non autorisée' }, 405);
   }
 
   const callerResult = await resolveCallerProfile(req);
@@ -237,15 +257,15 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     matricule = String(body?.matricule ?? '').trim().toUpperCase();
   } catch {
-    return jsonResponse({ found: false, data: null, error: 'Corps JSON invalide' }, 400);
+    return jsonResponse(req, { found: false, data: null, error: 'Corps JSON invalide' }, 400);
   }
 
   if (!matricule || matricule.length < 2 || matricule.length > 20) {
-    return jsonResponse({ found: false, data: null, error: 'Matricule invalide (vide ou longueur hors norme)' }, 400);
+    return jsonResponse(req, { found: false, data: null, error: 'Matricule invalide (vide ou longueur hors norme)' }, 400);
   }
 
   if (!isAuthorizedForMatricule(callerResult.caller, matricule)) {
-    return jsonResponse({ found: false, data: null, error: 'Acces refuse pour ce matricule' }, 403);
+    return jsonResponse(req, { found: false, data: null, error: 'Acces refuse pour ce matricule' }, 403);
   }
 
   try {
@@ -266,13 +286,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (agent) {
-      return jsonResponse({ found: true, data: agent, error: null });
+      return jsonResponse(req, { found: true, data: agent, error: null });
     }
 
-    return jsonResponse({ found: false, data: null, error: null });
+    return jsonResponse(req, { found: false, data: null, error: null });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erreur serveur interne';
     console.error('[search-agent] Unexpected error:', err);
-    return jsonResponse({ found: false, data: null, error: msg }, 500);
+    return jsonResponse(req, { found: false, data: null, error: msg }, 500);
   }
 });

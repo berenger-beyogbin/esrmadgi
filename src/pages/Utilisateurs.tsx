@@ -6,6 +6,8 @@ import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPoli
 import {
   Ban,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   EyeOff,
   KeyRound,
@@ -40,6 +42,8 @@ const ROLE_OPTIONS: Array<{ value: UserProfile; label: string }> = [
   { value: 'GESTIONNAIRE', label: 'Gestionnaire' },
   { value: 'ADMINISTRATEUR', label: 'Superadmin' },
 ];
+
+const USERS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 const emptyForm: UserFormState = {
   matricule: '',
@@ -90,6 +94,8 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
   const [search, setSearch] = useState('');
   const [profilFilter, setProfilFilter] = useState<UserProfile | 'TOUS'>('TOUS');
   const [actifFilter, setActifFilter] = useState<'TOUS' | 'true' | 'false'>('TOUS');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [formMode, setFormMode] = useState<FormMode>('CREATE');
   const [showForm, setShowForm] = useState(false);
@@ -114,6 +120,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
       });
       if (error) throw error;
       setUsers(data || []);
+      setCurrentPage(1);
     } catch (e: any) {
       setErrorMsg(e?.message || 'Erreur lors du chargement des utilisateurs.');
     } finally {
@@ -215,6 +222,13 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
   };
 
   const editingSelf = Boolean(editingUser && String(editingUser.id_utilisateur) === String(currentUser.id));
+  const totalPages = Math.max(1, Math.ceil(users.length / rowsPerPage));
+  const firstRowIndex = (currentPage - 1) * rowsPerPage;
+  const paginatedUsers = users.slice(firstRowIndex, firstRowIndex + rowsPerPage);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   return (
     <div className="space-y-6" id="utilisateurs-acces-container">
@@ -253,8 +267,8 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
         </div>
       </div>
 
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(260px,1.5fr)_minmax(180px,1fr)_minmax(180px,1fr)_auto] items-end gap-4">
           <div className="relative">
             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Recherche</label>
             <input
@@ -297,13 +311,11 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
               <option value="false">Desactives</option>
             </select>
           </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
           <button
             id="btn-users-refresh"
             onClick={loadUsers}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition"
+            className="h-[42px] flex items-center justify-center gap-1.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Actualiser
@@ -485,7 +497,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
           <p className="text-slate-400 text-sm">Aucun utilisateur ne correspond aux filtres.</p>
         </div>
       ) : (
-        <ScrollableTableWrapper>
+        <ScrollableTableWrapper maxHeight="none">
           <table className="rtable min-w-full divide-y divide-slate-100 text-sm text-left text-slate-700" id="tbl-utilisateurs">
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-xs">
               <tr>
@@ -499,7 +511,7 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {users.map((user) => (
+              {paginatedUsers.map((user) => (
                 <tr key={user.id_utilisateur} className="hover:bg-slate-50/50 transition">
                   <td data-label="Matricule" className="py-3.5 px-4 font-bold font-mono text-slate-800">{user.matricule}</td>
                   <td data-label="Profil" className="py-3.5 px-4">
@@ -548,6 +560,50 @@ export default function Utilisateurs({ currentUser }: UtilisateursProps) {
               ))}
             </tbody>
           </table>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/70">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs font-medium text-slate-600">
+              <span>
+                Affichage {firstRowIndex + 1} à {Math.min(firstRowIndex + rowsPerPage, users.length)} sur {users.length} utilisateurs
+              </span>
+              <label className="flex items-center gap-2">
+                <span>Lignes par page</span>
+                <select
+                  value={rowsPerPage}
+                  onChange={(event) => {
+                    setRowsPerPage(Number(event.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold outline-none focus:ring-2 focus:ring-emerald-500"
+                  aria-label="Nombre de lignes par page"
+                >
+                  {USERS_PER_PAGE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                aria-label="Page précédente"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-xs font-bold text-slate-700">Page {currentPage} sur {totalPages}</span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                aria-label="Page suivante"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </ScrollableTableWrapper>
       )}
     </div>
