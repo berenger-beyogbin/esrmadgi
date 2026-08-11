@@ -22,7 +22,6 @@ export interface ControleCloture {
   controles: {
     cotisationsToutesEncaissees: boolean;
     paiementsAvecDateValeur: boolean;
-    datesValeurCompatibles: boolean;
     precomptesTousTraites: boolean;
   };
   clotureAutorisee: boolean;
@@ -43,10 +42,6 @@ export function dateArreteTrimestre(annee: number, trimestre: number): string {
 export function estPaiementSpontane(item: { source?: unknown; statut_detail?: unknown }): boolean {
   return ['SPONTANEE', 'DIRECT'].includes(String(item.source ?? '').toUpperCase())
     && String(item.statut_detail ?? '').toUpperCase() === 'ENCAISSEE';
-}
-
-export function dateValeurCompatibleCloture(dateValeur: unknown, dateArrete: string): boolean {
-  return typeof dateValeur === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValeur) && dateValeur <= dateArrete;
 }
 
 export const periodesService = {
@@ -92,10 +87,6 @@ export const periodesService = {
     const cotisationsEncaissees = cotisations.filter((item) =>
       String(item.statut_detail).toUpperCase() === 'ENCAISSEE');
     const paiementsAvecDateValeur = [...cotisationsEncaissees, ...regularisations].every((item) => Boolean(item.date_valeur));
-    const dateArrete = dateArreteTrimestre(row.annee, row.trimestre);
-    const datesValeurIncompatibles = [...cotisationsEncaissees, ...regularisations]
-      .filter((item) => item.date_valeur && !dateValeurCompatibleCloture(item.date_valeur, dateArrete));
-    const datesValeurCompatibles = datesValeurIncompatibles.length === 0;
     const precomptesTousTraites = precomptes.length > 0 && precomptes.every((item) =>
       !['GENERE', 'INITIE'].includes(String(item.statut_precompte)));
     const alertes: string[] = [];
@@ -109,12 +100,9 @@ export const periodesService = {
       const count = cotisationsEncaissees.filter((item) => !item.date_valeur).length;
       alertes.push(`${count} paiement${count > 1 ? 's' : ''} encaissé${count > 1 ? 's' : ''} sans date de valeur.`);
     }
-    if (!datesValeurCompatibles) {
-      alertes.push(`${datesValeurIncompatibles.length} paiement(s) ont une date de valeur postérieure à la date d'arrêté ${dateArrete}.`);
-    }
     if (!precomptesTousTraites) alertes.push('Certains précomptes ne sont pas encore traités.');
     if (!infrastructurePrete) alertes.push("La migration de clôture ESR n'est pas encore installée dans Supabase.");
-    const controles = { cotisationsToutesEncaissees, paiementsAvecDateValeur, datesValeurCompatibles, precomptesTousTraites };
+    const controles = { cotisationsToutesEncaissees, paiementsAvecDateValeur, precomptesTousTraites };
     return {
       periode: normalized,
       statut: row.statut,

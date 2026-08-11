@@ -220,7 +220,6 @@ export interface ControleCloturePeriode {
   controles: {
     cotisationsToutesEncaissees: boolean;
     paiementsAvecDateValeur: boolean;
-    datesValeurCompatibles: boolean;
     precomptesTousTraites: boolean;
   };
   clotureAutorisee: boolean;

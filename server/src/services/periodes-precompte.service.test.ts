@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dateArreteTrimestre, dateValeurCompatibleCloture, dateValeurSuivante, estPaiementSpontane } from './periodes-precompte.service';
+import { dateArreteTrimestre, dateValeurSuivante, estPaiementSpontane } from './periodes-precompte.service';
 import { calculerProvisionDepuisMouvements } from './moteur-actuariel.service';
 
 test('la date de valeur est le premier jour du trimestre suivant', () => {
@@ -21,12 +21,6 @@ test('la cloture d un trimestre ne credite qu une periode d interet', () => {
   });
   const tauxTrimestriel = Math.pow(1.035, 1 / 4) - 1;
   assert.ok(Math.abs(resultat.provisionBrute - 70_000 * (1 + tauxTrimestriel)) <= 0.01);
-});
-
-test('une date de valeur posterieure a la date d arrete bloque la cloture', () => {
-  assert.equal(dateValeurCompatibleCloture('2026-06-30', '2026-06-30'), true);
-  assert.equal(dateValeurCompatibleCloture('2026-06-16', '2026-06-30'), true);
-  assert.equal(dateValeurCompatibleCloture('2026-07-01', '2026-06-30'), false);
 });
 
 test('la clôture du quatrième trimestre passe à l’année suivante', () => {

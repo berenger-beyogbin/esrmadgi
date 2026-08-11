@@ -9,6 +9,16 @@
     size: A4;
     margin: 10mm;
   }
+
+  .simulation-sheet {
+    box-sizing: border-box;
+    height: 250mm;
+    max-height: 250mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
 }
 
 @layer base {

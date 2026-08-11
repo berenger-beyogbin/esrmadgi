@@ -74,16 +74,19 @@ function FicheContent({ data }: { data: FicheSimulationData }) {
   const matrimoniale = normalizeAccents(data.situation_matrimoniale || '');
 
   return (
-    <div className="bg-white text-slate-900 text-[11.5px] leading-snug p-6 print:p-3 max-w-[210mm] mx-auto font-serif print:text-[10.5px]">
+    <div className="simulation-sheet bg-white text-slate-900 text-[12px] leading-snug p-6 print:p-3 max-w-[210mm] mx-auto font-serif print:text-[12px] print:leading-normal">
       <div className="text-center mb-1 text-[10px] font-semibold tracking-wide text-rose-700 print:hidden">
         DOCUMENT DE SIMULATION — NE PAS SIGNER — SANS VALEUR CONTRACTUELLE
       </div>
-      <h1 className="text-center text-base font-bold uppercase">Fiche de simulation d'adhésion</h1>
-      <h2 className="text-center text-sm font-bold uppercase mb-3">Épargne Santé Retraite MADGI</h2>
+      <header className="simulation-heading">
+        <h1 className="text-center text-lg print:text-xl font-bold uppercase">Fiche de simulation d'adhésion</h1>
+        <h2 className="text-center text-base print:text-lg font-bold uppercase">Épargne Santé Retraite MADGI</h2>
+      </header>
 
-      <p className="font-bold underline mb-2">Adhérent (e) :</p>
+      <section className="simulation-identity">
+        <p className="font-bold underline mb-2">Adhérent (e) :</p>
 
-      <div className="space-y-1.5">
+        <div className="space-y-1.5">
         <p><span className="font-semibold">Matricule :</span> /{data.matricule || BLANK}/</p>
         <p><span className="font-semibold">Nom &amp; Prénoms :</span> {data.civilite} {data.nom} {data.prenoms}</p>
         <p>
@@ -114,27 +117,31 @@ function FicheContent({ data }: { data: FicheSimulationData }) {
         <p><span className="font-semibold">Date du dernier précompte :</span> {formatDateOrBlank(data.date_retraite)}</p>
         <p><span className="font-semibold">Date Effet :</span> {formatDateOrBlank(data.date_effet)}</p>
         <p><span className="font-semibold">Cotisation Épargne Santé Retraite :</span> <span className="text-base font-bold text-red-600">{formatMontant(data.cotisation_es)} / trimestre</span></p>
-      </div>
+        </div>
+      </section>
 
-      <p className="mt-3 text-justify">
-        Cette fiche présente une <span className="font-semibold">simulation</span> de mon intention de souscrire à l'Épargne Santé Retraite MADGI.
-        Ma souscription ne sera effective qu'après la signature du bulletin d'Adhésion et du contrat.
-        Les cotisations d'un montant simulé de <span className="font-semibold">{formatMontant(data.cotisation_es)}</span> / trimestre,
-        seraient perçues du /______/______/_________/ au /______/______/__________/ sur mes émoluments.
-      </p>
+      <section className="simulation-notice">
+        <p className="text-justify">
+          Cette fiche présente une <span className="font-semibold">simulation</span> de mon intention de souscrire à l'Épargne Santé Retraite MADGI.
+          Ma souscription ne sera effective qu'après la signature du bulletin d'Adhésion et du contrat.
+          Les cotisations d'un montant simulé de <span className="font-semibold">{formatMontant(data.cotisation_es)}</span> / trimestre,
+          seraient perçues du /______/______/_________/ au /______/______/__________/ sur mes émoluments.
+        </p>
 
-      <p className="mt-1.5 text-justify">
-        J'ai été informé(e) que si je passe à un grade supérieur entrainant le rallongement de ma durée d'activité,
-        la cotisation sera recalculée en fonction de la nouvelle durée résiduelle d'activité.
-      </p>
+        <p className="mt-1.5 text-justify">
+          J'ai été informé(e) que si je passe à un grade supérieur entrainant le rallongement de ma durée d'activité,
+          la cotisation sera recalculée en fonction de la nouvelle durée résiduelle d'activité.
+        </p>
 
-      <p className="mt-1.5 text-justify">
-        Aussi, je suis tenu(e) d'informer la MADGI, par courrier, de toutes modifications intervenues dans mes déclarations.
-      </p>
+        <p className="mt-1.5 text-justify">
+          Aussi, je suis tenu(e) d'informer la MADGI, par courrier, de toutes modifications intervenues dans mes déclarations.
+        </p>
+      </section>
 
-      <p className="mt-4">Fait à Abidjan, le {BLANK}</p>
-
-      <p className="mt-4">L'ADHÉRENT (E) <span className="italic">(Simulation — signature non requise à ce stade)</span></p>
+      <footer className="simulation-signature">
+        <p>Fait à Abidjan, le {BLANK}</p>
+        <p className="mt-4">L'ADHÉRENT (E) <span className="italic">(Simulation — signature non requise à ce stade)</span></p>
+      </footer>
     </div>
   );
 }
