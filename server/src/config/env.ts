@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-config();
+config({ override: true });
 
 function opt(key: string): string | undefined {
   const v = process.env[key];
