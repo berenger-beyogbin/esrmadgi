@@ -97,7 +97,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
   const [calculDetails, setCalculDetails] = useState<CalculCotisationTrimestrielleResult | null>(null);
   const [showSimulationFiche, setShowSimulationFiche] = useState(false);
 
-  type AgentSearchStatus = 'idle' | 'searching' | 'found' | 'not_found' | 'error';
+  type AgentSearchStatus = 'idle' | 'searching' | 'found' | 'already_adherent' | 'not_found' | 'error';
   const [isSearchingAgent, setIsSearchingAgent] = useState(false);
   const [agentSearchStatus, setAgentSearchStatus] = useState<AgentSearchStatus>('idle');
   const [agentSearchMessage, setAgentSearchMessage] = useState('');
@@ -459,12 +459,18 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     setAgentSearchStatus('searching');
     setAgentSearchMessage('Recherche en cours…');
 
-    const { data: agentData, error } = await adherentService.searchAgentByMatricule(mat);
+    const { data: agentData, error, alreadyAdherent } = await adherentService.searchAgentByMatricule(mat);
     setIsSearchingAgent(false);
 
     if (error) {
       setAgentSearchStatus('error');
       setAgentSearchMessage(error);
+      return;
+    }
+
+    if (alreadyAdherent) {
+      setAgentSearchStatus('already_adherent');
+      setAgentSearchMessage(`Le matricule ${mat} est déjà adhérent à la MADGI.`);
       return;
     }
 
@@ -731,11 +737,13 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
               {!adherent && agentSearchMessage && (
                 <p className={`mt-1.5 text-xs font-medium flex items-center gap-1 ${
                   agentSearchStatus === 'found' ? 'text-emerald-700'
+                  : agentSearchStatus === 'already_adherent' ? 'text-rose-700'
                   : agentSearchStatus === 'not_found' ? 'text-amber-600'
                   : agentSearchStatus === 'error' ? 'text-rose-600'
                   : 'text-slate-500'
                 }`}>
                   {agentSearchStatus === 'found' && <CheckCircle2 className="w-3 h-3 shrink-0" />}
+                  {agentSearchStatus === 'already_adherent' && <AlertTriangle className="w-3 h-3 shrink-0" />}
                   {agentSearchStatus === 'not_found' && <AlertTriangle className="w-3 h-3 shrink-0" />}
                   {agentSearchStatus === 'error' && <XCircle className="w-3 h-3 shrink-0" />}
                   {agentSearchStatus === 'searching' && <Loader2 className="w-3 h-3 shrink-0 animate-spin" />}

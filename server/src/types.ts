@@ -18,6 +18,8 @@ export interface SearchAgentResponse {
   found: boolean;
   data: ExternalAgentInfo | null;
   error: string | null;
+  alreadyAdherent: boolean;
+  adherentId: string | null;
 }
 
 export interface ApiListResponse<T = unknown> {

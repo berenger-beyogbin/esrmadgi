@@ -104,21 +104,36 @@ export const adherentService = {
     return data;
   },
 
-  async searchAgentByMatricule(matricule: string): Promise<{ data: ExternalAgentInfo | null; error: string | null }> {
+  async searchAgentByMatricule(matricule: string): Promise<{
+    data: ExternalAgentInfo | null;
+    error: string | null;
+    alreadyAdherent: boolean;
+    adherentId: string | null;
+  }> {
     const mat = matricule.trim().toUpperCase();
-    if (!mat) return { data: null, error: 'Matricule vide' };
+    if (!mat) return { data: null, error: 'Matricule vide', alreadyAdherent: false, adherentId: null };
 
-    type SearchResponse = { found: boolean; data: ExternalAgentInfo | null; error: string | null };
+    type SearchResponse = {
+      found: boolean;
+      data: ExternalAgentInfo | null;
+      error: string | null;
+      alreadyAdherent?: boolean;
+      adherentId?: string | null;
+    };
     const { data: result, error: networkError } = await apiPost<SearchResponse>(
       '/api/agents/search-by-matricule',
       { matricule: mat },
     );
 
-    if (networkError) return { data: null, error: networkError };
-    if (!result) return { data: null, error: 'Reponse vide du serveur' };
+    if (networkError) return { data: null, error: networkError, alreadyAdherent: false, adherentId: null };
+    if (!result) return { data: null, error: 'Reponse vide du serveur', alreadyAdherent: false, adherentId: null };
 
-    if (result.found && result.data) return { data: result.data, error: null };
-    if (result.error) return { data: null, error: result.error };
-    return { data: null, error: null };
+    const membership = {
+      alreadyAdherent: result.alreadyAdherent === true,
+      adherentId: result.adherentId ?? null,
+    };
+    if (result.found && result.data) return { data: result.data, error: null, ...membership };
+    if (result.error) return { data: null, error: result.error, ...membership };
+    return { data: null, error: null, ...membership };
   },
 };
