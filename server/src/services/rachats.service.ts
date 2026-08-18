@@ -6,7 +6,7 @@ import { comptesEsrService } from './comptes-esr.service';
 import { genererLiquidationPdf } from './pdf-document.service';
 import { ancienneteAnneesCompletes, rachatTransitionPermise, RachatStatut } from './rachat-workflow';
 import { reglesActuariellesService } from './regles-actuarielles.service';
-import { calculerValeurRachatEligibleDepuisProvision } from './moteur-actuariel.service';
+import { calculerValeurRachatDepuisProvision } from './moteur-actuariel.service';
 
 const uid=(u:AuthenticatedUser)=>u.id_utilisateur;
 const money=(n:number)=>Math.round((n+Number.EPSILON)*100)/100;
@@ -24,13 +24,13 @@ export const rachatsService={
     if(anciennete<regles.delaiMinimumRachatAnnees)throw new AppError(400,`Rachat non eligible avant ${regles.delaiMinimumRachatAnnees} annees completes`);
     const recalcul:any=await comptesEsrService.recalculerCompte(user,p.adherentId,p.dateDemande);
     if(recalcul.calcul.nombreMouvements<8)throw new AppError(400,'Rachat non eligible : huit cotisations trimestrielles encaissees sont requises');
-    const pm=Number(recalcul.calcul.provisionMathematique), liquidation=calculerValeurRachatEligibleDepuisProvision(pm,regles.fraisGestionRachat);
+    const dateArrete=String(recalcul.calcul.dateCalcul), pm=Number(recalcul.calcul.provisionMathematique), liquidation=calculerValeurRachatDepuisProvision(pm,regles.fraisGestionRachat,regles.penaliteRachat);
     const frais=liquidation.fraisGestion, penalite=liquidation.penalite, net=liquidation.montantNet;
-    const mouvements=await rachatsRepository.cotisations(p.adherentId,p.dateDemande);
-    const version=`ESR-RACHAT-1|${p.dateDemande}`;
-    const row:any=await rachatsRepository.create({id_adherent:Number(p.adherentId),date_demande:p.dateDemande,date_arrete:p.dateDemande,motif:p.motif??null,
+    const mouvements=await rachatsRepository.cotisations(p.adherentId,dateArrete);
+    const version=`ESR-RACHAT-2|${p.dateDemande}`;
+    const row:any=await rachatsRepository.create({id_adherent:Number(p.adherentId),date_demande:p.dateDemande,date_arrete:dateArrete,motif:p.motif??null,
       capital_verse:recalcul.calcul.capitalVerse,provision_mathematique:pm,taux_frais_gestion:regles.fraisGestionRachat,frais_gestion:frais,
-      taux_penalite:0,penalite,montant_net:net,nombre_mouvements:recalcul.calcul.nombreMouvements,anciennete_annees:anciennete,
+      taux_penalite:regles.penaliteRachat,penalite,montant_net:net,nombre_mouvements:recalcul.calcul.nombreMouvements,anciennete_annees:anciennete,
       version_calcul:version,parametres_json:regles.versions,mouvements_json:mouvements,cree_par:uid(user)});
     await rachatsRepository.event(String(row.id_rachat),null,'DOSSIER_OUVERT',uid(user),p.motif??'');
     await auditService.logEvent(user,{action:'CREATION_RACHAT',objetAudit:'RACHAT',idObjet:row.id_rachat,details:JSON.stringify({pm,frais,penalite,net,anciennete,version})});

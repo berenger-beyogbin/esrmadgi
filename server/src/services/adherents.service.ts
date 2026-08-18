@@ -18,9 +18,13 @@ export interface AdherentFormPayload {
   nom: string;
   prenoms: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string;
   telephone: string;
   email: string;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string;
   statut: string;
   grade_id: string;
@@ -83,6 +87,10 @@ function normalizeFormPayload(payload: AdherentFormPayload): AdherentFormPayload
     prenoms: payload.prenoms.trim(),
     email: payload.email.trim(),
     telephone: payload.telephone.trim(),
+    lieu_naissance: payload.lieu_naissance.trim(),
+    adresse_geographique: payload.adresse_geographique.trim(),
+    adresse_postale: payload.adresse_postale.trim(),
+    direction: payload.direction.trim(),
     grade: payload.grade?.trim() || '',
   };
 }
@@ -98,7 +106,11 @@ function toCreatePayload(payload: AdherentFormPayload): CreateAdherentPayload {
     email: payload.email,
     statut: payload.statut || 'ACTIF',
     date_naissance: payload.date_naissance,
+    lieu_naissance: payload.lieu_naissance,
     situation_matrimoniale: payload.situation_matrimoniale,
+    adresse_geographique: payload.adresse_geographique,
+    adresse_postale: payload.adresse_postale,
+    direction: payload.direction,
     emploi: payload.emploi,
     grade_id: payload.grade_id,
     grade: payload.grade,
@@ -123,7 +135,11 @@ function toUpdatePayload(payload: AdherentFormPayload): UpdateAdherentPayload {
     email: payload.email,
     statut: payload.statut,
     date_naissance: payload.date_naissance,
+    lieu_naissance: payload.lieu_naissance,
     situation_matrimoniale: payload.situation_matrimoniale,
+    adresse_geographique: payload.adresse_geographique,
+    adresse_postale: payload.adresse_postale,
+    direction: payload.direction,
     emploi: payload.emploi,
     grade_id: payload.grade_id,
     grade: payload.grade,

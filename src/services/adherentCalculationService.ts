@@ -86,7 +86,7 @@ export function roundToStep(
 export const adherentCalculationService = {
 
   /**
-   * Retourne les premiers jours de trimestre disponibles pour l'annee d'adhesion
+   * Retourne les derniers jours de trimestre disponibles pour l'annee d'adhesion
    * et l'annee suivante.
    * Avec onlyOnOrAfterAdhesion=true, la liste commence par le trimestre qui
    * contient la date d'adhesion, puisque le precompte est effectue en fin de trimestre.
@@ -178,17 +178,16 @@ export const adherentCalculationService = {
   },
 
   /**
-   * Retourne le premier jour du trimestre qui suit le trimestre du précompte.
+   * Retourne le dernier jour du trimestre qui suit le trimestre du précompte.
    * WebDev : DateEffet
    *
-   * Compatible avec l'ancienne date de fin de trimestre et le nouveau choix
-   * manuel du trimestre, qui enregistre le premier jour du trimestre.
+   * Le choix manuel du trimestre enregistre toujours sa date de fin.
    *
    * Exemples :
-   *   2025-03-31 → 2025-04-01
-   *   2025-04-01 → 2025-07-01
-   *   2025-10-01 → 2026-01-01
-   *   2025-12-31 → 2026-01-01
+   *   2025-03-31 → 2025-06-30
+   *   2025-06-30 → 2025-09-30
+   *   2025-09-30 → 2025-12-31
+   *   2025-12-31 → 2026-03-31
    */
   calculateDateEffet(datePrecompte: string): string {
     const isoDatePrecompte = toIsoDate(datePrecompte);

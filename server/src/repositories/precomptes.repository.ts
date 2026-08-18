@@ -11,7 +11,16 @@ export const precomptesRepository = {
 
     const { data, error } = await query.order('periode', { ascending: false });
     if (error) throw new Error(error.message);
-    return data ?? [];
+    const rows = data ?? [];
+    const ids = rows.map((row: any) => Number(row.id_precompte)).filter(Number.isFinite);
+    if (ids.length === 0) return rows;
+    const { data: credits, error: creditsError } = await supabase
+      .from('precomptes')
+      .select('id_precompte,montant_cotisation_brut,montant_credit_spontane')
+      .in('id_precompte', ids);
+    if (creditsError) throw new Error(creditsError.message);
+    const creditParPrecompte = new Map((credits ?? []).map((row: any) => [Number(row.id_precompte), row]));
+    return rows.map((row: any) => ({ ...row, ...(creditParPrecompte.get(Number(row.id_precompte)) ?? {}) }));
   },
 
   async findNonPrecomptes(periode?: string): Promise<unknown[]> {
@@ -74,9 +83,42 @@ export const precomptesRepository = {
     statut_precompte: string;
     date_generation: string;
     id_cotisation_detail: number;
-  }): Promise<void> {
+  }): Promise<{ id_precompte: number }> {
     const supabase = getSupabaseServer();
-    const { error } = await supabase.from('precomptes').insert(input);
+    const { data, error } = await supabase
+      .from('precomptes')
+      .insert({ ...input, montant_cotisation_brut: input.montant_depart, montant_credit_spontane: 0 })
+      .select('id_precompte')
+      .single();
+    if (error) throw new Error(error.message);
+    return data as { id_precompte: number };
+  },
+
+  async imputerPaiementsSpontanes(input: {
+    idPrecompte: number;
+    idAdherent: number;
+    dateLimite: string;
+    montantBrut: number;
+  }): Promise<{ montant_brut: number; montant_credit: number; montant_net: number }> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase.rpc('imputer_paiements_spontanes_precompte_esr', {
+      p_id_precompte: input.idPrecompte,
+      p_id_adherent: input.idAdherent,
+      p_date_limite: input.dateLimite,
+      p_montant_brut: input.montantBrut,
+    });
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      montant_brut: Number(row?.montant_brut ?? input.montantBrut),
+      montant_credit: Number(row?.montant_credit ?? 0),
+      montant_net: Number(row?.montant_net ?? input.montantBrut),
+    };
+  },
+
+  async deletePrecompte(idPrecompte: number): Promise<void> {
+    const supabase = getSupabaseServer();
+    const { error } = await supabase.from('precomptes').delete().eq('id_precompte', idPrecompte);
     if (error) throw new Error(error.message);
   },
 
@@ -138,7 +180,7 @@ export const precomptesRepository = {
     idPrecompte: number;
     idCotisationDetail: number;
     montantRetour: number;
-    dateRetour: string;
+    dateRetour: string | null;
     statutPrecompte: string;
     motif: string;
   }): Promise<void> {
@@ -147,7 +189,7 @@ export const precomptesRepository = {
       .from('precomptes')
       .update({
         montant_retour: input.montantRetour,
-        date_retour: input.dateRetour,
+        date_retour: input.statutPrecompte === 'NON_PRECOMPTE' ? null : input.dateRetour,
         statut_precompte: input.statutPrecompte,
         updated_at: new Date().toISOString(),
       })

@@ -34,24 +34,21 @@ function parsePeriodeTrimestre(periode: string): ParsedTrimestre | null {
   };
 }
 
-function parseDateQuarter(dateIso: string): ParsedTrimestre {
-  const date = new Date(`${dateIso}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime())) {
-    throw new AppError(400, 'Date de cotisation invalide');
+export function estEligibleAuPrecomptePourPeriode(
+  adherent: { cotisation_es?: unknown; date_precompte?: unknown },
+  dateFinPeriode: string,
+): boolean {
+  const datePremierPrecompte = String(adherent.date_precompte ?? '').trim();
+  return Number(adherent.cotisation_es) > 0
+    && /^\d{4}-\d{2}-\d{2}$/.test(datePremierPrecompte)
+    && datePremierPrecompte <= dateFinPeriode;
+}
+
+export function calculerCotisationNette(montantBrut: number, creditSpontane: number): number {
+  if (!Number.isFinite(montantBrut) || !Number.isFinite(creditSpontane) || montantBrut < 0 || creditSpontane < 0) {
+    throw new Error('Montant de cotisation ou credit spontane invalide');
   }
-
-  const annee = date.getUTCFullYear();
-  const month = date.getUTCMonth() + 1;
-  const trimestre = Math.ceil(month / 3);
-  const debuts: Record<number, string> = { 1: '01-01', 2: '04-01', 3: '07-01', 4: '10-01' };
-  const fins: Record<number, string> = { 1: '03-31', 2: '06-30', 3: '09-30', 4: '12-31' };
-
-  return {
-    annee,
-    trimestre,
-    periodeDeb: `${annee}-${debuts[trimestre]}`,
-    periodeFin: `${annee}-${fins[trimestre]}`,
-  };
+  return Math.round((Math.max(montantBrut - creditSpontane, 0) + Number.EPSILON) * 100) / 100;
 }
 
 function assertOwnAdherent(user: AuthenticatedUser, idAdherent: string | number): void {
@@ -120,7 +117,8 @@ export const cotisationsService = {
     const adherent = normalizeActiveAdherent(
       await cotisationsRepository.findActiveAdherentById(payload.id_adherent),
     );
-    const parsedDateVersement = parseDateQuarter(payload.date);
+    // La date saisie demeure la date de valeur. Elle ne détermine plus la
+    // période comptable d'un paiement spontané ordinaire.
 
     if (payload.id_precompte) {
       const precompte = await precomptesRepository.findById(payload.id_precompte);
@@ -204,20 +202,27 @@ export const cotisationsService = {
       }
     }
 
-    const periode = `${parsedDateVersement.annee}T${parsedDateVersement.trimestre}`;
-    await periodesRepository.ensureOuverte(periode);
+    const periodeEnCours = await periodesRepository.findPeriodeEnCours();
+    if (!periodeEnCours) {
+      throw new AppError(409, 'Aucune periode ouverte pour enregistrer le paiement spontane.');
+    }
+    const periode = String(periodeEnCours.periode).trim().toUpperCase();
+    const parsedPeriodeEnCours = parsePeriodeTrimestre(periode);
+    if (!parsedPeriodeEnCours) {
+      throw new AppError(500, 'La periode ouverte est invalide.');
+    }
     const reference = buildReference(
       'SP',
-      parsedDateVersement.annee,
-      parsedDateVersement.trimestre,
+      parsedPeriodeEnCours.annee,
+      parsedPeriodeEnCours.trimestre,
       adherent.matricule,
     );
 
     const entete = await cotisationsRepository.createCotisationEntete({
       id_adherent: payload.id_adherent,
       mode: payload.mode,
-      periode_deb: parsedDateVersement.periodeDeb,
-      periode_fin: parsedDateVersement.periodeFin,
+      periode_deb: parsedPeriodeEnCours.periodeDeb,
+      periode_fin: parsedPeriodeEnCours.periodeFin,
       reference,
       statut: 'OUVERT',
     });
@@ -250,15 +255,21 @@ export const cotisationsService = {
 
     const today = new Date().toISOString().split('T')[0];
     const adherents = await cotisationsRepository.findActiveAdherentsForCotisation();
-    const eligible = adherents.filter((adherent: any) => Number(adherent.cotisation_es) > 0);
+    const eligible = adherents.filter((adherent: any) =>
+      estEligibleAuPrecomptePourPeriode(adherent, parsed.periodeFin));
 
     if (eligible.length === 0) {
-      return { created: 0, skipped: 0, failed: 0, errors: ['Aucun adherent actif avec cotisation active trouve.'] };
+      return {
+        created: 0,
+        skipped: adherents.length,
+        failed: 0,
+        errors: ['Aucun adhérent n’est éligible à cette période selon sa date de premier précompte.'],
+      };
     }
 
     const matriculesExistants = await precomptesRepository.findGeneratedMatricules(normalizedPeriode);
     let created = 0;
-    let skipped = 0;
+    let skipped = adherents.length - eligible.length;
     let failed = 0;
     const errors: string[] = [];
 
@@ -300,10 +311,11 @@ export const cotisationsService = {
             throw new Error('id_cotisation_detail manquant');
           }
 
-          await precomptesRepository.createPrecompte({
+          const montantBrut = Number(adherent.cotisation_es);
+          const precompte = await precomptesRepository.createPrecompte({
             matricule: String(adherent.matricule),
             periode: normalizedPeriode,
-            montant_depart: Number(adherent.cotisation_es),
+            montant_depart: montantBrut,
             montant_retour: 0,
             annee: parsed.annee,
             trimestre: parsed.trimestre,
@@ -311,8 +323,20 @@ export const cotisationsService = {
             date_generation: today,
             id_cotisation_detail: detailId,
           });
+          await precomptesRepository.imputerPaiementsSpontanes({
+            idPrecompte: precompte.id_precompte,
+            idAdherent: Number(adherent.id_adherent),
+            dateLimite: parsed.periodeFin,
+            montantBrut,
+          });
           created++;
         } catch (err) {
+          const precompte = await precomptesRepository
+            .findByMatriculeAndPeriode(String(adherent.matricule), normalizedPeriode)
+            .catch(() => null);
+          if (precompte?.id_precompte) {
+            await precomptesRepository.deletePrecompte(Number(precompte.id_precompte)).catch(() => undefined);
+          }
           if (detailId) {
             await precomptesRepository.deleteCotisationDetail(detailId).catch(() => undefined);
           }

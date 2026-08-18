@@ -26,8 +26,9 @@ function calculateDateEffetFromPrecompte(datePrecompte: string | null | undefine
   const month = Number(isoDatePrecompte.slice(5, 7));
   const currentQuarter = Math.floor((month - 1) / 3) + 1;
   const nextQuarterYear = currentQuarter === 4 ? year + 1 : year;
-  const nextQuarterMonth = currentQuarter === 4 ? 1 : currentQuarter * 3 + 1;
-  return `${nextQuarterYear}-${String(nextQuarterMonth).padStart(2, '0')}-01`;
+  const nextQuarter = currentQuarter === 4 ? 1 : currentQuarter + 1;
+  const nextQuarterEnd = ['03-31', '06-30', '09-30', '12-31'][nextQuarter - 1];
+  return `${nextQuarterYear}-${nextQuarterEnd}`;
 }
 
 async function ensureFirstLoginAccess(user: AuthenticatedUser, adhesion: AnyRow) {
@@ -102,15 +103,15 @@ function getAllowedPremierPrecompteDates(dateSouscription: string): string[] {
   if (!Number.isInteger(adhesionYear)) return [];
   const adhesionMonth = Number(isoDateSouscription.slice(5, 7));
   if (!Number.isInteger(adhesionMonth) || adhesionMonth < 1 || adhesionMonth > 12) return [];
-  const currentQuarterStartMonth = Math.floor((adhesionMonth - 1) / 3) * 3 + 1;
-  const currentQuarterStart = `${adhesionYear}-${String(currentQuarterStartMonth).padStart(2, '0')}-01`;
+  const currentQuarter = Math.floor((adhesionMonth - 1) / 3) + 1;
+  const currentQuarterStart = `${adhesionYear}-${String((currentQuarter - 1) * 3 + 1).padStart(2, '0')}-01`;
 
   return [adhesionYear, adhesionYear + 1]
     .flatMap((year) => [
-      `${year}-01-01`,
-      `${year}-04-01`,
-      `${year}-07-01`,
-      `${year}-10-01`,
+      `${year}-03-31`,
+      `${year}-06-30`,
+      `${year}-09-30`,
+      `${year}-12-31`,
     ])
     .filter((datePrecompte) => datePrecompte >= currentQuarterStart);
 }
@@ -129,7 +130,7 @@ function ensureSubmittable(payload: OnlineAdhesionPayload): void {
       400,
       allowedPrecompteDates.length === 0
         ? "Aucun trimestre de premier precompte n'est disponible pour cette date d'adhesion."
-      : "Le premier precompte doit etre le premier jour d'un trimestre autorise de l'annee d'adhesion ou de l'annee suivante.",
+      : "Le premier precompte doit etre le dernier jour d'un trimestre autorise de l'annee d'adhesion ou de l'annee suivante.",
     );
   }
   const dateEffet = toStrictIsoDate(payload.date_effet);

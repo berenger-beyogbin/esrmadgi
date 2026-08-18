@@ -5,6 +5,7 @@ export interface ExternalAgentInfo {
   date_naissance?: string | null;
   telephone?: string | null;
   email?: string | null;
+  direction?: string | null;
   emploi?: string | null;
   grade?: string | null;
   civilite?: string | null;

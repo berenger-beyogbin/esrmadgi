@@ -175,6 +175,7 @@ function mapExternalAgent(
     date_naissance: normalizeDate(raw.date_naissance ?? raw.dateNaissance ?? raw.DateNaissance ?? raw.DATE_NAISSANCE),
     telephone: firstString(raw, ['telephone', 'Telephone', 'TELEPHONE', 'tel', 'mobile']) || null,
     email: firstString(raw, ['email', 'Email', 'EMAIL', 'mail']) || null,
+    direction: firstString(raw, ['direction', 'Direction', 'DIRECTION']) || null,
     emploi: firstString(raw, ['emploi', 'Emploi', 'EMPLOI', 'fonction', 'Fonction']) || null,
     grade: extractGrade(raw),
     civilite: normalizeCivilite(raw),

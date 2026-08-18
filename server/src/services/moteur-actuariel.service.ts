@@ -118,13 +118,6 @@ export function calculerValeurRachatDepuisProvision(
   return { provisionBrute: roundMoney(provisionBrute), fraisGestion: roundMoney(fraisGestion), baseApresFrais: roundMoney(baseApresFrais), penalite: roundMoney(penalite), montantNet: roundMoney(Math.max(0, baseApresFrais - penalite)), formule };
 }
 
-export function calculerValeurRachatEligibleDepuisProvision(
-  provisionBrute: number,
-  fraisGestionPourcent: number,
-): ValeurRachatResult {
-  return calculerValeurRachatDepuisProvision(provisionBrute, fraisGestionPourcent, 0);
-}
-
 export function calculerCotisationUnique(input: CotisationUniqueInput): CotisationRetraiteResult {
   const formule = 'PU = R * couverture * (1 + g) * a_y * v_trimestriel^n';
   const invalide = (): CotisationRetraiteResult => ({
@@ -186,6 +179,27 @@ function quarterIndex(dateIso: string): number | null {
   const month = Number(match[2]);
   if (!Number.isInteger(year) || month < 1 || month > 12) return null;
   return year * 4 + Math.floor((month - 1) / 3);
+}
+
+/**
+ * Date d'evaluation retenue par le classeur actuariel : dernier jour du
+ * dernier trimestre entierement termine. Une date qui tombe exactement en
+ * fin de trimestre conserve cette meme date.
+ */
+export function dateArreteDernierTrimestreTermine(dateEvaluation: string): string | null {
+  const match = dateEvaluation.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isInteger(year) || month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  const quarter = Math.floor((month - 1) / 3) + 1;
+  const ends = ['03-31', '06-30', '09-30', '12-31'];
+  const currentEnd = `${year}-${ends[quarter - 1]}`;
+  if (dateEvaluation === currentEnd) return currentEnd;
+  if (quarter === 1) return `${year - 1}-12-31`;
+  return `${year}-${ends[quarter - 2]}`;
 }
 
 export function calculerProvisionMathematique(

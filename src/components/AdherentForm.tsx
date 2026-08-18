@@ -112,9 +112,13 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       nom: '',
       prenoms: '',
       date_naissance: '',
+      lieu_naissance: '',
       situation_matrimoniale: '',
       telephone: '',
       email: '',
+      adresse_geographique: '',
+      adresse_postale: '',
+      direction: '',
       emploi: '',
       statut: 'ACTIF',
       grade_id: '',
@@ -180,9 +184,13 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           nom: adherent.nom || '',
           prenoms: adherent.prenoms || '',
           date_naissance: adherent.date_naissance || '',
+          lieu_naissance: adherent.lieu_naissance || '',
           situation_matrimoniale: adherent.situation_matrimoniale || '',
           telephone: adherent.telephone || '',
           email: adherent.email || '',
+          adresse_geographique: adherent.adresse_geographique || '',
+          adresse_postale: adherent.adresse_postale || '',
+          direction: adherent.direction || '',
           emploi: adherent.emploi || '',
           statut: normalizeStatutEsr(adherent.statut, adherent),
           grade_id: adherent.grade_id || '',
@@ -524,6 +532,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         date_naissance: newDateNaissance,
         telephone: agentData.telephone || prev.telephone,
         email: agentData.email || prev.email,
+        direction: agentData.direction || prev.direction,
         emploi: pickExistingOption(agentData.emploi, emplois.map((e) => e.libelle_emploi), prev.emploi),
         civilite: pickExistingOption(agentData.civilite, civilites.map((c) => c.libelle_civilite), prev.civilite),
         situation_matrimoniale: pickExistingOption(
@@ -810,6 +819,19 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             </div>
 
             <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Lieu de naissance</label>
+              <input
+                type="text"
+                name="lieu_naissance"
+                required
+                value={formData.lieu_naissance}
+                onChange={handleChange}
+                placeholder="Ex : Abidjan"
+                className="mt-1 block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-slate-600 uppercase">Situation matrimoniale</label>
               <select
                 name="situation_matrimoniale"
@@ -855,7 +877,45 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-600 uppercase">Emploi / Direction</label>
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Adresse géographique</label>
+              <input
+                type="text"
+                name="adresse_geographique"
+                required
+                value={formData.adresse_geographique}
+                onChange={handleChange}
+                placeholder="Ex : Cocody Angré, Abidjan"
+                className="mt-1 block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Adresse postale</label>
+              <input
+                type="text"
+                name="adresse_postale"
+                value={formData.adresse_postale}
+                onChange={handleChange}
+                placeholder="Ex : 01 BP 1234 Abidjan 01"
+                className="mt-1 block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Direction</label>
+              <input
+                type="text"
+                name="direction"
+                required
+                value={formData.direction}
+                onChange={handleChange}
+                placeholder="Ex : Direction des grandes entreprises"
+                className="mt-1 block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Emploi</label>
               <select
                 name="emploi"
                 value={formData.emploi}
@@ -978,7 +1038,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-600 uppercase">Cotisation Annuelle Globale (FCFA)</label>
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Cotisation santé</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -1016,7 +1076,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
 
             <div>
               <label className="block text-sm font-semibold text-slate-600 uppercase">
-                Cotisation Épargne Santé-Retraite calculée{' '}
+                Cotisation trimestrielle{' '}
               </label>
               <input
                 type="text"
@@ -1153,9 +1213,13 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           nom: formData.nom,
           prenoms: formData.prenoms,
           date_naissance: formData.date_naissance,
+          lieu_naissance: formData.lieu_naissance,
           situation_matrimoniale: formData.situation_matrimoniale,
           telephone: formData.telephone,
           email: formData.email,
+          adresse_geographique: formData.adresse_geographique,
+          adresse_postale: formData.adresse_postale,
+          direction: formData.direction,
           emploi: formData.emploi,
           grade: formData.grade,
           age_retraite: formData.age_retraite,

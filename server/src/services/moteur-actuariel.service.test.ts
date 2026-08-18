@@ -7,7 +7,8 @@ import {
   calculerInvaliditeAvantRetraite,
   calculerProvisionDepuisMouvements,
   calculerProvisionMathematique,
-  calculerValeurRachatEligibleDepuisProvision,
+  dateArreteDernierTrimestreTermine,
+  calculerValeurRachatDepuisProvision,
   calculerRachat,
 } from './moteur-actuariel.service';
 
@@ -74,6 +75,31 @@ test('provision par mouvements equivaut a la formule recurrente', () => {
   assert.ok(Math.abs(result.provisionBrute - 657_844.21) <= 0.01);
 });
 
+test('la date d evaluation Excel retient le dernier trimestre entierement termine', () => {
+  assert.equal(dateArreteDernierTrimestreTermine('2024-03-11'), '2023-12-31');
+  assert.equal(dateArreteDernierTrimestreTermine('2024-03-31'), '2024-03-31');
+  assert.equal(dateArreteDernierTrimestreTermine('2024-07-15'), '2024-06-30');
+  assert.equal(dateArreteDernierTrimestreTermine('2025-01-01'), '2024-12-31');
+});
+
+test('le calcul par mouvements reproduit le cas Excel a quatre trimestres', () => {
+  const result = calculerProvisionDepuisMouvements({
+    mouvements: [
+      { montant: 50_000, dateValeur: '2023-03-31' },
+      { montant: 50_000, dateValeur: '2023-06-30' },
+      { montant: 50_000, dateValeur: '2023-09-30' },
+      { montant: 50_000, dateValeur: '2023-12-31' },
+    ],
+    dateCalcul: dateArreteDernierTrimestreTermine('2024-03-11')!,
+    tauxAnnuelPourcent: 3.5,
+  });
+  assert.equal(result.provisionBrute, 204_356.19);
+  const liquidation = calculerValeurRachatDepuisProvision(result.provisionBrute, 5, 5);
+  assert.equal(liquidation.fraisGestion, 10_217.81);
+  assert.equal(liquidation.penalite, 9_706.92);
+  assert.equal(liquidation.montantNet, 184_431.46);
+});
+
 test('rachat reproduit le classeur de reference', () => {
   const result = calculerRachat({
     cotisationTrimestrielle: 50_000,
@@ -103,12 +129,6 @@ test('rachat refuse avant le delai parametre', () => {
   });
   assert.equal(result.statut, 'NON_ELIGIBLE');
   assert.equal(result.montantNet, 0);
-});
-
-test('une valeur de rachat eligible ne subit plus la penalite avant delai', () => {
-  const result = calculerValeurRachatEligibleDepuisProvision(204_356.18711402288, 5);
-  assert.equal(result.penalite, 0);
-  assert.equal(result.montantNet, 194_138.38);
 });
 
 test('deces et invalidite utilisent leur taux parametre', () => {

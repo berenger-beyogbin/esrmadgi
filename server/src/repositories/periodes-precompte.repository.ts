@@ -66,6 +66,19 @@ export const periodesRepository = {
     return data ?? [];
   },
 
+  async findPeriodeEnCours(): Promise<PeriodeMetier | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from(await getPeriodesTable())
+      .select('*')
+      .eq('statut', 'OUVERTE')
+      .order('periode', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ?? null;
+  },
+
   async findByPeriode(periode: string): Promise<PeriodeMetier | null> {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase

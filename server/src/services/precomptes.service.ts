@@ -62,7 +62,9 @@ export const precomptesService = {
         idPrecompte: Number(precompte.id_precompte),
         idCotisationDetail: Number(precompte.id_cotisation_detail),
         montantRetour,
-        dateRetour: ligne.dateRetour ?? input.dateRetour,
+        dateRetour: statutPrecompte === 'NON_PRECOMPTE'
+          ? null
+          : (ligne.dateRetour ?? input.dateRetour),
         statutPrecompte,
         motif: ligne.motif ?? '',
       });

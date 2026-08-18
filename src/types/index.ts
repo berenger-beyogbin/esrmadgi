@@ -75,9 +75,13 @@ export interface Adherent {
   nom: string;
   prenoms: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string; // From situations_matrimoniales
   telephone: string;
   email: string;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string; // From emplois
   statut: 'ACTIF' | 'RETRAITE' | 'DECEDE' | 'INACTIF' | string;
   grade_id: string;
@@ -100,9 +104,13 @@ export interface VAdherentComplet {
   nom: string;
   prenoms: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string;
   telephone: string;
   email: string;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string;
   statut: boolean | string;
   decede?: boolean;
@@ -181,6 +189,8 @@ export interface VPrecompteDetails {
   annee: number;
   trimestre: number;
   montant_depart: number;
+  montant_cotisation_brut?: number;
+  montant_credit_spontane?: number;
   montant_retour: number;
   statut_precompte: 'GENERE' | 'INITIE' | 'ENCAISSE' | 'PARTIEL' | 'REJETE' | string;
   date_generation: string | null;
@@ -452,6 +462,7 @@ export interface ExternalAgentInfo {
   date_naissance?: string | null;
   telephone?: string | null;
   email?: string | null;
+  direction?: string | null;
   emploi?: string | null;
   grade?: string | null;
   civilite?: string | null;

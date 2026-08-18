@@ -143,3 +143,9 @@
     text-align: left;
   }
 }
+
+/* Le tableau des précomptes possède onze colonnes explicites totalisant 100 %.
+   Le débordement horizontal est donc inutile sur desktop et masqué ici. */
+.precomptes-table-wrapper > div {
+  overflow-x: hidden;
+}

@@ -9,9 +9,13 @@ export interface FicheSimulationData {
   nom: string;
   prenoms: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string;
   telephone: string;
   email: string;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string;
   grade: string;
   age_retraite: number;
@@ -91,7 +95,7 @@ function FicheContent({ data }: { data: FicheSimulationData }) {
         <p><span className="font-semibold">Nom &amp; Prénoms :</span> {data.civilite} {data.nom} {data.prenoms}</p>
         <p>
           <span className="font-semibold">Né(e) le :</span> {formatDateOrBlank(data.date_naissance)}{' '}
-          <span className="font-semibold ml-4">Lieu de naissance :</span> {BLANK}
+          <span className="font-semibold ml-4">Lieu de naissance :</span> {data.lieu_naissance || BLANK}
         </p>
         <p>
           <span className="font-semibold">Sexe :</span>{' '}
@@ -107,8 +111,8 @@ function FicheContent({ data }: { data: FicheSimulationData }) {
         </p>
         <p><span className="font-semibold">Emploi :</span> {data.emploi || BLANK} <span className="font-semibold ml-4">Grade :</span> {data.grade || BLANK}</p>
         <p><span className="font-semibold">Fonction :</span> {BLANK}</p>
-        <p><span className="font-semibold">Direction :</span> {BLANK}</p>
-        <p><span className="font-semibold">Adresse postale :</span> {BLANK} <span className="font-semibold ml-4">Adresse géographique :</span> {BLANK}</p>
+        <p><span className="font-semibold">Direction :</span> {data.direction || BLANK}</p>
+        <p><span className="font-semibold">Adresse postale :</span> {data.adresse_postale || BLANK} <span className="font-semibold ml-4">Adresse géographique :</span> {data.adresse_geographique || BLANK}</p>
         <p><span className="font-semibold">Contact(s) :</span> {data.telephone || BLANK} <span className="font-semibold ml-4">E-mail :</span> {data.email || BLANK}</p>
         <p><span className="font-semibold">Durée résiduelle d'activité (trimestre) :</span> {data.nb_trimestre || BLANK}</p>
         <p><span className="font-semibold">Âge de retraite :</span> {data.age_retraite ? `${data.age_retraite} ans` : BLANK}</p>

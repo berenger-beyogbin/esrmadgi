@@ -4,7 +4,7 @@ import { assertPeriode } from '../utils/periode';
 import { auditService } from './audit.service';
 import { AppError } from '../middleware/errorHandler';
 import { cotisationsRepository } from '../repositories/cotisations.repository';
-import { calculerProvisionDepuisMouvements, calculerValeurRachatEligibleDepuisProvision } from './moteur-actuariel.service';
+import { calculerProvisionDepuisMouvements, calculerValeurRachatDepuisProvision } from './moteur-actuariel.service';
 import { reglesActuariellesService } from './regles-actuarielles.service';
 import { comptesEsrRepository } from '../repositories/comptes-esr.repository';
 
@@ -141,7 +141,7 @@ export const periodesService = {
     const effectiveDates = Array.from(new Set(
       Object.values(regles.versions).map((version) => version.dateDebut ?? 'origine'),
     )).sort();
-    const versionCalcul = `ESR-PM-1|${effectiveDates.join(',')}`.slice(0, 50);
+    const versionCalcul = `ESR-PM-2|${effectiveDates.join(',')}`.slice(0, 50);
     const snapshots = [];
     for (const adherent of data.adherents) {
       const idAdherent = String(adherent.id_adherent);
@@ -155,9 +155,11 @@ export const periodesService = {
       const montantCotise = data.cotisations
         .filter((item) => String(item.id_adherent) === idAdherent && String(item.statut_detail) === 'ENCAISSEE')
         .reduce((sum, item) => sum + Number(item.montant ?? 0), 0);
-      // A la cloture, la valeur de rachat indicative concerne les contrats
-      // ayant franchi le delai d'eligibilite : aucune penalite "avant delai".
-      const valeurRachat = calculerValeurRachatEligibleDepuisProvision(calcul.provisionBrute, regles.fraisGestionRachat).montantNet;
+      const valeurRachat = calculerValeurRachatDepuisProvision(
+        calcul.provisionBrute,
+        regles.fraisGestionRachat,
+        regles.penaliteRachat,
+      ).montantNet;
       snapshots.push({
         id_adherent: Number(idAdherent),
         capital_acquis: calcul.capitalVerse,

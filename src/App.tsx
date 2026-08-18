@@ -24,6 +24,7 @@ import Reporting from './pages/Reporting';
 import Utilisateurs from './pages/Utilisateurs';
 import Aide from './pages/Aide';
 import HeaderBanner from './components/HeaderBanner';
+import { getFicheAdherentPreviewId, nettoyerAncienneUrlFicheAdherent } from './utils/ficheAdherentPreview';
 
 // Icons matching French labels in Screenshot 3
 import {
@@ -173,7 +174,7 @@ export default function App() {
     );
   }
 
-  const ficheAdherentId = new URLSearchParams(window.location.search).get('fiche-adherent');
+  const ficheAdherentId = nettoyerAncienneUrlFicheAdherent() ?? getFicheAdherentPreviewId();
   if (ficheAdherentId && currentUser.role !== 'ADHERENT') {
     return (
       <EspaceAdherent

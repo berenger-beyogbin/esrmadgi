@@ -293,7 +293,7 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                     <th className="py-3.5 px-4">Grade</th>
                     <th className="py-3.5 px-4">Statut</th>
                     <th className="py-3.5 px-4">Date d'effet</th>
-                    <th className="py-3.5 px-4 text-right">Cotisation annuelle</th>
+                    <th className="py-3.5 px-4 text-right">Cotisation trimestrielle</th>
                     <th className="py-3.5 px-4 text-center">Trimestres</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
@@ -336,8 +336,8 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                       <td data-label="Date d'effet" className="py-4 px-4 font-mono text-slate-600">
                         {formatDateFr(ad.date_effet)}
                       </td>
-                      <td data-label="Cotisation annuelle" className="py-4 px-4 text-right font-bold text-slate-800 font-mono">
-                        {formatFCFA(ad.cotisation_annuelle)}
+                      <td data-label="Cotisation trimestrielle" className="py-4 px-4 text-right font-bold text-slate-800 font-mono">
+                        {formatFCFA(ad.cotisation_es)}
                       </td>
                       <td data-label="Trimestres" className="py-4 px-4 text-center font-semibold text-slate-600 font-mono">
                         {ad.nb_trimestre || 0}
@@ -616,6 +616,11 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                 </div>
 
                 <div>
+                  <p className="text-xs text-slate-500 font-semibold uppercase">Lieu de naissance</p>
+                  <p className="font-semibold text-slate-800 mt-0.5">{selectedAdherent.lieu_naissance || '—'}</p>
+                </div>
+
+                <div>
                   <p className="text-xs text-slate-500 font-semibold uppercase">Situation conjugale</p>
                   <p className="font-semibold text-slate-800 mt-0.5">{selectedAdherent.situation_matrimoniale}</p>
                 </div>
@@ -637,7 +642,19 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                 </div>
 
                 <div>
-                  <p className="text-xs text-slate-500 font-semibold uppercase">Emploi / Département</p>
+                  <p className="text-xs text-slate-500 font-semibold uppercase">Adresse géographique</p>
+                  <p className="font-semibold text-slate-800 mt-0.5">{selectedAdherent.adresse_geographique || '—'}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500 font-semibold uppercase">Adresse postale</p>
+                  <p className="font-semibold text-slate-800 mt-0.5">{selectedAdherent.adresse_postale || '—'}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500 font-semibold uppercase">Direction</p>
+                  <p className="font-semibold text-slate-800 mt-0.5">{selectedAdherent.direction || '—'}</p>
+                  <p className="text-xs text-slate-500 font-semibold uppercase mt-3">Emploi</p>
                   <p className="font-semibold text-slate-800 mt-0.5">{selectedAdherent.emploi}</p>
                 </div>
 
@@ -671,12 +688,8 @@ export default function Adherents({ currentUser }: AdherentsProps) {
                   <span className="text-slate-400">Trimestres acquis</span>
                   <span className="font-bold text-slate-100">{selectedAdherent.nb_trimestre}</span>
                 </div>
-                <div className="flex justify-between pb-1.5 border-b border-slate-800">
-                  <span className="text-slate-400">Cotisation Globale</span>
-                  <span className="font-bold text-teal-400">{formatFCFA(selectedAdherent.cotisation_annuelle)}</span>
-                </div>
                 <div className="flex justify-between font-semibold">
-                  <span className="text-slate-400">Part Épargne-Santé</span>
+                  <span className="text-slate-400">Cotisation trimestrielle</span>
                   <span className="font-bold text-emerald-400">{formatFCFA(selectedAdherent.cotisation_es)}</span>
                 </div>
               </div>

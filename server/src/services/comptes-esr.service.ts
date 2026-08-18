@@ -3,7 +3,11 @@ import { AuthenticatedUser } from '../types';
 import { CompteEsrFilters, comptesEsrRepository } from '../repositories/comptes-esr.repository';
 import { cotisationsRepository } from '../repositories/cotisations.repository';
 import { auditService } from './audit.service';
-import { calculerProvisionDepuisMouvements, calculerValeurRachatEligibleDepuisProvision } from './moteur-actuariel.service';
+import {
+  calculerProvisionDepuisMouvements,
+  calculerValeurRachatDepuisProvision,
+  dateArreteDernierTrimestreTermine,
+} from './moteur-actuariel.service';
 import { reglesActuariellesService } from './regles-actuarielles.service';
 import { genererAvisAnnuelPdf, genererReleveComptePdf } from './pdf-document.service';
 
@@ -48,14 +52,16 @@ export const comptesEsrService = {
       throw new AppError(403, 'Acces refuse au recalcul du compte ESR de cet adherent');
     }
 
+    const dateArrete = dateArreteDernierTrimestreTermine(dateCalcul);
+    if (!dateArrete) throw new AppError(400, 'Date de calcul invalide');
     const regles = await reglesActuariellesService.getRegles(dateCalcul);
-    const cotisations = await cotisationsRepository.findEncaisseesByAdherentId(adherentId, dateCalcul);
+    const cotisations = await cotisationsRepository.findEncaisseesByAdherentId(adherentId, dateArrete);
     const provision = calculerProvisionDepuisMouvements({
       mouvements: cotisations.map((row) => ({
         montant: row.montant,
         dateValeur: row.date_valeur,
       })),
-      dateCalcul,
+      dateCalcul: dateArrete,
       tauxAnnuelPourcent: regles.tauxGaranti,
     });
     const repartition = repartirCotisationsCompte(cotisations);
@@ -63,15 +69,16 @@ export const comptesEsrService = {
       throw new AppError(400, 'Impossible de recalculer le compte ESR avec les mouvements disponibles');
     }
 
-    // Le rachat est interdit avant le delai minimum. La penalite contractuelle
-    // prevue avant ce delai ne doit donc pas etre appliquee a une valeur de
-    // rachat devenue eligible.
-    const liquidation = calculerValeurRachatEligibleDepuisProvision(provision.provisionBrute, regles.fraisGestionRachat);
+    const liquidation = calculerValeurRachatDepuisProvision(
+      provision.provisionBrute,
+      regles.fraisGestionRachat,
+      regles.penaliteRachat,
+    );
     const valeurRachat = liquidation.montantNet;
     const effectiveDates = Array.from(new Set(
       Object.values(regles.versions).map((version) => version.dateDebut ?? 'origine'),
     )).sort();
-    const versionCalcul = `ESR-PM-1|${effectiveDates.join(',')}`.slice(0, 50);
+    const versionCalcul = `ESR-PM-2|${effectiveDates.join(',')}`.slice(0, 50);
 
     const compte = await comptesEsrRepository.saveCalculatedAccount({
       adherentId,
@@ -80,7 +87,7 @@ export const comptesEsrService = {
       cotisationUnique: repartition.cotisationUnique,
       provisionMathematique: provision.provisionBrute,
       valeurRachat: Math.round((valeurRachat + Number.EPSILON) * 100) / 100,
-      dateCalcul,
+      dateCalcul: dateArrete,
       versionCalcul,
     });
 
@@ -90,6 +97,7 @@ export const comptesEsrService = {
       idObjet: adherentId,
       details: JSON.stringify({
         dateCalcul,
+        dateArrete,
         nombreMouvements: provision.nombreMouvements,
         capitalVerse: provision.capitalVerse,
         primesPeriodiques: repartition.primesPeriodiques,
@@ -110,7 +118,7 @@ export const comptesEsrService = {
         provisionMathematique: provision.provisionBrute,
         valeurRachat: Math.round((valeurRachat + Number.EPSILON) * 100) / 100,
         tauxTrimestriel: provision.tauxTrimestriel,
-        dateCalcul,
+        dateCalcul: dateArrete,
       },
     };
   },
@@ -131,9 +139,10 @@ export const comptesEsrService = {
     const mouvements = await cotisationsRepository.findEncaisseesByAdherentId(adherentId, dateCalcul);
     const repartition = repartirCotisationsCompte(mouvements);
     const regles = await reglesActuariellesService.getRegles(dateCalcul);
-    const valeurRachatHistorique = calculerValeurRachatEligibleDepuisProvision(
+    const valeurRachatHistorique = calculerValeurRachatDepuisProvision(
       Number(historique.pm ?? 0),
       regles.fraisGestionRachat,
+      regles.penaliteRachat,
     ).montantNet;
     return genererAvisAnnuelPdf({
       annee,

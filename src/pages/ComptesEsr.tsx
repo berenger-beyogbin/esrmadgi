@@ -4,6 +4,7 @@ import { VCompteEsrDetails, DBUser } from '../types';
 import { ChevronLeft, ChevronRight, Eye, Search, Landmark, Calculator, AlertCircle, RefreshCw, Layers } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { ScrollableTableWrapper } from '../components/common/ScrollableTableWrapper';
+import { FICHE_ADHERENT_PREVIEW_KEY } from '../utils/ficheAdherentPreview';
 
 interface ComptesEsrProps {
   currentUser: DBUser;
@@ -55,8 +56,20 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
     }
     const url = new URL(window.location.href);
     url.search = '';
-    url.searchParams.set('fiche-adherent', adherentId);
-    window.open(url.toString(), '_blank', 'noopener,noreferrer');
+    url.hash = '';
+    const ficheWindow = window.open('about:blank', '_blank');
+    if (!ficheWindow) {
+      setErrorMsg("L'ouverture de la fiche a été bloquée par le navigateur.");
+      return;
+    }
+    try {
+      ficheWindow.sessionStorage.setItem(FICHE_ADHERENT_PREVIEW_KEY, adherentId);
+      ficheWindow.opener = null;
+      ficheWindow.location.replace(url.toString());
+    } catch {
+      ficheWindow.close();
+      setErrorMsg("Impossible d'ouvrir la fiche adhérent de manière sécurisée.");
+    }
   };
 
   const totalPages = Math.max(1, Math.ceil(comptes.length / rowsPerPage));

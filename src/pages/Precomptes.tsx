@@ -265,7 +265,10 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
         agent_nom: `${p.nom} ${p.prenoms}`,
         categorie: gradeParMatricule.get(p.matricule) || '',
         periode: p.periode,
-        madgi_esr: p.montant_depart,
+        // Le fichier DGI attend exactement la cle `madgi_esr` definie dans
+        // worksheet.columns. Il contient le montant net restant a precompter
+        // apres imputation des paiements spontanes.
+        madgi_esr: Number(p.montant_depart ?? 0),
       }));
       const buffer = await workbook.xlsx.writeBuffer();
       downloadWorkbook(buffer, `precomptes_${periode}.xlsx`);
@@ -609,25 +612,29 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
           <p className="text-slate-400 text-sm">Aucun précompte trouvé.</p>
         </div>
       ) : (
-        <ScrollableTableWrapper maxHeight="none">
-          <table className="rtable w-full table-fixed divide-y divide-slate-100 text-xs text-left text-slate-700" id="tbl-precomptes">
+        <ScrollableTableWrapper maxHeight="none" className="precomptes-table-wrapper">
+          <table className="rtable w-full table-fixed divide-y divide-slate-100 text-[11px] text-left text-slate-700" id="tbl-precomptes">
             <colgroup>
-              <col className="w-[9%]" />
-              <col className="w-[15%]" />
               <col className="w-[7%]" />
-              <col className="w-[12%]" />
-              <col className="w-[13%]" />
-              <col className="w-[12%]" />
-              <col className="w-[11%]" />
-              <col className="w-[13%]" />
+              <col className="w-[14%]" />
+              <col className="w-[6%]" />
+              <col className="w-[10%]" />
+              <col className="w-[10%]" />
+              <col className="w-[9%]" />
+              <col className="w-[9%]" />
+              <col className="w-[9%]" />
               <col className="w-[8%]" />
+              <col className="w-[9%]" />
+              <col className="w-[9%]" />
             </colgroup>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-[10px]">
               <tr>
                 <th className="py-3 px-2">Matricule</th>
                 <th className="py-3 px-2">Adhérent</th>
                 <th className="py-3 px-2">Période</th>
-                <th className="py-3 px-2 text-right">Montant départ</th>
+                <th className="py-3 px-2 text-right">Cotisation brute</th>
+                <th className="py-3 px-2 text-right">Crédit spontané</th>
+                <th className="py-3 px-2 text-right">À précompter</th>
                 <th className="py-3 px-2 text-center">Date génération</th>
                 <th className="py-3 px-2 text-right">Montant retour</th>
                 <th className="py-3 px-2 text-center">Date retour</th>
@@ -650,7 +657,7 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
             <tbody className="divide-y divide-slate-100 bg-white">
               {filteredPrecomptes.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-16 text-center text-slate-400 text-sm">
+                  <td colSpan={11} className="px-4 py-16 text-center text-slate-400 text-sm">
                     Aucun précompte avec le statut {statutFilter}.
                   </td>
                 </tr>
@@ -659,7 +666,13 @@ export default function Precomptes({ currentUser }: PrecomptesProps) {
                   <td data-label="Matricule" className="py-2.5 px-2 font-bold font-mono text-slate-700 truncate">{p.matricule}</td>
                   <td data-label="Adhérent" className="py-2.5 px-2 font-semibold text-slate-800 uppercase leading-snug break-words">{p.nom} {p.prenoms}</td>
                   <td data-label="Période" className="py-2.5 px-2 font-mono text-slate-600 whitespace-nowrap">{p.periode}</td>
-                  <td data-label="Montant départ" className="py-2.5 px-2 text-right font-semibold font-mono text-slate-700 whitespace-nowrap">
+                  <td data-label="Cotisation brute" className="py-2.5 px-2 text-right font-mono text-slate-600 whitespace-nowrap">
+                    {formatFCFA(p.montant_cotisation_brut ?? p.montant_depart)}
+                  </td>
+                  <td data-label="Crédit spontané" className="py-2.5 px-2 text-right font-mono text-emerald-700 whitespace-nowrap">
+                    {formatFCFA(p.montant_credit_spontane ?? 0)}
+                  </td>
+                  <td data-label="À précompter" className="py-2.5 px-2 text-right font-semibold font-mono text-slate-700 whitespace-nowrap">
                     {formatFCFA(p.montant_depart)}
                   </td>
                   <td data-label="Date génération" className="py-2.5 px-2 text-center font-mono text-slate-500 whitespace-nowrap">

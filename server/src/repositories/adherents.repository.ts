@@ -11,7 +11,11 @@ export interface CreateAdherentPayload {
   email: string;
   statut: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string;
   grade_id: string;
   grade?: string;
@@ -34,7 +38,11 @@ export interface UpdateAdherentPayload {
   email: string;
   statut: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string;
   grade_id: string;
   grade?: string;
@@ -81,7 +89,11 @@ function adherentBasePayload(payload: CreateAdherentPayload | UpdateAdherentPayl
     decede: payload.statut === 'DECEDE',
     retraite: payload.statut === 'RETRAITE',
     date_naissance: payload.date_naissance,
+    lieu_naissance: payload.lieu_naissance,
     situation_matrimoniale: payload.situation_matrimoniale,
+    adresse_geographique: payload.adresse_geographique,
+    adresse_postale: payload.adresse_postale,
+    direction: payload.direction,
     emploi: payload.emploi,
     updated_at: new Date().toISOString(),
   };

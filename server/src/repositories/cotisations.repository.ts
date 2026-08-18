@@ -27,6 +27,8 @@ export interface ActiveAdherentForCotisation {
   statut?: boolean | string | null;
   decede?: boolean | null;
   retraite?: boolean | null;
+  date_precompte?: string | null;
+  cotisation_es?: number | null;
 }
 
 export interface ParsedTrimestre {
