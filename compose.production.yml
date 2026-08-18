@@ -1,0 +1,106 @@
+name: madgi-esr-app
+
+services:
+  proxy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+      APP_DOMAIN: ${APP_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      SUPABASE_DOMAIN: ${SUPABASE_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app
+      - supabase
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://${API_DOMAIN}
+        VITE_SUPABASE_URL: https://${SUPABASE_DOMAIN}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    restart: unless-stopped
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      ENABLE_DEMO_AUTH: "false"
+      TRUST_PROXY: "true"
+      FRONTEND_URL: https://${APP_DOMAIN}
+      FRONTEND_URLS: https://${APP_DOMAIN}
+      SUPABASE_URL: http://api-gw:8000
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-MADGI ESR <no-reply@madgi.ci>}
+      SMS_API_URL: ${SMS_API_URL:-}
+      SMS_API_USERNAME: ${SMS_API_USERNAME:-}
+      SMS_API_PASSWORD: ${SMS_API_PASSWORD:-}
+      SMS_API_SERVICE_ID: ${SMS_API_SERVICE_ID:-}
+      FIRST_LOGIN_SMS_STANDBY: ${FIRST_LOGIN_SMS_STANDBY:-false}
+      MYSQL_HOST: ${MYSQL_HOST:-}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      MYSQL_USER: ${MYSQL_USER:-}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-}
+      SIAPS_BASE_URL: ${SIAPS_BASE_URL:-}
+      SIAPS_SLUG: ${SIAPS_SLUG:-}
+      SIAPS_EMAIL: ${SIAPS_EMAIL:-}
+      SIAPS_PASSWORD: ${SIAPS_PASSWORD:-}
+      SIAPS_DATE_FORMAT: ${SIAPS_DATE_FORMAT:-compact}
+    networks:
+      - app
+      - supabase
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  app:
+  supabase:
+    external: true
+    name: ${SUPABASE_DOCKER_NETWORK}
+
+volumes:
+  caddy_data:
+  caddy_config:

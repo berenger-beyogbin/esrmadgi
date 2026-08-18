@@ -1,0 +1,16 @@
+.git
+.agents
+.claude
+.codex*
+.env*
+node_modules
+dist
+tmp
+output
+DOCUMENT ESR
+docs
+server
+supabase
+*.log
+compose*.yml
+render.yaml

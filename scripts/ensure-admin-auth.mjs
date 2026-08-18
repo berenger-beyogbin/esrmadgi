@@ -143,12 +143,23 @@ if (updateError) {
   console.error('[ERREUR] update utilisateurs :', updateError.message);
   process.exit(1);
 }
-if (count === 0) {
-  console.error('[ERREUR] Aucune ligne trouvée pour matricule =', MADGI_ADMIN_MATRICULE);
-  console.error('         Vérifiez que ce matricule existe bien dans public.utilisateurs.');
-  process.exit(1);
+if (!count) {
+  console.log('      → Ligne applicative absente. Création en cours...');
+  const { error: insertError } = await supabase.from('utilisateurs').insert({
+    auth_user_id: authUser.id,
+    matricule: MADGI_ADMIN_MATRICULE,
+    email: MADGI_ADMIN_EMAIL,
+    user_actif: true,
+    profil: 'ADMINISTRATEUR',
+  });
+  if (insertError) {
+    console.error('[ERREUR] création utilisateurs :', insertError.message);
+    process.exit(1);
+  }
+  console.log('      → Ligne applicative créée.');
+} else {
+  console.log('      → Ligne mise à jour (', count, 'ligne(s) affectée(s)).');
 }
-console.log('      → Ligne mise à jour (', count, 'ligne(s) affectée(s)).');
 
 // ── Étape 4 : Vérification et résumé ─────────────────────────────────────────
 console.log('[4/4] Vérification en base...');

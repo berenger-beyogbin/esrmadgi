@@ -1,0 +1,11 @@
+[Unit]
+Description=Planification de la sauvegarde MADGI ESR
+
+[Timer]
+OnCalendar=*-*-* 02:15:00 UTC
+RandomizedDelaySec=15m
+Persistent=true
+Unit=madgi-esr-backup.service
+
+[Install]
+WantedBy=timers.target

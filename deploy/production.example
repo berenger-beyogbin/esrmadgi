@@ -1,0 +1,38 @@
+# Copiez ce fichier vers deploy/production.env et ne versionnez jamais ce dernier.
+ACME_EMAIL=admin@example.ci
+APP_DOMAIN=esr.example.ci
+API_DOMAIN=api-esr.example.ci
+SUPABASE_DOMAIN=supabase-esr.example.ci
+
+# Nom du reseau cree par le Compose officiel Supabase sur le VPS.
+# Verifier avec : docker network ls
+SUPABASE_DOCKER_NETWORK=supabase_default
+
+# Recopier les cles generees dans le .env du Supabase auto-heberge.
+SUPABASE_ANON_KEY=replace-with-publishable-or-anon-key
+SUPABASE_SERVICE_ROLE_KEY=replace-with-secret-or-service-role-key
+
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=MADGI ESR <no-reply@example.ci>
+
+SMS_API_URL=https://api-public-2.mtarget.fr/messages
+SMS_API_USERNAME=
+SMS_API_PASSWORD=
+SMS_API_SERVICE_ID=
+FIRST_LOGIN_SMS_STANDBY=false
+
+MYSQL_HOST=
+MYSQL_PORT=3306
+MYSQL_USER=
+MYSQL_PASSWORD=
+MYSQL_DATABASE=
+
+SIAPS_BASE_URL=
+SIAPS_SLUG=
+SIAPS_EMAIL=
+SIAPS_PASSWORD=
+SIAPS_DATE_FORMAT=compact
