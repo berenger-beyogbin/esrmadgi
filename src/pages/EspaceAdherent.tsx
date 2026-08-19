@@ -178,6 +178,47 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
       })
   }, [cotisationsEffectuees]);
 
+  const cotisationsChartRows = useMemo(() => {
+    const parPeriode = new Map<string, { cotisation: VCotisationDetails; montant: number }>();
+
+    cotisationsEffectuees.forEach((cotisation) => {
+      const periode = String(cotisation.periode || '').trim();
+      const key = periode || `operation-${cotisation.id}`;
+      const existing = parPeriode.get(key);
+
+      if (!existing) {
+        parPeriode.set(key, {
+          cotisation,
+          montant: toNumber(cotisation.montant),
+        });
+        return;
+      }
+
+      existing.montant += toNumber(cotisation.montant);
+      if (cotisationDate(cotisation) > cotisationDate(existing.cotisation)) {
+        existing.cotisation = cotisation;
+      }
+    });
+
+    let cumul = 0;
+    return Array.from(parPeriode.values())
+      .sort((a, b) => {
+        const byPeriode = String(a.cotisation.periode).localeCompare(String(b.cotisation.periode));
+        if (byPeriode !== 0) return byPeriode;
+        return cotisationDate(a.cotisation).localeCompare(cotisationDate(b.cotisation));
+      })
+      .map(({ cotisation, montant }) => {
+        cumul += montant;
+        return {
+          ...cotisation,
+          montant,
+          interets: 0,
+          capitalCumule: cumul,
+        };
+      })
+      .sort((a, b) => String(b.periode).localeCompare(String(a.periode)));
+  }, [cotisationsEffectuees]);
+
   const displayedCotisations = cotisationsRows.slice(0, 8);
   const derniereCotisation = cotisationsRows[0] ?? null;
   const dernierStatut = cotisationStatus(derniereCotisation?.statut_detail || derniereCotisation?.statut);
@@ -288,7 +329,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                 <div className="bg-white p-5 shadow-md">
                   <h3 className="text-base font-black text-center">Progression du total cotisé</h3>
                   <p className="text-xs text-slate-500 text-center mt-1 mb-4">Uniquement les cotisations effectivement encaissées</p>
-                  <CapitalChart rows={cotisationsRows} />
+                  <CapitalChart rows={cotisationsChartRows} />
                 </div>
               </section>
 

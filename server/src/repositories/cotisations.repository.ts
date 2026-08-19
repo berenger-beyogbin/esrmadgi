@@ -17,6 +17,7 @@ export interface CotisationSpontaneePayload {
   date: string;
   montant: number;
   id_precompte?: number;
+  id_paiement_existant?: number;
 }
 
 export interface ActiveAdherentForCotisation {
@@ -182,6 +183,37 @@ export const cotisationsRepository = {
 
     if (error) throw new Error(error.message);
     return data ?? null;
+  },
+
+  async findCompteEsr(idAdherent: number): Promise<Record<string, unknown> | null> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase.from('comptes_esr').select('*')
+      .eq('id_adherent', idAdherent).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ?? null;
+  },
+
+  async enregistrerSpontaneeRecalculee(input: {
+    idAdherent: number; mode: string; datePaiement: string; dateValeur: string;
+    montant: number; periode: string; reference: string; nouvelleCotisation: number;
+    tauxGaranti: number; fraisRente: number; idPaiementExistant?: number;
+  }): Promise<unknown> {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase.rpc('enregistrer_cotisation_spontanee_recalculee_esr', {
+      p_id_adherent: input.idAdherent,
+      p_mode: input.mode,
+      p_date_paiement: input.datePaiement,
+      p_date_valeur: input.dateValeur,
+      p_montant: input.montant,
+      p_periode: input.periode,
+      p_reference: input.reference,
+      p_nouvelle_cotisation: input.nouvelleCotisation,
+      p_taux_garanti: input.tauxGaranti,
+      p_frais_rente: input.fraisRente,
+      p_id_paiement_existant: input.idPaiementExistant ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return data;
   },
 
   async createCotisationEntete(input: {

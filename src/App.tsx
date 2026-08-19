@@ -17,6 +17,7 @@ import Cotisations from './pages/Cotisations';
 import Precomptes from './pages/Precomptes';
 import RegularisationPrecomptes from './pages/RegularisationPrecomptes';
 import CloturePeriode from './pages/CloturePeriode';
+import Paiements from './pages/Paiements';
 import Prestations from './pages/Prestations';
 import Rachats from './pages/Rachats';
 import Parametres from './pages/Parametres';
@@ -48,6 +49,7 @@ import {
   List,
   Lock,
   WalletCards,
+  CreditCard,
 } from 'lucide-react';
 
 type ModuleType =
@@ -61,6 +63,7 @@ type ModuleType =
   | 'PRECOMPTES'
   | 'REGULARISATION_PRECOMPTES'
   | 'CLOTURE_PERIODE'
+  | 'PAIEMENTS'
   | 'REPORTING'
   | 'PARAMETRES'
   | 'UTILISATEURS'
@@ -220,6 +223,7 @@ export default function App() {
         { key: 'REGULARISATION_PRECOMPTES', label: 'Régularisation de Précompte', icon: Repeat, moduleId: 'REGULARISATION_PRECOMPTES' as ModuleType },
         { key: 'COTISATION_SPONTANEE', label: 'Cotisation Spontanée', icon: PlusCircle, moduleId: 'COTISATIONS' as ModuleType, action: 'SPONTANEE' as const },
         { key: 'COTISATIONS_LISTE', label: 'Liste des Cotisations', icon: List, moduleId: 'COTISATIONS' as ModuleType },
+        { key: 'VALIDATION_PAIEMENTS', label: 'Validation des paiements', icon: CreditCard, moduleId: 'PAIEMENTS' as ModuleType },
         { key: 'CLOTURE_PERIODE', label: 'Clôture de Période', icon: Lock, moduleId: 'CLOTURE_PERIODE' as ModuleType },
       ],
     },
@@ -303,6 +307,8 @@ export default function App() {
         return <RegularisationPrecomptes currentUser={currentUser} />;
       case 'CLOTURE_PERIODE':
         return <CloturePeriode currentUser={currentUser} />;
+      case 'PAIEMENTS':
+        return <Paiements currentUser={currentUser} />;
       case 'PRESTATIONS':
         return <Prestations currentUser={currentUser} />;
       case 'RACHATS':

@@ -93,6 +93,24 @@ export interface CotisationRetraiteResult {
   formule: string;
 }
 
+export interface CotisationApresSpontaneeInput {
+  renteAnnuelle: number;
+  ageRetraite: number;
+  ageMaximum: number;
+  nombreTrimestresRestants: number;
+  tauxAnnuelPourcent: number;
+  fraisRentePourcent: number;
+  capitalAcquis: number;
+  mortalite: PointMortalite[];
+}
+
+export interface CotisationApresSpontaneeResult {
+  statut: StatutCalcul;
+  cotisationTrimestrielle: number;
+  capitalConstitutif: number;
+  capitalRestant: number;
+}
+
 function isNonNegativeFinite(value: number): boolean {
   return Number.isFinite(value) && value >= 0;
 }
@@ -103,6 +121,50 @@ function isPercentage(value: number): boolean {
 
 function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+export function calculerCotisationTrimestrielleApresSpontanee(
+  input: CotisationApresSpontaneeInput,
+): CotisationApresSpontaneeResult {
+  const invalide = (): CotisationApresSpontaneeResult => ({
+    statut: 'PARAMETRES_INVALIDES', cotisationTrimestrielle: 0, capitalConstitutif: 0, capitalRestant: 0,
+  });
+  if (!isNonNegativeFinite(input.renteAnnuelle)
+    || !Number.isInteger(input.ageRetraite)
+    || !Number.isInteger(input.ageMaximum)
+    || input.ageMaximum <= input.ageRetraite
+    || !Number.isInteger(input.nombreTrimestresRestants)
+    || input.nombreTrimestresRestants < 0
+    || !isNonNegativeFinite(input.tauxAnnuelPourcent)
+    || !isPercentage(input.fraisRentePourcent)
+    || !isNonNegativeFinite(input.capitalAcquis)) return invalide();
+
+  const lx = new Map(input.mortalite.map((point) => [point.age, point.lx]));
+  const ly = lx.get(input.ageRetraite);
+  if (!ly || ly <= 0) return invalide();
+  const tauxAnnuel = input.tauxAnnuelPourcent / 100;
+  const v = 1 / (1 + tauxAnnuel);
+  let somme = 0;
+  for (let age = input.ageRetraite; age <= input.ageMaximum; age += 1) {
+    const survivants = lx.get(age);
+    if (survivants != null && survivants >= 0) somme += survivants * Math.pow(v, age - input.ageRetraite);
+  }
+  const capitalConstitutif = input.renteAnnuelle * (1 + input.fraisRentePourcent / 100) * (somme / ly);
+  const capitalRestant = Math.max(0, capitalConstitutif - input.capitalAcquis);
+  if (input.nombreTrimestresRestants === 0) {
+    return { statut: 'OK', cotisationTrimestrielle: Math.round(capitalRestant), capitalConstitutif, capitalRestant };
+  }
+  const tauxTrimestriel = Math.pow(1 + tauxAnnuel, 0.25) - 1;
+  const denominateur = (1 + tauxTrimestriel)
+    * (Math.pow(1 + tauxTrimestriel, input.nombreTrimestresRestants) - 1);
+  if (denominateur <= 0 || tauxTrimestriel <= 0) return invalide();
+  const prime = capitalRestant * tauxTrimestriel / denominateur;
+  return {
+    statut: 'OK',
+    cotisationTrimestrielle: Math.ceil((prime - Number.EPSILON) / 100) * 100,
+    capitalConstitutif,
+    capitalRestant,
+  };
 }
 
 export function calculerValeurRachatDepuisProvision(

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { calculerCotisationNette, estEligibleAuPrecomptePourPeriode } from './cotisations.service';
+import { calculerCotisationNette, dateValeurCotisationSpontanee, estEligibleAuPrecomptePourPeriode } from './cotisations.service';
 
 test('inclut l adherent dans le trimestre de son premier precompte', () => {
   assert.equal(estEligibleAuPrecomptePourPeriode(
@@ -38,4 +38,9 @@ test('la cotisation nette ne devient jamais negative', () => {
 
 test('refuse un credit spontane negatif', () => {
   assert.throws(() => calculerCotisationNette(100_000, -1));
+});
+
+test('la cotisation spontanee prend valeur au debut du trimestre suivant', () => {
+  assert.equal(dateValeurCotisationSpontanee(2026, 1), '2026-04-01');
+  assert.equal(dateValeurCotisationSpontanee(2026, 4), '2027-01-01');
 });

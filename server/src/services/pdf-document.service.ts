@@ -43,8 +43,8 @@ export async function genererRecuPaiementPdf(input: {
     ['Nom et prenoms', `${safe(input.nom)} ${safe(input.prenoms)}`],
     ['Matricule', safe(input.matricule)],
     ['Montant', formatMoney(input.montant)],
-    ['Date du paiement', safe(input.datePaiement)],
-    ['Date de valeur', safe(input.dateValeur)],
+    ['Date du paiement', formatDateFr(input.datePaiement)],
+    ['Date de valeur', formatDateFr(input.dateValeur)],
     ['Moyen de paiement', safe(input.moyen)],
     ['Origine / reference', safe(input.origine)],
   ];
@@ -64,7 +64,7 @@ export async function genererRecuPaiementPdf(input: {
     x: 110, y: 245, size: 9, font: regular, color: rgb(0.3, 0.34, 0.38),
   });
   page.drawText('LE SERVICE ESR', { x: 390, y: 175, size: 10, font: bold, color: blue });
-  page.drawText(`Document généré le ${new Date().toISOString().slice(0, 10)}`, {
+  page.drawText(`Document généré le ${formatDateFr(new Date().toISOString())}`, {
     x: 80, y: 65, size: 8, font: regular, color: rgb(0.45, 0.48, 0.52),
   });
   return pdf.save();

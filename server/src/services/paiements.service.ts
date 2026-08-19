@@ -87,6 +87,7 @@ export const paiementsService = {
         date: String(paiement.date_compensation ?? paiement.date_valeur ?? paiement.date_paiement),
         montant: Number(paiement.montant_paiement),
         id_precompte: paiement.id_precompte ? Number(paiement.id_precompte) : undefined,
+        id_paiement_existant: Number(paiement.id_paiement),
       });
     }
 

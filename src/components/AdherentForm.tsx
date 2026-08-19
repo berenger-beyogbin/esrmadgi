@@ -3,7 +3,7 @@ import { adherentService } from '../services/adherentService';
 import { adherentCalculationService, MortalitePoint, CalculCotisationTrimestrielleResult } from '../services/adherentCalculationService';
 import { parametreService } from '../services/parametreService';
 import { parametresGenerauxService } from '../services/parametresGenerauxService';
-import { Civilite, SituationMatrimoniale, Emploi, Grade, VAdherentComplet } from '../types';
+import { Civilite, SituationMatrimoniale, Grade, VAdherentComplet } from '../types';
 import { Save, ArrowLeft, Loader2, User, FileText, AlertTriangle, Calculator, CheckCircle2, XCircle, Search, Printer } from 'lucide-react';
 import FicheSimulationAdhesion from './FicheSimulationAdhesion';
 import { formatDateFr, toIsoDate } from '../utils/formatters';
@@ -79,7 +79,6 @@ function normalizeStatutEsr(
 export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: AdherentFormProps) {
   const [civilites, setCivilites] = useState<Civilite[]>([]);
   const [situations, setSituations] = useState<SituationMatrimoniale[]>([]);
-  const [emplois, setEmplois] = useState<Emploi[]>([]);
   const [grades, setGrades] = useState<Grade[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -151,17 +150,15 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
   }, [formData.date_precompte, precompteOptions]);
   useEffect(() => {
     async function loadAuxData() {
-      const [civRes, sitRes, empRes, grdList] = await Promise.all([
+      const [civRes, sitRes, grdList] = await Promise.all([
         adherentService.getCivilites(),
         adherentService.getSituationsMatrimoniales(),
-        adherentService.getEmplois(),
         adherentService.getGrades(),
       ]);
 
       const errors: string[] = [];
       if (civRes.error) errors.push(`Civilités : ${civRes.error.message}`);
       if (sitRes.error) errors.push(`Situations matrimoniales : ${sitRes.error.message}`);
-      if (empRes.error) errors.push(`Emplois : ${empRes.error.message}`);
 
       if (errors.length > 0) {
         setRefLoadError(errors.join(' | '));
@@ -169,11 +166,9 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
 
       const civList = civRes.data;
       const sitList = sitRes.data;
-      const empList = empRes.data;
 
       setCivilites(civList);
       setSituations(sitList);
-      setEmplois(empList);
       setGrades(grdList || []);
 
       if (adherent) {
@@ -209,7 +204,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           matricule: '',
           civilite: civList[0]?.libelle_civilite || '',
           situation_matrimoniale: sitList[0]?.libelle_situation || '',
-          emploi: empList[0]?.libelle_emploi || '',
+          emploi: '',
         }));
       }
     }
@@ -533,7 +528,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         telephone: agentData.telephone || prev.telephone,
         email: agentData.email || prev.email,
         direction: agentData.direction || prev.direction,
-        emploi: pickExistingOption(agentData.emploi, emplois.map((e) => e.libelle_emploi), prev.emploi),
+        emploi: agentData.emploi || prev.emploi,
         civilite: pickExistingOption(agentData.civilite, civilites.map((c) => c.libelle_civilite), prev.civilite),
         situation_matrimoniale: pickExistingOption(
           agentData.situation_matrimoniale,
@@ -579,7 +574,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         return;
       }
       if (!formData.emploi) {
-        setFormError('La liste des emplois est vide ou non chargée. Veuillez initialiser les référentiels.');
+        setFormError('Veuillez renseigner l’emploi ou la fonction de l’adhérent.');
         setIsSubmitting(false);
         return;
       }
@@ -915,22 +910,16 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-600 uppercase">Emploi</label>
-              <select
+              <label className="block text-sm font-semibold text-slate-600 uppercase">Emploi / Fonction</label>
+              <input
+                type="text"
                 name="emploi"
+                required
                 value={formData.emploi}
                 onChange={handleChange}
+                placeholder="Ex : Administrateur"
                 className="mt-1 block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
-              >
-                {emplois.length === 0 && (
-                  <option value="">— Référentiel vide —</option>
-                )}
-                {emplois.map(e => (
-                  <option key={e.id_emploi} value={e.libelle_emploi}>
-                    {e.libelle_emploi}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             <div>

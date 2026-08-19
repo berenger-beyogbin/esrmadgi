@@ -9,6 +9,9 @@ import {
 } from '../repositories/cotisations.repository';
 import { precomptesRepository } from '../repositories/precomptes.repository';
 import { periodesRepository } from '../repositories/periodes-precompte.repository';
+import { parametresRepository } from '../repositories/parametres.repository';
+import { reglesActuariellesService } from './regles-actuarielles.service';
+import { calculerCotisationTrimestrielleApresSpontanee } from './moteur-actuariel.service';
 
 export interface GeneratePrecomptesResult {
   created: number;
@@ -49,6 +52,12 @@ export function calculerCotisationNette(montantBrut: number, creditSpontane: num
     throw new Error('Montant de cotisation ou credit spontane invalide');
   }
   return Math.round((Math.max(montantBrut - creditSpontane, 0) + Number.EPSILON) * 100) / 100;
+}
+
+export function dateValeurCotisationSpontanee(annee: number, trimestre: number): string {
+  const anneeValeur = trimestre === 4 ? annee + 1 : annee;
+  const moisValeur = trimestre === 4 ? 1 : trimestre * 3 + 1;
+  return `${anneeValeur}-${String(moisValeur).padStart(2, '0')}-01`;
 }
 
 function assertOwnAdherent(user: AuthenticatedUser, idAdherent: string | number): void {
@@ -218,30 +227,39 @@ export const cotisationsService = {
       adherent.matricule,
     );
 
-    const entete = await cotisationsRepository.createCotisationEntete({
-      id_adherent: payload.id_adherent,
-      mode: payload.mode,
-      periode_deb: parsedPeriodeEnCours.periodeDeb,
-      periode_fin: parsedPeriodeEnCours.periodeFin,
-      reference,
-      statut: 'OUVERT',
+    const [info, compte, mortalite, regles] = await Promise.all([
+      cotisationsRepository.findActiveInfoCotisation(String(payload.id_adherent)) as Promise<Record<string, unknown> | null>,
+      cotisationsRepository.findCompteEsr(payload.id_adherent),
+      parametresRepository.findMortalite() as Promise<Array<Record<string, unknown>>>,
+      reglesActuariellesService.getRegles(payload.date),
+    ]);
+    if (!info) throw new AppError(409, 'Informations de cotisation actives introuvables.');
+    if (!compte) throw new AppError(409, 'Compte ESR introuvable.');
+    const nouveauCapital = Number(compte.capital_acquis ?? 0) + payload.montant;
+    const calcul = calculerCotisationTrimestrielleApresSpontanee({
+      renteAnnuelle: Number(info.cotisation_annuelle),
+      ageRetraite: Math.trunc(Number(info.age_retraite)),
+      ageMaximum: Math.trunc(regles.ageMaximum),
+      nombreTrimestresRestants: Math.trunc(Number(info.nb_trimestre)),
+      tauxAnnuelPourcent: regles.tauxGaranti,
+      fraisRentePourcent: regles.fraisRente,
+      capitalAcquis: nouveauCapital,
+      mortalite: mortalite.map((row) => ({ age: Number(row.age_mort), lx: Number(row.lx) })),
     });
-
-    try {
-      const detail = await cotisationsRepository.createCotisationDetail({
-        id_cotisation_entete: entete.id_cotisation_entete,
-        periode,
-        date_valeur: payload.date,
-        montant: payload.montant,
-        source: 'SPONTANEE',
-        statut: 'ENCAISSEE',
-      });
-
-      return { entete, detail };
-    } catch (err) {
-      await cotisationsRepository.deleteCotisationEntete(entete.id_cotisation_entete);
-      throw err;
-    }
+    if (calcul.statut !== 'OK') throw new AppError(409, 'Recalcul actuariel impossible apres le versement spontane.');
+    return cotisationsRepository.enregistrerSpontaneeRecalculee({
+      idAdherent: payload.id_adherent,
+      mode: payload.mode,
+      datePaiement: payload.date,
+      dateValeur: dateValeurCotisationSpontanee(parsedPeriodeEnCours.annee, parsedPeriodeEnCours.trimestre),
+      montant: payload.montant,
+      periode,
+      reference,
+      nouvelleCotisation: calcul.cotisationTrimestrielle,
+      tauxGaranti: regles.tauxGaranti,
+      fraisRente: regles.fraisRente,
+      idPaiementExistant: payload.id_paiement_existant,
+    });
   },
 
   async generatePrecomptes(periode: string): Promise<GeneratePrecomptesResult> {
@@ -322,12 +340,6 @@ export const cotisationsService = {
             statut_precompte: 'GENERE',
             date_generation: today,
             id_cotisation_detail: detailId,
-          });
-          await precomptesRepository.imputerPaiementsSpontanes({
-            idPrecompte: precompte.id_precompte,
-            idAdherent: Number(adherent.id_adherent),
-            dateLimite: parsed.periodeFin,
-            montantBrut,
           });
           created++;
         } catch (err) {

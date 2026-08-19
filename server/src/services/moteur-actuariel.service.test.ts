@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  calculerCotisationTrimestrielleApresSpontanee,
   calculerCotisationUnique,
   calculerDecesAvantRetraite,
   calculerDecesPendantRente,
@@ -11,6 +12,19 @@ import {
   calculerValeurRachatDepuisProvision,
   calculerRachat,
 } from './moteur-actuariel.service';
+
+test('un versement spontane reduit la prime par recalcul du capital restant', () => {
+  const base = {
+    renteAnnuelle: 1_000_000, ageRetraite: 60, ageMaximum: 62,
+    nombreTrimestresRestants: 20, tauxAnnuelPourcent: 3.5, fraisRentePourcent: 5,
+    mortalite: [{ age: 60, lx: 1000 }, { age: 61, lx: 900 }, { age: 62, lx: 800 }],
+  };
+  const avant = calculerCotisationTrimestrielleApresSpontanee({ ...base, capitalAcquis: 0 });
+  const apres = calculerCotisationTrimestrielleApresSpontanee({ ...base, capitalAcquis: 500_000 });
+  assert.equal(avant.statut, 'OK');
+  assert.ok(apres.cotisationTrimestrielle < avant.cotisationTrimestrielle);
+  assert.equal(apres.cotisationTrimestrielle % 100, 0);
+});
 
 const mortaliteMini = [
   { age: 60, lx: 100000 },
