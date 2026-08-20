@@ -1,5 +1,6 @@
 import {
   ExternalAgentInfo,
+  CommercialActivity,
   OnlineAdhesion,
   OnlineAdhesionPayload,
   OnlineAdhesionReferentiels,
@@ -27,6 +28,9 @@ async function postSingle<T>(path: string, payload: unknown): Promise<{ data: T 
 }
 
 export const onlineAdhesionService = {
+  async commercialActivity(): Promise<{ data: CommercialActivity | null; error: Error | null }> {
+    return getSingle<CommercialActivity>('/api/adhesions-en-ligne/commercial/activity');
+  },
   async getReferentiels(): Promise<{ data: OnlineAdhesionReferentiels | null; error: Error | null }> {
     return getSingle<OnlineAdhesionReferentiels>('/api/adhesions-en-ligne/referentiels');
   },
@@ -49,6 +53,20 @@ export const onlineAdhesionService = {
 
   async submit(payload: OnlineAdhesionPayload): Promise<{ data: OnlineAdhesion | null; error: Error | null }> {
     return postSingle<OnlineAdhesion>('/api/adhesions-en-ligne', payload);
+  },
+
+  async submitCommercial(payload: OnlineAdhesionPayload): Promise<{ data: OnlineAdhesion | null; error: Error | null }> {
+    return postSingle<OnlineAdhesion>('/api/adhesions-en-ligne/commercial', payload);
+  },
+
+  async listMine(filters?: { search?: string; statut?: OnlineAdhesionStatus | 'TOUS' }): Promise<{ data: OnlineAdhesion[]; error: Error | null }> {
+    const params = new URLSearchParams();
+    if (filters?.search?.trim()) params.set('search', filters.search.trim());
+    if (filters?.statut) params.set('statut', filters.statut);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const { data, error } = await apiGet<ApiResponse<OnlineAdhesion[]>>(`/api/adhesions-en-ligne/commercial/mine${query}`);
+    if (error) return { data: [], error: new Error(error) };
+    return { data: data?.data ?? [], error: toError(data?.error) };
   },
 
   async list(filters?: {

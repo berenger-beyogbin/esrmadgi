@@ -319,7 +319,7 @@ export default function Prestations({ currentUser }: PrestationsProps) {
                     className="mt-1 block w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-bold"
                   >
                     <option value="RETRAITE">RETRAITE (Départ normal)</option>
-                    <option value="DECES">DECES (Prestation Ayants droit)</option>
+                    <option value="DECES">DÉCÈS (Prestation bénéficiaires en cas de décès)</option>
                     <option value="INVALIDITE">INVALIDITE ACCIDENTELLE</option>
                   </select>
                 </div>

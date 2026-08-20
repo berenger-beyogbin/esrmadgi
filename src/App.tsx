@@ -10,6 +10,8 @@ import OnlineAdhesion from './pages/OnlineAdhesion';
 import FirstLoginPasswordChange from './pages/FirstLoginPasswordChange';
 import EspaceAdherent from './pages/EspaceAdherent';
 import DashboardV2 from './pages/DashboardV2';
+import DashboardCommercial from './pages/DashboardCommercial';
+import ActiviteCommerciale from './pages/ActiviteCommerciale';
 import Adherents from './pages/Adherents';
 import AdhesionsEnLigne from './pages/AdhesionsEnLigne';
 import ComptesEsr from './pages/ComptesEsr';
@@ -50,10 +52,14 @@ import {
   Lock,
   WalletCards,
   CreditCard,
+  UserPlus,
+  TrendingUp,
 } from 'lucide-react';
 
 type ModuleType =
   | 'DASHBOARD'
+  | 'NOUVELLE_ADHESION'
+  | 'ACTIVITE_COMMERCIALE'
   | 'ADHESIONS_EN_LIGNE'
   | 'ADHERENTS'
   | 'COTISATIONS'
@@ -193,13 +199,34 @@ export default function App() {
     return <EspaceAdherent currentUser={currentUser} onSignOut={handleSignOut} />;
   }
 
+  const isCommercial = currentUser.profil_code === 'COMMERCIAL' || currentUser.profil === 'COMMERCIAL';
+  if (isCommercial && activeModule === 'NOUVELLE_ADHESION') {
+    return <OnlineAdhesion commercialMode onBackToLogin={() => setActiveModule('DASHBOARD')} />;
+  }
+
   // Sidebar configurations matching Screenshot 3 labels and order
   const menuItems = [
     {
       id: 'DASHBOARD' as ModuleType,
-      label: 'Tableau de Bord',
+      label: isCommercial ? 'Tableau de bord commercial' : 'Tableau de Bord',
       icon: LayoutDashboard,
       allowed: ['ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'],
+    },
+    {
+      id: 'NOUVELLE_ADHESION' as ModuleType,
+      permission: 'INSCRIPTION_ADHERENT',
+      commercialOnly: true,
+      label: 'Nouvelle adhesion',
+      icon: UserPlus,
+      allowed: ['GESTIONNAIRE'],
+    },
+    {
+      id: 'ACTIVITE_COMMERCIALE' as ModuleType,
+      permission: 'ADHESIONS_EN_LIGNE',
+      managerOnly: true,
+      label: 'Activite commerciale',
+      icon: TrendingUp,
+      allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
     },
     {
       id: 'ADHESIONS_EN_LIGNE' as ModuleType,
@@ -271,9 +298,24 @@ export default function App() {
     },
   ];
 
-  const visibleMenuItems = menuItems.filter((item) =>
-    currentUser.role === 'SUPERADMIN' || item.allowed.includes(currentUser.role),
-  );
+  const hasPermission = (permission: string) =>
+    currentUser.role === 'SUPERADMIN' ||
+    currentUser.profil_code === 'ADMINISTRATEUR' ||
+    currentUser.permissions?.includes('*') ||
+    !currentUser.permissions?.length ||
+    currentUser.permissions.includes(permission) ||
+    (isCommercial && permission === 'DASHBOARD' && currentUser.permissions.includes('DASHBOARD_COMMERCIAL'));
+
+  const visibleMenuItems = menuItems
+    .map((item) => item.children
+      ? { ...item, children: item.children.filter((child) => hasPermission(child.key)) }
+      : item)
+    .filter((item) =>
+      (currentUser.role === 'SUPERADMIN' || item.allowed.includes(currentUser.role)) &&
+      (!('commercialOnly' in item) || !item.commercialOnly || isCommercial) &&
+      (!('managerOnly' in item) || !item.managerOnly || !isCommercial) &&
+      (item.children ? item.children.length > 0 : hasPermission('permission' in item ? String(item.permission) : String(item.id))),
+    );
 
   const selectCotisationChild = (child: { key: string; moduleId: ModuleType; action?: 'SPONTANEE' }) => {
     setActiveModule(child.moduleId);
@@ -286,7 +328,13 @@ export default function App() {
   const renderActiveModule = () => {
     switch (activeModule) {
       case 'DASHBOARD':
-        return <DashboardV2 currentUser={currentUser} />;
+        return isCommercial
+          ? <DashboardCommercial currentUser={currentUser} onNewAdhesion={() => setActiveModule('NOUVELLE_ADHESION')} />
+          : <DashboardV2 currentUser={currentUser} />;
+      case 'NOUVELLE_ADHESION':
+        return <DashboardCommercial currentUser={currentUser} onNewAdhesion={() => setActiveModule('NOUVELLE_ADHESION')} />;
+      case 'ACTIVITE_COMMERCIALE':
+        return <ActiviteCommerciale />;
       case 'ADHESIONS_EN_LIGNE':
         return <AdhesionsEnLigne currentUser={currentUser} />;
       case 'ADHERENTS':
@@ -322,7 +370,9 @@ export default function App() {
       case 'AIDE':
         return <Aide currentUser={currentUser} />;
       default:
-        return <DashboardV2 currentUser={currentUser} />;
+        return isCommercial
+          ? <DashboardCommercial currentUser={currentUser} onNewAdhesion={() => setActiveModule('NOUVELLE_ADHESION')} />
+          : <DashboardV2 currentUser={currentUser} />;
     }
   };
 
@@ -516,7 +566,7 @@ export default function App() {
               </div>
               <div className="min-w-0 flex-1 text-left">
                 <p className="text-sm font-bold text-white truncate">{currentUser.nom}</p>
-                <p className="text-xs text-slate-300/80 uppercase tracking-wider truncate">{currentUser.role}</p>
+                <p className="text-xs text-slate-300/80 uppercase tracking-wider truncate">{currentUser.profil_code || currentUser.profil || currentUser.role}</p>
               </div>
             </div>
 

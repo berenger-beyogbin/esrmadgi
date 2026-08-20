@@ -202,6 +202,8 @@ export const authService = {
       nom: role === 'ADHERENT' ? 'KOUADIO' : role === 'GESTIONNAIRE' ? 'DIALLO' : 'SORO',
       prenoms: role === 'ADHERENT' ? 'Jean Marc' : role === 'GESTIONNAIRE' ? 'Mariama' : 'Bakary',
       role,
+      profil: role,
+      profil_code: role,
     };
     localStorage.setItem('madgi_user_session', JSON.stringify(mockUser));
     return mockUser;

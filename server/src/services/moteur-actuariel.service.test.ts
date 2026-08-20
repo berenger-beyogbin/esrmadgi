@@ -45,7 +45,8 @@ test('cotisation unique egale au capital constitutif au depart en retraite', () 
   });
   assert.equal(resultat.statut, 'OK');
   assert.equal(resultat.cotisationUnique, resultat.capitalConstitutif);
-  assert.equal(resultat.capitalConstitutif, 1785227.89);
+  assert.equal(resultat.capitalConstitutif, 1785300);
+  assert.equal(resultat.capitalConstitutif % 100, 0);
 });
 
 test('cotisation unique est actualisee avant la retraite', () => {
@@ -61,7 +62,8 @@ test('cotisation unique est actualisee avant la retraite', () => {
   });
   assert.equal(resultat.statut, 'OK');
   assert.ok(resultat.cotisationUnique < resultat.capitalConstitutif);
-  assert.equal(resultat.cotisationUnique, 1666529.34);
+  assert.equal(resultat.capitalConstitutif, 1785300);
+  assert.equal(resultat.cotisationUnique, 1666596.65);
 });
 
 test('provision mathematique reproduit le classeur deces', () => {

@@ -42,7 +42,7 @@ export interface UtilisateurUpsertInput {
   email: string;
   telephone?: string | null;
   user_actif: boolean;
-  profil: UserProfile;
+  profil: string;
   id_adherent?: number | null;
   auditUserId: number | null;
 }
@@ -52,7 +52,7 @@ export interface UtilisateurUpdateInput {
   email?: string;
   telephone?: string | null;
   user_actif?: boolean;
-  profil?: UserProfile;
+  profil?: string;
   id_adherent?: number | null;
   auditUserId: number | null;
 }
@@ -220,7 +220,7 @@ export const utilisateursRepository = {
     email: string;
     password: string;
     matricule: string;
-    profil: UserProfile;
+    profil: string;
     must_change_password?: boolean;
   }): Promise<User> {
     const supabase = getSupabaseServer();
@@ -242,7 +242,7 @@ export const utilisateursRepository = {
 
   async updateAuthUser(
     authUserId: string,
-    input: { email?: string; password?: string; matricule?: string; profil?: UserProfile; must_change_password?: boolean },
+    input: { email?: string; password?: string; matricule?: string; profil?: string; must_change_password?: boolean },
   ): Promise<User> {
     const supabase = getSupabaseServer();
     const update: Record<string, unknown> = {};

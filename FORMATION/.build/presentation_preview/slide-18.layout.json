@@ -1,0 +1,394 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/e3vqon",
+    "id": "e3vqon",
+    "slide": 18,
+    "layoutId": "d766847b-5f14-4d24-8f58-5c4ba24fdb5d",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "9ddbab7b-d74e-49dc-8938-48525465df94",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#173A6A",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "d766847b-5f14-4d24-8f58-5c4ba24fdb5d",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "9ddbab7b-d74e-49dc-8938-48525465df94",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "9ddbab7b-d74e-49dc-8938-48525465df94",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/i9s7ap4f",
+      "id": "1",
+      "bbox": [
+        70,
+        65,
+        300,
+        30
+      ],
+      "geometry": "rect",
+      "text": "MADGI ESR",
+      "textPreview": "MADGI ESR",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "fontSize": 16,
+        "typeface": "+mn-lt",
+        "color": "#D89B2B",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "MADGI ESR"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "MADGI ESR",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#D89B2B",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "MADGI ESR",
+              "fontSize": 16,
+              "color": "#D89B2B",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5w36543q",
+      "id": "2",
+      "bbox": [
+        70,
+        180,
+        1050,
+        120
+      ],
+      "geometry": "rect",
+      "text": "Vous êtes prêts à opérer, contrôler et sécuriser.",
+      "textPreview": "Vous êtes prêts à opérer, contrôler et sécuriser.",
+      "resolvedFontSize": 42,
+      "resolvedTextStyle": {
+        "fontSize": 42,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Vous êtes prêts à opérer, contrôler et sécuriser."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Vous êtes prêts à opérer, contrôler et sécuriser.",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Vous êtes prêts à opérer, contrôler et sécuriser.",
+              "fontSize": 42,
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kvupczm5",
+      "id": "3",
+      "bbox": [
+        70,
+        350,
+        1000,
+        60
+      ],
+      "geometry": "rect",
+      "text": "Prochaine étape : exercices pratiques, QCM et engagement de mise en œuvre.",
+      "textPreview": "Prochaine étape : exercices pratiques, QCM et engagement de mise en œuvre.",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "fontSize": 22,
+        "typeface": "+mn-lt",
+        "color": "#DCE8F8",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Prochaine étape : exercices pratiques, QCM et engagement de mise en œuvre."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Prochaine étape : exercices pratiques, QCM et engagement de mise en œuvre.",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "color": "#DCE8F8",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Prochaine étape : exercices pratiques, QCM et engagement de mise en œuvre.",
+              "fontSize": 22,
+              "color": "#DCE8F8",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rylo7ulw",
+      "id": "4",
+      "bbox": [
+        70,
+        505,
+        1140,
+        85
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#204A82",
+      "lineColor": "#315B91",
+      "lineWidth": 1
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6xc7ep4b",
+      "id": "5",
+      "bbox": [
+        95,
+        530,
+        1090,
+        36
+      ],
+      "geometry": "rect",
+      "text": "Règle finale : aucune opération sensible sans identité, période, montant, preuve et statut vérifiés.",
+      "textPreview": "Règle finale : aucune opération sensible sans identité, période, montant, preuve et statut vérifiés.",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Règle finale : aucune opération sensible sans identité, période, montant, preuve et statut vérifiés."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Règle finale : aucune opération sensible sans identité, période, montant, preuve et statut vérifiés.",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Règle finale : aucune opération sensible sans identité, période, montant, preuve et statut vérifiés.",
+              "fontSize": 18,
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/t0369432",
+      "id": "6",
+      "bbox": [
+        70,
+        635,
+        300,
+        25
+      ],
+      "geometry": "rect",
+      "text": "QUESTIONS",
+      "textPreview": "QUESTIONS",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#D89B2B",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "QUESTIONS"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "QUESTIONS",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#D89B2B",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "QUESTIONS",
+              "fontSize": 14,
+              "color": "#D89B2B",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

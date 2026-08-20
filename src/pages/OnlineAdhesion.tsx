@@ -8,6 +8,7 @@ import { formatDateFr, formatFCFA, toIsoDate } from '../utils/formatters';
 
 interface OnlineAdhesionProps {
   onBackToLogin: () => void;
+  commercialMode?: boolean;
 }
 
 type Step = 'LOOKUP' | 'FORM' | 'SUCCESS';
@@ -57,9 +58,13 @@ function initialPayload(): OnlineAdhesionPayload {
     nom: '',
     prenoms: '',
     date_naissance: '',
+    lieu_naissance: '',
     situation_matrimoniale: '',
     telephone: '',
     email: '',
+    adresse_geographique: '',
+    adresse_postale: '',
+    direction: '',
     emploi: '',
     grade_id: '',
     grade: '',
@@ -73,7 +78,7 @@ function initialPayload(): OnlineAdhesionPayload {
   };
 }
 
-export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
+export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }: OnlineAdhesionProps) {
   const [step, setStep] = useState<Step>('LOOKUP');
   const [matricule, setMatricule] = useState('');
   const [lookupDateNaissance, setLookupDateNaissance] = useState('');
@@ -182,10 +187,14 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
       nom: agent.nom,
       prenoms: agent.prenoms,
       date_naissance: agent.date_naissance || '',
+      lieu_naissance: '',
       civilite: pickExistingOption(agent.civilite, civiliteOptions, refs?.civilites[0]?.libelle_civilite || ''),
       situation_matrimoniale: refs?.situations_matrimoniales[0]?.libelle_situation || '',
       telephone: agent.telephone || '',
       email: agent.email || '',
+      adresse_geographique: '',
+      adresse_postale: '',
+      direction: agent.direction || '',
       emploi: agent.emploi || '',
       grade_id: '',
       grade: '',
@@ -297,7 +306,9 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
     }
 
     setIsSubmitting(true);
-    const { data, error } = await onlineAdhesionService.submit(formData);
+    const { data, error } = commercialMode
+      ? await onlineAdhesionService.submitCommercial(formData)
+      : await onlineAdhesionService.submit(formData);
     setIsSubmitting(false);
 
     if (error) {
@@ -321,16 +332,18 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
               className="inline-flex items-center gap-2 text-sm font-semibold text-[#2b529f] hover:underline"
             >
               <ArrowLeft className="w-4 h-4" />
-              Retour connexion
+              {commercialMode ? 'Retour au tableau de bord' : 'Retour connexion'}
             </button>
 
             <div className="space-y-5">
               <div className="flex items-start gap-4">
                 <ClipboardList className="w-8 h-8 text-[#2b529f] shrink-0" />
                 <div>
-                  <h1 className="text-3xl font-extrabold text-slate-900">Adhesion en ligne</h1>
+                  <h1 className="text-3xl font-extrabold text-slate-900">{commercialMode ? 'Inscription d un agent' : 'Adhesion en ligne'}</h1>
                   <p className="text-slate-600 mt-2">
-                    Saisissez votre matricule, completez les champs requis, puis la mutuelle validera la demande.
+                    {commercialMode
+                      ? 'Identifiez l agent, completez son dossier, puis transmettez-le au backoffice pour validation.'
+                      : 'Saisissez votre matricule, completez les champs requis, puis la mutuelle validera la demande.'}
                   </p>
                 </div>
               </div>
@@ -360,7 +373,7 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
               className="lg:hidden mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#2b529f] hover:underline"
             >
               <ArrowLeft className="w-4 h-4" />
-              Retour connexion
+              {commercialMode ? 'Retour au tableau de bord' : 'Retour connexion'}
             </button>
 
             {errorMsg && (
@@ -450,6 +463,9 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                   <Field label="Date de naissance">
                     <input type="date" value={formData.date_naissance} onChange={(e) => updateField('date_naissance', e.target.value)} className={fieldClass} required />
                   </Field>
+                  <Field label="Lieu de naissance">
+                    <input value={formData.lieu_naissance} onChange={(e) => updateField('lieu_naissance', e.target.value)} placeholder="Ex : Abidjan" className={fieldClass} required />
+                  </Field>
                   <Field label="Situation matrimoniale">
                     <select value={formData.situation_matrimoniale} onChange={(e) => updateField('situation_matrimoniale', e.target.value)} className={fieldClass} required>
                       {refs?.situations_matrimoniales.map((item) => (
@@ -463,7 +479,16 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
                   <Field label="Email">
                     <input type="email" value={formData.email || ''} onChange={(e) => updateField('email', e.target.value)} className={fieldClass} />
                   </Field>
-                  <Field label="Emploi / Direction">
+                  <Field label="Adresse geographique">
+                    <input value={formData.adresse_geographique} onChange={(e) => updateField('adresse_geographique', e.target.value)} placeholder="Ex : Cocody Angre, Abidjan" className={fieldClass} required />
+                  </Field>
+                  <Field label="Adresse postale">
+                    <input value={formData.adresse_postale} onChange={(e) => updateField('adresse_postale', e.target.value)} placeholder="Ex : 01 BP 1234 Abidjan 01" className={fieldClass} />
+                  </Field>
+                  <Field label="Direction">
+                    <input value={formData.direction} onChange={(e) => updateField('direction', e.target.value)} placeholder="Ex : Direction des grandes entreprises" className={fieldClass} required />
+                  </Field>
+                  <Field label="Emploi / Fonction">
                     <input value={formData.emploi} onChange={(e) => updateField('emploi', e.target.value)} className={fieldClass} required />
                   </Field>
                   <Field label="Grade professionnel">
@@ -537,12 +562,16 @@ export default function OnlineAdhesion({ onBackToLogin }: OnlineAdhesionProps) {
             {step === 'SUCCESS' && (
               <div className="max-w-xl mx-auto py-16 text-center space-y-5">
                 <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto" />
-                <h2 className="text-2xl font-bold text-slate-900">Adhesion en attente de validation</h2>
+                <h2 className="text-2xl font-bold text-slate-900">Dossier transmis pour validation</h2>
                 <p className="text-slate-600">
-                  Votre demande pour le matricule <strong>{successMatricule}</strong> a ete transmise a la mutuelle.
+                  {commercialMode ? (
+                    <>Le dossier du matricule <strong>{successMatricule}</strong> a ete transmis au backoffice.</>
+                  ) : (
+                    <>Votre demande pour le matricule <strong>{successMatricule}</strong> a ete transmise a la mutuelle.</>
+                  )}
                 </p>
                 <button onClick={onBackToLogin} className="px-6 py-3 bg-[#2b529f] hover:bg-[#1f3e7a] text-white rounded-xl font-bold">
-                  Retour a la connexion
+                  {commercialMode ? 'Retour au tableau de bord' : 'Retour a la connexion'}
                 </button>
               </div>
             )}

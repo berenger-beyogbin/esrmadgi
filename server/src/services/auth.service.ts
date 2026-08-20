@@ -9,7 +9,9 @@ export interface CurrentUserDto {
   nom: string;
   prenoms: string;
   role: AuthenticatedUser['role'];
-  profil: AuthenticatedUser['role'];
+  profil: string;
+  profil_code: string;
+  permissions: string[];
   id_adherent: string | null;
   user_actif: boolean;
   must_change_password: boolean;
@@ -25,7 +27,9 @@ export const authService = {
       nom: user.matricule || user.email.split('@')[0],
       prenoms: '',
       role: user.role,
-      profil: user.role,
+      profil: user.profil_code,
+      profil_code: user.profil_code,
+      permissions: user.permissions,
       id_adherent: user.id_adherent,
       user_actif: true,
       must_change_password: Boolean(user.must_change_password),
@@ -36,7 +40,7 @@ export const authService = {
     await utilisateursRepository.updateAuthUser(user.auth_user_id, {
       password: newPassword,
       matricule: user.matricule,
-      profil: user.role,
+      profil: user.profil_code,
       must_change_password: false,
     });
 

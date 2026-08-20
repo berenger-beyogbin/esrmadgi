@@ -11,9 +11,13 @@ export interface OnlineAdhesionPayload {
   nom: string;
   prenoms: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string;
   telephone: string;
   email?: string | null;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string;
   grade_id: string;
   grade?: string;
@@ -32,13 +36,14 @@ export interface OnlineAdhesionPayload {
 export interface OnlineAdhesionFilters {
   search?: string;
   statut?: 'TOUS' | OnlineAdhesionStatus;
+  commercialId?: string;
 }
 
 type AdherentRow = Record<string, any>;
 type InfoCotisationRow = Record<string, any>;
 
 const ADHERENT_SELECT =
-  'id_adherent, matricule, nom, prenoms, civilite, sexe, date_naissance, emploi, situation_matrimoniale, email, telephone, date_souscription, statut, etat, decede, adhesion_en_ligne, retraite, created_at, updated_at';
+  'id_adherent, matricule, nom, prenoms, civilite, sexe, date_naissance, lieu_naissance, emploi, direction, situation_matrimoniale, email, telephone, adresse_geographique, adresse_postale, date_souscription, statut, etat, decede, adhesion_en_ligne, retraite, commercial_id, source_adhesion, created_at, updated_at';
 
 const INFO_SELECT =
   'id_info_cotisation, id_adherent, grade, id_grade, date_naissance, date_retraite, age_retraite, cotisation_annuelle, date_precompte, date_effet, nb_trimestre, cotisation_es, info_actif, taux_gar, frais_rente, taux_rachat, created_at, updated_at';
@@ -83,9 +88,13 @@ function toAdherentPayload(payload: OnlineAdhesionPayload, status: OnlineAdhesio
     nom: payload.nom,
     prenoms: payload.prenoms,
     date_naissance: payload.date_naissance,
+    lieu_naissance: payload.lieu_naissance,
     situation_matrimoniale: payload.situation_matrimoniale,
     telephone: payload.telephone,
     email: payload.email || null,
+    adresse_geographique: payload.adresse_geographique,
+    adresse_postale: payload.adresse_postale || null,
+    direction: payload.direction,
     emploi: payload.emploi,
     statut: status === 'VALIDE',
     etat: status === 'VALIDE' ? 'ACTIF' : status,
@@ -217,6 +226,29 @@ async function ensureCompteEsr(idAdherent: number): Promise<void> {
 }
 
 export const adhesionsEnLigneRepository = {
+  async commercialActivity(): Promise<{ commerciaux: Record<string, unknown>[]; dossiers: Record<string, unknown>[] }> {
+    const supabase = getSupabaseServer();
+    const [{ data: users, error: usersError }, { data: dossiers, error: dossiersError }] = await Promise.all([
+      supabase
+        .from('utilisateurs')
+        .select('id_utilisateur, matricule, email, user_actif')
+        .eq('profil', 'COMMERCIAL')
+        .order('matricule'),
+      supabase
+        .from('adherents')
+        .select('id_adherent, commercial_id, matricule, nom, prenoms, statut, etat, created_at')
+        .eq('adhesion_en_ligne', true)
+        .not('commercial_id', 'is', null)
+        .order('created_at', { ascending: false }),
+    ]);
+    if (usersError) throw new Error(usersError.message);
+    if (dossiersError) throw new Error(dossiersError.message);
+    return {
+      commerciaux: (users ?? []) as Record<string, unknown>[],
+      dossiers: (dossiers ?? []) as Record<string, unknown>[],
+    };
+  },
+
   async list(filters?: OnlineAdhesionFilters): Promise<unknown[]> {
     const supabase = getSupabaseServer();
     let query: any = supabase.from('adherents').select(ADHERENT_SELECT).eq('adhesion_en_ligne', true);
@@ -234,6 +266,7 @@ export const adhesionsEnLigneRepository = {
       const orFilter = buildIlikeOrFilter(filters.search, ['matricule', 'nom', 'prenoms']);
       if (orFilter) query = query.or(orFilter);
     }
+    if (filters?.commercialId) query = query.eq('commercial_id', filters.commercialId);
 
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
@@ -274,12 +307,14 @@ export const adhesionsEnLigneRepository = {
     return normalizeOnlineAdhesion(data as AdherentRow, info);
   },
 
-  async createPending(payload: OnlineAdhesionPayload): Promise<unknown> {
+  async createPending(payload: OnlineAdhesionPayload, attribution?: { commercialId?: string; source?: string }): Promise<unknown> {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from('adherents')
       .insert({
         ...toAdherentPayload(payload, 'EN_ATTENTE'),
+        commercial_id: attribution?.commercialId ? Number(attribution.commercialId) : null,
+        source_adhesion: attribution?.source ?? 'EN_LIGNE',
         created_at: new Date().toISOString(),
       })
       .select(ADHERENT_SELECT)

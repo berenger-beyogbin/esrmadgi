@@ -10,7 +10,9 @@ export interface DBUser {
   nom: string;
   prenoms: string;
   role: UserProfile;
-  profil?: UserProfile;
+  profil?: string;
+  profil_code?: string;
+  permissions?: string[];
   id_adherent?: string | null;
   user_actif?: boolean;
   must_change_password?: boolean;
@@ -149,6 +151,7 @@ export interface VCompteEsrDetails {
   nom: string;
   prenoms: string;
   capital_acquis: number;
+  capital_constitutif?: number | null;
   pm: number;
   pp: number;
   pu: number;
@@ -382,7 +385,7 @@ export interface UtilisateurAcces {
   email: string;
   telephone: string | null;
   user_actif: boolean;
-  profil: UserProfile;
+  profil: string;
   role: UserProfile;
   id_adherent: string | null;
   date_creation: string | null;
@@ -422,6 +425,9 @@ export interface DashboardStats {
   totalAdherentsActifs: number;
   cotisationTrimestrielleTotale: number;
   provisionTotale: number;
+  provisionPeriode: string | null;
+  provisionDateArrete: string | null;
+  provisionDisponible: boolean;
   capitalAcquisTotal: number;
   nombrePrestations: number;
   repartition: {
@@ -482,9 +488,13 @@ export interface OnlineAdhesionPayload {
   nom: string;
   prenoms: string;
   date_naissance: string;
+  lieu_naissance: string;
   situation_matrimoniale: string;
   telephone: string;
   email?: string | null;
+  adresse_geographique: string;
+  adresse_postale: string;
+  direction: string;
   emploi: string;
   grade_id: string;
   grade?: string;
@@ -507,6 +517,8 @@ export interface OnlineAdhesion extends OnlineAdhesionPayload {
   etat: string;
   statut_demande: OnlineAdhesionStatus;
   adhesion_en_ligne: boolean;
+  commercial_id?: number | null;
+  source_adhesion?: 'EN_LIGNE' | 'COMMERCIAL' | 'BACKOFFICE';
   grade_code?: string;
   grade_libelle?: string | null;
   id_info_cotisation?: number | null;
@@ -523,6 +535,32 @@ export interface FirstLoginCredentials {
 
 export interface OnlineAdhesionValidationResult extends OnlineAdhesion {
   first_login?: FirstLoginCredentials;
+}
+
+export interface CommercialActivityRow {
+  id_utilisateur: number;
+  matricule: string;
+  email: string;
+  actif: boolean;
+  total: number;
+  en_attente: number;
+  valides: number;
+  rejetes: number;
+  taux_conversion: number;
+  derniere_activite: string | null;
+}
+
+export interface CommercialActivity {
+  synthese: {
+    commerciaux: number;
+    commerciaux_actifs: number;
+    dossiers: number;
+    en_attente: number;
+    valides: number;
+    rejetes: number;
+    taux_conversion: number;
+  };
+  commerciaux: CommercialActivityRow[];
 }
 
 export interface OnlineAdhesionReferentiels {

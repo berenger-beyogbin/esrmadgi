@@ -1075,7 +1075,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
                 className="mt-1 block w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-emerald-700 font-bold font-mono cursor-not-allowed"
               />
               <p className="mt-1 text-xs text-slate-500">
-                Calcul actuariel : taux garanti, frais de rente, mortalité et durée résiduelle.
+                Calcul actuariel : taux garanti, frais de gestion, mortalité et durée résiduelle.
               </p>
             </div>
 
@@ -1135,9 +1135,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
               <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-2">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Paramètres techniques</p>
                 <PreCalcRow label="Taux garanti" value={formatPercent(parametresCalcul.tauxAnnuel * 100)} />
-                <PreCalcRow label="Frais rente" value={formatPercent(parametresCalcul.fraisRente * 100)} />
-                <PreCalcRow label="Âge max mortalité" value={`${parametresCalcul.ageMax} ans`} />
-                <PreCalcRow label="Table mortalité" value={mortaliteData.length > 0 ? `${mortaliteData.length} points chargés` : 'Non chargée'} />
+                <PreCalcRow label="Frais de gestion" value={formatPercent(parametresCalcul.fraisRente * 100)} />
               </div>
 
               <div className={`rounded-xl border p-4 space-y-2 ${calculDetails?.status === 'OK' ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-100'}`}>

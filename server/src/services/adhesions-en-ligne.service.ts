@@ -22,13 +22,9 @@ function calculateDateEffetFromPrecompte(datePrecompte: string | null | undefine
   const isoDatePrecompte = toStrictIsoDate(datePrecompte);
   if (!isoDatePrecompte) return null;
 
-  const year = Number(isoDatePrecompte.slice(0, 4));
-  const month = Number(isoDatePrecompte.slice(5, 7));
-  const currentQuarter = Math.floor((month - 1) / 3) + 1;
-  const nextQuarterYear = currentQuarter === 4 ? year + 1 : year;
-  const nextQuarter = currentQuarter === 4 ? 1 : currentQuarter + 1;
-  const nextQuarterEnd = ['03-31', '06-30', '09-30', '12-31'][nextQuarter - 1];
-  return `${nextQuarterYear}-${nextQuarterEnd}`;
+  const date = new Date(`${isoDatePrecompte}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
 }
 
 async function ensureFirstLoginAccess(user: AuthenticatedUser, adhesion: AnyRow) {
@@ -54,7 +50,11 @@ function normalizePayload(payload: OnlineAdhesionPayload): OnlineAdhesionPayload
     matricule: payload.matricule.trim().toUpperCase(),
     nom: payload.nom.trim().toUpperCase(),
     prenoms: payload.prenoms.trim(),
+    lieu_naissance: payload.lieu_naissance.trim(),
     email: payload.email?.trim() || null,
+    adresse_geographique: payload.adresse_geographique.trim(),
+    adresse_postale: payload.adresse_postale.trim(),
+    direction: payload.direction.trim(),
     sexe: payload.sexe || sexeFromCivilite(payload.civilite),
     grade: payload.grade?.trim() || '',
     date_precompte: normalizedDatePrecompte,
@@ -136,7 +136,7 @@ function ensureSubmittable(payload: OnlineAdhesionPayload): void {
   const dateEffet = toStrictIsoDate(payload.date_effet);
   const expectedDateEffet = calculateDateEffetFromPrecompte(datePrecompte);
   if (!dateEffet || dateEffet !== expectedDateEffet) {
-    throw new AppError(400, 'La date d effet du contrat est incoherente avec le trimestre de premier precompte.');
+    throw new AppError(400, 'La date d effet du contrat doit etre le lendemain de la date du premier precompte.');
   }
   if (Number(payload.nb_trimestre) <= 0) {
     throw new AppError(400, 'Le nombre de trimestres est invalide.');
@@ -190,6 +190,43 @@ let publicReferentielsCache: { data: unknown; expiresAt: number } | null = null;
 let publicReferentielsRequest: Promise<unknown> | null = null;
 
 export const adhesionsEnLigneService = {
+  async commercialActivity() {
+    const { commerciaux, dossiers } = await adhesionsEnLigneRepository.commercialActivity();
+    const rows = commerciaux.map((commercial: AnyRow) => {
+      const own = dossiers.filter((item: AnyRow) => String(item.commercial_id) === String(commercial.id_utilisateur));
+      const valides = own.filter((item: AnyRow) => item.statut === true || String(item.etat).toUpperCase() === 'ACTIF').length;
+      const rejetes = own.filter((item: AnyRow) => String(item.etat).toUpperCase() === 'REJETE').length;
+      const enAttente = own.length - valides - rejetes;
+      return {
+        id_utilisateur: commercial.id_utilisateur,
+        matricule: commercial.matricule,
+        email: commercial.email,
+        actif: commercial.user_actif === true,
+        total: own.length,
+        en_attente: enAttente,
+        valides,
+        rejetes,
+        taux_conversion: own.length ? Math.round((valides / own.length) * 100) : 0,
+        derniere_activite: own[0]?.created_at ?? null,
+      };
+    });
+    const total = rows.reduce((sum, row) => sum + row.total, 0);
+    const valides = rows.reduce((sum, row) => sum + row.valides, 0);
+    const rejetes = rows.reduce((sum, row) => sum + row.rejetes, 0);
+    return {
+      synthese: {
+        commerciaux: rows.length,
+        commerciaux_actifs: rows.filter((row) => row.actif).length,
+        dossiers: total,
+        en_attente: rows.reduce((sum, row) => sum + row.en_attente, 0),
+        valides,
+        rejetes,
+        taux_conversion: total ? Math.round((valides / total) * 100) : 0,
+      },
+      commerciaux: rows.sort((a, b) => b.total - a.total),
+    };
+  },
+
   async searchAgent(matricule: string, dateNaissance: string) {
     const normalizedMatricule = matricule.trim().toUpperCase();
     const result = await agentsService.searchByMatricule(normalizedMatricule);
@@ -305,6 +342,39 @@ export const adhesionsEnLigneService = {
     }
 
     return adhesionsEnLigneRepository.createPending(normalized);
+  },
+
+  async submitCommercial(user: AuthenticatedUser, payload: OnlineAdhesionPayload): Promise<unknown> {
+    const normalized = await enrichWithCurrentActuarialParams(normalizePayload(payload));
+    ensureSubmittable(normalized);
+    const existing = (await adhesionsEnLigneRepository.findByMatricule(normalized.matricule)) as AnyRow | null;
+    if (existing && existing.adhesion_en_ligne !== true) {
+      throw new AppError(409, 'Ce matricule existe deja dans le registre des adherents.');
+    }
+    if (existing?.statut_demande === 'VALIDE') {
+      throw new AppError(409, 'Ce matricule dispose deja d une adhesion validee.');
+    }
+    if (existing?.id_adherent) {
+      if (String(existing.commercial_id ?? '') !== String(user.id_utilisateur)) {
+        throw new AppError(409, 'Une demande est deja en cours pour ce matricule.');
+      }
+      return adhesionsEnLigneRepository.update(String(existing.id_adherent), normalized, 'EN_ATTENTE');
+    }
+    const data = await adhesionsEnLigneRepository.createPending(normalized, {
+      commercialId: user.id_utilisateur,
+      source: 'COMMERCIAL',
+    });
+    await auditService.logEvent(user, {
+      action: 'CREATION_ADHESION_COMMERCIALE',
+      objetAudit: 'ADHESION_EN_LIGNE',
+      idObjet: String((data as AnyRow).id_adherent ?? (data as AnyRow).id ?? ''),
+      details: `Demande ${normalized.matricule} saisie par le commercial ${actor(user)}.`,
+    }).catch(() => undefined);
+    return data;
+  },
+
+  async listMine(user: AuthenticatedUser, filters?: OnlineAdhesionFilters): Promise<unknown[]> {
+    return adhesionsEnLigneRepository.list({ ...filters, commercialId: user.id_utilisateur, statut: filters?.statut ?? 'TOUS' });
   },
 
   async list(filters?: OnlineAdhesionFilters): Promise<unknown[]> {

@@ -3,6 +3,7 @@ import { env } from '../config/env';
 import { getSupabaseServer } from '../config/supabaseServer';
 import { AuthenticatedUser, UserProfile } from '../types';
 import { canAccessRole, normalizeRole } from '../utils/roles';
+import { profilsRepository } from '../repositories/profils.repository';
 
 function readBearerToken(req: Request): string | null {
   const header = req.header('authorization');
@@ -31,6 +32,8 @@ function readDevDemoUser(req: Request): AuthenticatedUser | null {
     matricule,
     email,
     role,
+    profil_code: role,
+    permissions: ['*'],
     id_adherent: idAdherent || null,
     must_change_password: false,
   };
@@ -81,8 +84,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    const role = normalizeRole(profile.profil);
-    if (!role) {
+    const profilCode = String(profile.profil ?? '').trim().toUpperCase();
+    const profilDefinition = await profilsRepository.findByCode(profilCode).catch(() => null);
+    const role = normalizeRole(profilDefinition?.role_base ?? profilCode);
+    if (!role || (profilDefinition && profilDefinition.etat !== 1)) {
       res.status(403).json({ data: null, error: 'Profil utilisateur invalide' });
       return;
     }
@@ -93,6 +98,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       matricule: String(profile.matricule ?? ''),
       email: String(profile.email ?? authData.user.email ?? ''),
       role,
+      profil_code: profilCode,
+      permissions: profilDefinition
+        ? String(profilDefinition.liste_fonctions ?? '').split(',').map((v) => v.trim()).filter(Boolean)
+        : ['*'],
       id_adherent: profile.id_adherent == null ? null : String(profile.id_adherent),
       must_change_password: Boolean(authData.user.user_metadata?.must_change_password),
     } satisfies AuthenticatedUser;
@@ -116,5 +125,25 @@ export function requireRoles(...allowedRoles: UserProfile[]) {
     }
 
     next();
+  };
+}
+
+export function requirePermission(permission: string) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ data: null, error: 'Authentification requise' });
+      return;
+    }
+    const acceptedPermissions = permission.split('|');
+    if (
+      req.user.role === 'SUPERADMIN' ||
+      req.user.profil_code === 'ADMINISTRATEUR' ||
+      req.user.permissions.includes('*') ||
+      acceptedPermissions.some((value) => req.user!.permissions.includes(value))
+    ) {
+      next();
+      return;
+    }
+    res.status(403).json({ data: null, error: 'Fonctionnalite non autorisee pour ce profil' });
   };
 }

@@ -28,6 +28,9 @@ export interface DashboardStats {
   totalAdherentsActifs: number;
   cotisationTrimestrielleTotale: number;
   provisionTotale: number;
+  provisionPeriode: string | null;
+  provisionDateArrete: string | null;
+  provisionDisponible: boolean;
   capitalAcquisTotal: number;
   nombrePrestations: number;
   repartition: {
@@ -45,6 +48,9 @@ const emptyStats: DashboardStats = {
   totalAdherentsActifs: 0,
   cotisationTrimestrielleTotale: 0,
   provisionTotale: 0,
+  provisionPeriode: null,
+  provisionDateArrete: null,
+  provisionDisponible: false,
   capitalAcquisTotal: 0,
   nombrePrestations: 0,
   repartition: {
@@ -108,10 +114,12 @@ function mapPrestation(row: DashboardPrestationRow): DernierePrestation {
 }
 
 export const dashboardService = {
-  async getStats(user: AuthenticatedUser): Promise<DashboardStats> {
+  async getStats(user: AuthenticatedUser, periode?: string): Promise<DashboardStats> {
     const scope = scopeForUser(user);
     const rows = await dashboardRepository.findAdherents(scope);
-    if (rows.length === 0) return emptyStats;
+    if (rows.length === 0) {
+      return { ...emptyStats, provisionPeriode: periode ?? null };
+    }
 
     const actifs = rows.filter(isActif);
     const retraites = rows.filter(isRetraite);
@@ -124,18 +132,35 @@ export const dashboardService = {
     );
     const capitalAcquisTotal = rows.reduce((sum, row) => sum + toNumber(row.capital_acquis), 0);
     const totalPm = rows.reduce((sum, row) => sum + toNumber(row.pm), 0);
-    const provisionTotale = totalPm > 0 ? totalPm : capitalAcquisTotal;
+    const adherentIds = scope
+      ? rows.map((row) => row.id_adherent).filter((id): id is number | string => id != null)
+      : undefined;
 
-    const [dernieresCotisations, dernieresPrestations, nombrePrestations] = await Promise.all([
+    const [dernieresCotisations, dernieresPrestations, nombrePrestations, provisionRows] = await Promise.all([
       dashboardRepository.findRecentCotisations(scope),
       dashboardRepository.findRecentPrestations(scope),
       dashboardRepository.countPrestations(scope),
+      periode ? dashboardRepository.findProvisionForPeriod(periode, adherentIds) : Promise.resolve([]),
     ]);
+
+    const provisionDisponible = Boolean(periode && provisionRows.length > 0);
+    const provisionTotale = provisionRows.reduce(
+      (sum, row) => sum + toNumber(row.provision_mathematique),
+      0,
+    );
+    const provisionDateArrete = provisionRows
+      .map((row) => row.date_valeur ?? '')
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null;
 
     return {
       totalAdherentsActifs: actifs.length,
       cotisationTrimestrielleTotale,
       provisionTotale,
+      provisionPeriode: periode ?? null,
+      provisionDateArrete,
+      provisionDisponible,
       capitalAcquisTotal,
       nombrePrestations,
       repartition: {

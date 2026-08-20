@@ -220,7 +220,9 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
       {isEditing && (
         <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-4">
           <h4 className="text-sm font-bold uppercase tracking-wider text-slate-700 pb-2 border-b border-slate-200">
-            {editingId ? 'Modifier un Bénéficiaire' : 'Déclarer un Bénéficiaire'}
+            {editingId
+              ? 'Modifier un bénéficiaire en cas de décès'
+              : 'Déclarer un bénéficiaire en cas de décès'}
           </h4>
           <form onSubmit={handleSave} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
@@ -310,7 +312,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
             disabled={liens.length === 0}
             className="mt-3 text-sm font-semibold text-emerald-600 hover:text-emerald-500 inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Déclarer un premier ayant droit →
+            Déclarer un premier bénéficiaire en cas de décès →
           </button>
         </div>
       ) : (

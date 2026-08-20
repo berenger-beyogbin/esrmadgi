@@ -9,7 +9,45 @@ import {
   dateArreteDernierTrimestreTermine,
 } from './moteur-actuariel.service';
 import { reglesActuariellesService } from './regles-actuarielles.service';
+import { parametresRepository } from '../repositories/parametres.repository';
+import { calculerCotisationUnique } from './moteur-actuariel.service';
 import { genererAvisAnnuelPdf, genererReleveComptePdf } from './pdf-document.service';
+
+async function enrichirCapitalConstitutif(
+  comptes: Array<Record<string, unknown>>,
+): Promise<Array<Record<string, unknown>>> {
+  const adherentIds = comptes
+    .map((compte) => compte.id_adherent)
+    .filter((id): id is number | string => typeof id === 'number' || typeof id === 'string');
+  if (adherentIds.length === 0) return comptes;
+
+  const [inputs, mortaliteRows, regles] = await Promise.all([
+    comptesEsrRepository.findCapitalInputs(adherentIds),
+    parametresRepository.findMortalite() as Promise<Array<Record<string, unknown>>>,
+    reglesActuariellesService.getRegles(new Date().toISOString().slice(0, 10)),
+  ]);
+  const inputsByAdherent = new Map(inputs.map((input) => [String(input.id_adherent), input]));
+  const mortalite = mortaliteRows.map((row) => ({ age: Number(row.age_mort), lx: Number(row.lx) }));
+
+  return comptes.map((compte) => {
+    const input = inputsByAdherent.get(String(compte.id_adherent));
+    if (!input) return { ...compte, capital_constitutif: null };
+    const resultat = calculerCotisationUnique({
+      renteAnnuelle: Number(input.cotisation_annuelle ?? 0),
+      tauxCouverturePourcent: 100,
+      ageRetraite: Number(input.age_retraite ?? 0),
+      ageMaximum: regles.ageMaximum,
+      tauxAnnuelPourcent: Number(input.taux_gar ?? regles.tauxGaranti),
+      fraisRentePourcent: Number(input.frais_rente ?? regles.fraisRente),
+      nombreTrimestresAvantRetraite: 0,
+      mortalite,
+    });
+    return {
+      ...compte,
+      capital_constitutif: resultat.statut === 'OK' ? resultat.capitalConstitutif : null,
+    };
+  });
+}
 
 export function repartirCotisationsCompte(cotisations: Array<{ montant: number; source: string }>): {
   primesPeriodiques: number; cotisationUnique: number;
@@ -30,7 +68,8 @@ export const comptesEsrService = {
       if (!user.matricule) return [];
       scopedFilters.matricule = user.matricule;
     }
-    return comptesEsrRepository.findComptes(scopedFilters);
+    const comptes = await comptesEsrRepository.findComptes(scopedFilters) as Array<Record<string, unknown>>;
+    return enrichirCapitalConstitutif(comptes);
   },
 
   async getCompteByAdherentId(user: AuthenticatedUser, adherentId: string): Promise<unknown | null> {
@@ -38,9 +77,13 @@ export const comptesEsrService = {
       if (!user.id_adherent || String(user.id_adherent) !== String(adherentId)) {
         throw new AppError(403, 'Acces refuse au compte ESR de cet adherent');
       }
-      return comptesEsrRepository.findByAdherentId(adherentId, user.matricule);
+      const compte = await comptesEsrRepository.findByAdherentId(adherentId, user.matricule) as Record<string, unknown> | null;
+      if (!compte) return null;
+      return (await enrichirCapitalConstitutif([compte]))[0];
     }
-    return comptesEsrRepository.findByAdherentId(adherentId);
+    const compte = await comptesEsrRepository.findByAdherentId(adherentId) as Record<string, unknown> | null;
+    if (!compte) return null;
+    return (await enrichirCapitalConstitutif([compte]))[0];
   },
 
   async recalculerCompte(
@@ -90,6 +133,9 @@ export const comptesEsrService = {
       dateCalcul: dateArrete,
       versionCalcul,
     });
+    const compteEnrichi = (await enrichirCapitalConstitutif([
+      compte as Record<string, unknown>,
+    ]))[0];
 
     await auditService.logEvent(user, {
       action: 'RECALCUL_COMPTE_ESR',
@@ -109,7 +155,7 @@ export const comptesEsrService = {
     });
 
     return {
-      compte,
+      compte: compteEnrichi,
       calcul: {
         nombreMouvements: provision.nombreMouvements,
         capitalVerse: provision.capitalVerse,

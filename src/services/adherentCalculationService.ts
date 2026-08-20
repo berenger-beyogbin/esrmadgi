@@ -36,7 +36,7 @@ export interface CalculCotisationTrimestrielleParams {
 export interface CalculCotisationTrimestrielleResult {
   /** Prime trimestrielle Pp arrondie au pas supérieur */
   cotisationTrimestrielle: number;
-  /** Capital constitutif K avant échelonnement */
+  /** Capital constitutif K arrondi au même pas supérieur que la prime */
   capitalConstitutif: number;
   /** Facteur de rente viagère a_y */
   facteurRente: number;
@@ -178,29 +178,16 @@ export const adherentCalculationService = {
   },
 
   /**
-   * Retourne le dernier jour du trimestre qui suit le trimestre du précompte.
-   * WebDev : DateEffet
-   *
-   * Le choix manuel du trimestre enregistre toujours sa date de fin.
-   *
-   * Exemples :
-   *   2025-03-31 → 2025-06-30
-   *   2025-06-30 → 2025-09-30
-   *   2025-09-30 → 2025-12-31
-   *   2025-12-31 → 2026-03-31
+   * La date d'effet du contrat est le lendemain du premier précompte.
+   * Exemples : 2025-03-31 → 2025-04-01, 2025-12-31 → 2026-01-01.
    */
   calculateDateEffet(datePrecompte: string): string {
     const isoDatePrecompte = toIsoDate(datePrecompte);
     if (!isoDatePrecompte) return '';
     try {
-      const parts = isoDatePrecompte.split('-').map(Number);
-      if (parts.length !== 3 || parts.some(isNaN)) return '';
-      const [year, month] = parts;
-      const currentQuarter = Math.floor((month - 1) / 3) + 1;
-      const nextQuarterYear = currentQuarter === 4 ? year + 1 : year;
-      const nextQuarter = currentQuarter === 4 ? 1 : currentQuarter + 1;
-      const nextQuarterEnd = ['03-31', '06-30', '09-30', '12-31'][nextQuarter - 1];
-      return `${nextQuarterYear}-${nextQuarterEnd}`;
+      const date = new Date(`${isoDatePrecompte}T00:00:00.000Z`);
+      date.setUTCDate(date.getUTCDate() + 1);
+      return date.toISOString().slice(0, 10);
     } catch (e) {
       console.error('Erreur calculateDateEffet:', e);
       return '';
@@ -286,7 +273,8 @@ export const adherentCalculationService = {
    *   2. Ly = Lx(ageRetraite) dans la table de mortalité → LX_INTROUVABLE / LX_NUL
    *   3. v = 1 / (1 + tauxAnnuel)
    *   4. a_y = Σ[k=0..ageMax-ageRetraite-1] Lx(ageRetraite+k) * v^k  / Ly
-   *   5. K = cotisationAnnuelle * pctPriseEnCharge * (1 + fraisRente) * a_y
+   *   5. K brut = cotisationAnnuelle * pctPriseEnCharge * (1 + fraisRente) * a_y,
+   *      puis K est arrondi au pas supérieur de la grille
    *   6. Si nbTrimestres <= 0 : retourner Math.round(K)
    *   7. ip = (1 + tauxAnnuel)^(1/4) - 1
    *   8. denom = (1 + ip) * ((1 + ip)^nbTrimestres - 1)
@@ -355,7 +343,8 @@ export const adherentCalculationService = {
 
     // ── 5. Capital constitutif K ────────────────────────────────────────────
     const R_eff = cotisationAnnuelle * pctPriseEnCharge;
-    const K = R_eff * (1 + fraisRente) * a_y;
+    const K_brut = R_eff * (1 + fraisRente) * a_y;
+    const K = roundToStep(K_brut, pasArrondi, 'sup');
 
     // ── 6. Taux trimestriel ─────────────────────────────────────────────────
     const ip = Math.pow(1 + tauxAnnuel, 1 / 4) - 1;
@@ -363,7 +352,7 @@ export const adherentCalculationService = {
     // ── Cas nbTrimestres <= 0 : retourner arrondi de K (WebDev) ────────────
     if (nbTrimestres <= 0) {
       return {
-        cotisationTrimestrielle: Math.round(K),
+        cotisationTrimestrielle: K,
         capitalConstitutif: K,
         facteurRente: a_y,
         tauxTrimestriel: ip,

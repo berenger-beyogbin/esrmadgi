@@ -7,8 +7,9 @@ import {
   UtilisateurRow,
   utilisateursRepository,
 } from '../repositories/utilisateurs.repository';
-import { normalizeRole, toStoredProfile } from '../utils/roles';
+import { normalizeRole } from '../utils/roles';
 import { generateTemporaryPassword, isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
+import { profilsRepository } from '../repositories/profils.repository';
 
 export interface UtilisateurDto {
   id: string;
@@ -18,7 +19,7 @@ export interface UtilisateurDto {
   email: string;
   telephone: string | null;
   user_actif: boolean;
-  profil: UserProfile;
+  profil: string;
   role: UserProfile;
   id_adherent: string | null;
   date_creation: string | null;
@@ -31,7 +32,7 @@ export interface CreateUtilisateurPayload {
   matricule: string;
   email: string;
   password: string;
-  profil: UserProfile;
+  profil: string;
   telephone?: string | null;
   user_actif?: boolean;
   id_adherent?: number | null;
@@ -52,7 +53,7 @@ export interface EnsureAdherentAccessResult {
 export interface UpdateUtilisateurPayload {
   email?: string;
   password?: string;
-  profil?: UserProfile;
+  profil?: string;
   telephone?: string | null;
   user_actif?: boolean;
   id_adherent?: number | null;
@@ -87,8 +88,8 @@ function authUsersByKey(users: User[]): { byId: Map<string, User>; byEmail: Map<
   return { byId, byEmail };
 }
 
-function toDto(row: UtilisateurRow, authUser?: User): UtilisateurDto {
-  const role = normalizeRole(row.profil) ?? 'ADHERENT';
+function toDto(row: UtilisateurRow, authUser?: User, baseRole?: UserProfile): UtilisateurDto {
+  const role = baseRole ?? normalizeRole(row.profil) ?? 'ADHERENT';
 
   return {
     id: String(row.id_utilisateur),
@@ -98,7 +99,7 @@ function toDto(row: UtilisateurRow, authUser?: User): UtilisateurDto {
     email: String(row.email ?? authUser?.email ?? ''),
     telephone: row.telephone ?? null,
     user_actif: row.user_actif === true,
-    profil: role,
+    profil: String(row.profil ?? role),
     role,
     id_adherent: row.id_adherent == null ? null : String(row.id_adherent),
     date_creation: row.date_creation ?? row.created_at ?? null,
@@ -121,6 +122,13 @@ async function resolveLinkedAdherentId(payload: {
     throw new AppError(400, 'Aucun adherent MADGI ne correspond a ce matricule.');
   }
   return adherent.id_adherent;
+}
+
+async function resolveProfil(code: string): Promise<{ code: string; role: UserProfile }> {
+  const normalized = code.trim().toUpperCase();
+  const definition = await profilsRepository.findByCode(normalized);
+  if (!definition || definition.etat !== 1) throw new AppError(400, 'Profil utilisateur introuvable ou inactif.');
+  return { code: definition.code_profil, role: normalizeRole(definition.role_base) ?? 'GESTIONNAIRE' };
 }
 
 async function findAuthUserByEmail(email: string): Promise<User | null> {
@@ -211,12 +219,11 @@ export const utilisateursService = {
   },
 
   async getAll(filters?: UtilisateurFilters): Promise<UtilisateurDto[]> {
-    const roleFilter =
-      filters?.profil && filters.profil !== 'TOUS' ? normalizeRole(filters.profil) : null;
     const rows = await utilisateursRepository.findAll({
       ...filters,
-      profil: roleFilter ? toStoredProfile(roleFilter) : undefined,
+      profil: filters?.profil && filters.profil !== 'TOUS' ? filters.profil.trim().toUpperCase() : undefined,
     });
+    const profileMap = new Map((await profilsRepository.list()).map((p) => [p.code_profil, normalizeRole(p.role_base) ?? 'GESTIONNAIRE']));
     const users = await utilisateursRepository.listAuthUsers();
     const maps = authUsersByKey(users);
 
@@ -224,7 +231,7 @@ export const utilisateursService = {
       const authUser =
         (row.auth_user_id ? maps.byId.get(row.auth_user_id) : undefined) ||
         (row.email ? maps.byEmail.get(row.email.toLowerCase()) : undefined);
-      return toDto(row, authUser);
+      return toDto(row, authUser, profileMap.get(String(row.profil ?? '')));
     });
   },
 
@@ -235,9 +242,10 @@ export const utilisateursService = {
 
     const matricule = normalizeMatricule(payload.matricule);
     const email = normalizeEmail(payload.email);
-    const profil = toStoredProfile(payload.profil);
+    const profilDefinition = await resolveProfil(payload.profil);
+    const profil = profilDefinition.code;
     const auditUserId = actorId(user);
-    const idAdherent = await resolveLinkedAdherentId({ profil, matricule, id_adherent: payload.id_adherent });
+    const idAdherent = await resolveLinkedAdherentId({ profil: profilDefinition.role, matricule, id_adherent: payload.id_adherent });
 
     const existingRow = await utilisateursRepository.findByMatricule(matricule);
     let authUser =
@@ -300,7 +308,7 @@ export const utilisateursService = {
       })
       .catch(() => undefined);
 
-    return toDto(row, authUser);
+    return toDto(row, authUser, profilDefinition.role);
   },
 
   async update(user: AuthenticatedUser, id: number, payload: UpdateUtilisateurPayload): Promise<UtilisateurDto> {
@@ -313,20 +321,21 @@ export const utilisateursService = {
       throw new AppError(404, 'Utilisateur introuvable');
     }
 
-    const profil = payload.profil ? toStoredProfile(payload.profil) : normalizeRole(existing.profil) ?? 'ADHERENT';
+    const profilDefinition = await resolveProfil(payload.profil ?? String(existing.profil ?? 'ADHERENT'));
+    const profil = profilDefinition.code;
     const matricule = normalizeMatricule(String(existing.matricule ?? ''));
     const email = payload.email ? normalizeEmail(payload.email) : String(existing.email ?? '');
     const auditUserId = actorId(user);
 
     if (String(user.id_utilisateur) === String(id)) {
-      if (payload.user_actif === false || (payload.profil && profil !== toStoredProfile(user.role))) {
+      if (payload.user_actif === false || (payload.profil && profil !== user.profil_code)) {
         throw new AppError(400, 'Impossible de retirer vos propres acces administrateur depuis cette session.');
       }
     }
 
     const idAdherent =
       payload.id_adherent !== undefined
-        ? await resolveLinkedAdherentId({ profil, matricule, id_adherent: payload.id_adherent })
+        ? await resolveLinkedAdherentId({ profil: profilDefinition.role, matricule, id_adherent: payload.id_adherent })
         : existing.id_adherent;
 
     let authUser: User | null = null;
@@ -377,6 +386,6 @@ export const utilisateursService = {
       })
       .catch(() => undefined);
 
-    return toDto(row, authUser ?? undefined);
+    return toDto(row, authUser ?? undefined, profilDefinition.role);
   },
 };

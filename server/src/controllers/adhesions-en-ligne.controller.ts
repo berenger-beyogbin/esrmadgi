@@ -31,9 +31,13 @@ const onlineAdhesionPayloadSchema = z.object({
   nom: z.string().trim().min(1, 'Nom requis').max(120),
   prenoms: z.string().trim().min(1, 'Prenoms requis').max(160),
   date_naissance: dateSchema,
+  lieu_naissance: z.string().trim().min(1, 'Lieu de naissance requis').max(160),
   situation_matrimoniale: z.string().trim().min(1, 'Situation matrimoniale requise').max(120),
   telephone: z.string().trim().min(1, 'Telephone requis').max(80),
   email: nullableEmailSchema,
+  adresse_geographique: z.string().trim().min(1, 'Adresse geographique requise').max(255),
+  adresse_postale: z.string().trim().max(255).default(''),
+  direction: z.string().trim().min(1, 'Direction requise').max(160),
   emploi: z.string().trim().min(1, 'Emploi requis').max(220),
   grade_id: z.string().trim().min(1, 'Grade requis'),
   grade: z.string().trim().optional(),
@@ -71,6 +75,14 @@ function parsePayload(body: unknown) {
 }
 
 export const adhesionsEnLigneController = {
+  async commercialActivity(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      res.json({ data: await adhesionsEnLigneService.commercialActivity(), error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async referentiels(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await adhesionsEnLigneService.getPublicReferentiels();
@@ -95,6 +107,28 @@ export const adhesionsEnLigneController = {
     try {
       const data = await adhesionsEnLigneService.submitPublic(parsePayload(req.body));
       res.status(201).json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async submitCommercial(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await adhesionsEnLigneService.submitCommercial(requireUser(req), parsePayload(req.body));
+      res.status(201).json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async listMine(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+      const statut = typeof req.query.statut === 'string' && ['TOUS', 'EN_ATTENTE', 'VALIDE', 'REJETE'].includes(req.query.statut)
+        ? req.query.statut as 'TOUS' | 'EN_ATTENTE' | 'VALIDE' | 'REJETE'
+        : 'TOUS';
+      const data = await adhesionsEnLigneService.listMine(requireUser(req), { search, statut });
+      res.json({ data, error: null });
     } catch (err) {
       next(err);
     }

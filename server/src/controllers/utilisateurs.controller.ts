@@ -4,7 +4,7 @@ import { AppError } from '../middleware/errorHandler';
 import { utilisateursService } from '../services/utilisateurs.service';
 import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
 
-const roleSchema = z.enum(['ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR', 'SUPERADMIN']);
+const roleSchema = z.string().trim().min(2).max(40).transform((value) => value.toUpperCase());
 const idSchema = z.coerce.number().int().positive('ID utilisateur invalide');
 const nullableNumberSchema = z.union([z.coerce.number().int().positive(), z.null()]).optional();
 const passwordSchema = z.string().refine(isStrongPassword, PASSWORD_POLICY_MESSAGE);

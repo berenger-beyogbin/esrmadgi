@@ -5,12 +5,19 @@ export interface DashboardScope {
 }
 
 export interface DashboardAdherentRow {
+  id_adherent?: number | string | null;
   statut?: boolean | string | null;
   decede?: boolean | null;
   retraite?: boolean | null;
   cotisation_es?: number | string | null;
   capital_acquis?: number | string | null;
   pm?: number | string | null;
+}
+
+export interface DashboardProvisionRow {
+  id_adherent?: number | string | null;
+  provision_mathematique?: number | string | null;
+  date_valeur?: string | null;
 }
 
 export interface DashboardCotisationRow {
@@ -45,13 +52,32 @@ export const dashboardRepository = {
     const supabase = getSupabaseServer();
     let query: any = supabase
       .from('v_adherents_complets')
-      .select('statut, decede, retraite, cotisation_es, capital_acquis, pm, matricule');
+      .select('id_adherent, statut, decede, retraite, cotisation_es, capital_acquis, pm, matricule');
 
     query = applyMatriculeScope(query, scope);
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
     return (data ?? []) as DashboardAdherentRow[];
+  },
+
+  async findProvisionForPeriod(
+    periode: string,
+    adherentIds?: Array<number | string>,
+  ): Promise<DashboardProvisionRow[]> {
+    if (adherentIds && adherentIds.length === 0) return [];
+
+    const supabase = getSupabaseServer();
+    let query: any = supabase
+      .from('historique_actuariel_esr')
+      .select('id_adherent, provision_mathematique, date_valeur')
+      .eq('periode', periode);
+
+    if (adherentIds) query = query.in('id_adherent', adherentIds);
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return (data ?? []) as DashboardProvisionRow[];
   },
 
   async findRecentCotisations(scope?: DashboardScope): Promise<DashboardCotisationRow[]> {

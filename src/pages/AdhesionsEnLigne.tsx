@@ -35,9 +35,13 @@ function payloadFromAdhesion(item: OnlineAdhesion): OnlineAdhesionPayload {
     nom: item.nom,
     prenoms: item.prenoms,
     date_naissance: item.date_naissance,
+    lieu_naissance: item.lieu_naissance || '',
     situation_matrimoniale: item.situation_matrimoniale,
     telephone: item.telephone,
     email: item.email || '',
+    adresse_geographique: item.adresse_geographique || '',
+    adresse_postale: item.adresse_postale || '',
+    direction: item.direction || '',
     emploi: item.emploi,
     grade_id: item.grade_id,
     grade: item.grade || item.grade_libelle || '',
@@ -429,6 +433,7 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
             <Field label="Nom"><input disabled={isReadOnly} value={formData.nom} onChange={(e) => updateField('nom', e.target.value.toUpperCase())} className={fieldClass} /></Field>
             <Field label="Prenoms"><input disabled={isReadOnly} value={formData.prenoms} onChange={(e) => updateField('prenoms', e.target.value)} className={fieldClass} /></Field>
             <Field label="Date naissance"><input type="date" disabled={isReadOnly} value={formData.date_naissance} onChange={(e) => updateField('date_naissance', e.target.value)} className={fieldClass} /></Field>
+            <Field label="Lieu de naissance"><input disabled={isReadOnly} value={formData.lieu_naissance} onChange={(e) => updateField('lieu_naissance', e.target.value)} placeholder="Ex : Abidjan" className={fieldClass} /></Field>
             <Field label="Situation matrimoniale">
               <select disabled={isReadOnly} value={formData.situation_matrimoniale} onChange={(e) => updateField('situation_matrimoniale', e.target.value)} className={fieldClass}>
                 {refs?.situations_matrimoniales.map((item) => <option key={item.id_situation_matrimoniale} value={item.libelle_situation}>{item.libelle_situation}</option>)}
@@ -436,6 +441,9 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
             </Field>
             <Field label="Telephone"><input disabled={isReadOnly} value={formData.telephone} onChange={(e) => updateField('telephone', e.target.value)} className={fieldClass} /></Field>
             <Field label="Email"><input type="email" disabled={isReadOnly} value={formData.email || ''} onChange={(e) => updateField('email', e.target.value)} className={fieldClass} /></Field>
+            <Field label="Adresse geographique"><input disabled={isReadOnly} value={formData.adresse_geographique} onChange={(e) => updateField('adresse_geographique', e.target.value)} placeholder="Ex : Cocody Angre, Abidjan" className={fieldClass} /></Field>
+            <Field label="Adresse postale"><input disabled={isReadOnly} value={formData.adresse_postale} onChange={(e) => updateField('adresse_postale', e.target.value)} placeholder="Ex : 01 BP 1234 Abidjan 01" className={fieldClass} /></Field>
+            <Field label="Direction"><input disabled={isReadOnly} value={formData.direction} onChange={(e) => updateField('direction', e.target.value)} placeholder="Ex : Direction des grandes entreprises" className={fieldClass} /></Field>
             <Field label="Emploi / Fonction"><input disabled={isReadOnly} value={formData.emploi} onChange={(e) => updateField('emploi', e.target.value)} className={fieldClass} /></Field>
             <Field label="Grade">
               <select disabled={isReadOnly} value={formData.grade_id} onChange={(e) => handleGradeChange(e.target.value)} className={fieldClass}>

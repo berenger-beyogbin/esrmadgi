@@ -7,6 +7,9 @@ const emptyStats: DashboardStats = {
   totalAdherentsActifs: 0,
   cotisationTrimestrielleTotale: 0,
   provisionTotale: 0,
+  provisionPeriode: null,
+  provisionDateArrete: null,
+  provisionDisponible: false,
   capitalAcquisTotal: 0,
   nombrePrestations: 0,
   repartition: {
@@ -20,8 +23,9 @@ const emptyStats: DashboardStats = {
   dernieresPrestations: [],
 };
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const { data, error } = await apiGet<ApiResponse<DashboardStats>>('/api/dashboard');
+export async function getDashboardStats(periode: string): Promise<DashboardStats> {
+  const query = new URLSearchParams({ periode });
+  const { data, error } = await apiGet<ApiResponse<DashboardStats>>(`/api/dashboard?${query}`);
 
   if (error) throw new Error(error);
   if (data?.error) throw new Error(data.error);

@@ -9,7 +9,7 @@ function toError(error: string | null | undefined): Error | null {
 
 export interface UtilisateurFilters {
   search?: string;
-  profil?: UserProfile | 'TOUS';
+  profil?: string | 'TOUS';
   actif?: 'TOUS' | 'true' | 'false';
 }
 
@@ -17,7 +17,7 @@ export interface CreateUtilisateurPayload {
   matricule: string;
   email: string;
   password: string;
-  profil: UserProfile;
+  profil: string;
   telephone?: string | null;
   user_actif?: boolean;
   id_adherent?: number | null;
@@ -26,7 +26,7 @@ export interface CreateUtilisateurPayload {
 export interface UpdateUtilisateurPayload {
   email?: string;
   password?: string;
-  profil?: UserProfile;
+  profil?: string;
   telephone?: string | null;
   user_actif?: boolean;
   id_adherent?: number | null;

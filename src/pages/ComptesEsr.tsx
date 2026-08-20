@@ -139,13 +139,14 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
         <ScrollableTableWrapper maxHeight="none">
           <table className="rtable w-full table-fixed divide-y divide-slate-100 text-left text-xs" id="tbl-comptes-esr">
             <colgroup>
+              <col className="w-[8%]" />
+              <col className="w-[16%]" />
+              <col className="w-[11%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
+              <col className="w-[13%]" />
+              <col className="w-[12%]" />
               <col className="w-[9%]" />
-              <col className="w-[19%]" />
-              <col className="w-[13%]" />
-              <col className="w-[13%]" />
-              <col className="w-[15%]" />
-              <col className="w-[14%]" />
-              <col className="w-[10%]" />
               <col className="w-[7%]" />
             </colgroup>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-[11px] leading-tight [&_th]:whitespace-normal [&_th]:break-words [&_th]:px-2 [&_th]:py-3">
@@ -153,6 +154,7 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
                 <th className="py-3.5 px-4">Matricule</th>
                 <th className="py-3.5 px-4">Nom & Prénoms</th>
                 <th className="py-3.5 px-4 text-right">Primes payées (pp)</th>
+                <th className="py-3.5 px-4 text-right">Capital constitutif</th>
                 <th className="py-3.5 px-4 text-right">Capital acquis</th>
                 <th className="py-3.5 px-4 text-right">Provision math. (pm)</th>
                 <th className="py-3.5 px-4 text-right">Valeur de rachat</th>
@@ -171,6 +173,9 @@ export default function ComptesEsr({ currentUser }: ComptesEsrProps) {
                   </td>
                   <td data-label="Primes payées (pp)" className="py-4 px-4 text-right font-mono text-slate-600">
                     {formatFCFA(c.pp || 0)}
+                  </td>
+                  <td data-label="Capital constitutif" className="py-4 px-4 text-right font-bold font-mono text-blue-700">
+                    {c.capital_constitutif == null ? '—' : formatFCFA(c.capital_constitutif)}
                   </td>
                   <td data-label="Capital acquis" className="py-4 px-4 text-right font-bold font-mono text-teal-700">
                     {formatFCFA(c.capital_acquis || 0)}

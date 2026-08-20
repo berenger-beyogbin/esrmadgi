@@ -6,6 +6,14 @@ export interface CompteEsrFilters {
   matricule?: string;
 }
 
+export interface CompteCapitalInputRow {
+  id_adherent: number | string;
+  age_retraite?: number | string | null;
+  cotisation_annuelle?: number | string | null;
+  taux_gar?: number | string | null;
+  frais_rente?: number | string | null;
+}
+
 export const comptesEsrRepository = {
   async actualiserRepartition(adherentId: string): Promise<void> {
     const supabase = getSupabaseServer();
@@ -30,6 +38,17 @@ export const comptesEsrRepository = {
     const { data, error } = await query.order('nom', { ascending: true });
     if (error) throw new Error(error.message);
     return data ?? [];
+  },
+
+  async findCapitalInputs(adherentIds: Array<number | string>): Promise<CompteCapitalInputRow[]> {
+    if (adherentIds.length === 0) return [];
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('v_adherents_complets')
+      .select('id_adherent,age_retraite,cotisation_annuelle,taux_gar,frais_rente')
+      .in('id_adherent', adherentIds);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as CompteCapitalInputRow[];
   },
 
   async findByAdherentId(adherentId: string, matricule?: string): Promise<unknown | null> {

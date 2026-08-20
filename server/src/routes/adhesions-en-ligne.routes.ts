@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { adhesionsEnLigneController } from '../controllers/adhesions-en-ligne.controller';
-import { requireAuth, requireRoles } from '../middleware/auth';
+import { requireAuth, requirePermission, requireRoles } from '../middleware/auth';
 import {
   publicAgentSearchRateLimiter,
   publicReadRateLimiter,
@@ -21,7 +21,19 @@ adhesionsEnLigneRouter.post('/', publicSubmissionRateLimiter, (req, res, next) =
   adhesionsEnLigneController.submit(req, res, next);
 });
 
-adhesionsEnLigneRouter.use(requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'));
+adhesionsEnLigneRouter.get('/commercial/activity', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), requirePermission('ADHESIONS_EN_LIGNE'), (req, res, next) => {
+  adhesionsEnLigneController.commercialActivity(req, res, next);
+});
+
+adhesionsEnLigneRouter.get('/commercial/mine', requireAuth, requireRoles('GESTIONNAIRE'), requirePermission('MES_ADHESIONS'), (req, res, next) => {
+  adhesionsEnLigneController.listMine(req, res, next);
+});
+
+adhesionsEnLigneRouter.post('/commercial', requireAuth, requireRoles('GESTIONNAIRE'), requirePermission('INSCRIPTION_ADHERENT'), (req, res, next) => {
+  adhesionsEnLigneController.submitCommercial(req, res, next);
+});
+
+adhesionsEnLigneRouter.use(requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), requirePermission('ADHESIONS_EN_LIGNE'));
 
 adhesionsEnLigneRouter.get('/', (req, res, next) => {
   adhesionsEnLigneController.list(req, res, next);

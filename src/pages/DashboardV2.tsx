@@ -63,7 +63,8 @@ export default function DashboardV2({ currentUser }: DashboardV2Props) {
     setIsLoading(true);
     setError(null);
     try {
-      const [dashboard, report] = await Promise.all([getDashboardStats(), getCimaC20(annee)]);
+      const periodeProvision = `${annee}T${mode === 'ANNEE' ? 4 : trimestre}`;
+      const [dashboard, report] = await Promise.all([getDashboardStats(periodeProvision), getCimaC20(annee)]);
       setStats(dashboard);
       setCima(report);
       setUpdatedAt(new Date());
@@ -76,7 +77,7 @@ export default function DashboardV2({ currentUser }: DashboardV2Props) {
 
   useEffect(() => {
     if (periodeInitialisee) load();
-  }, [annee, periodeInitialisee]);
+  }, [annee, mode, trimestre, periodeInitialisee]);
 
   const anneesDisponibles = useMemo(
     () => Array.from(new Set([...Array.from({ length: 6 }, (_, index) => currentYear - 4 + index), annee])).sort((a, b) => a - b),
@@ -94,6 +95,12 @@ export default function DashboardV2({ currentUser }: DashboardV2Props) {
   const taux = attendu > 0 ? Math.min(100, Math.round((encaisse / attendu) * 100)) : 0;
   const totalAdherents = stats ? (Object.values(stats.repartition) as number[]).reduce((sum, value) => sum + value, 0) : 0;
   const periodeLabel = mode === 'ANNEE' ? `Année ${annee}` : `${annee}T${trimestre}`;
+  const provisionValue = stats?.provisionDisponible
+    ? formatFCFA(stats.provisionTotale)
+    : 'Non calculée';
+  const provisionDetail = stats?.provisionDisponible && stats.provisionDateArrete
+    ? `Provision arrêtée au ${formatDateFr(stats.provisionDateArrete)}`
+    : `Provision non calculée pour ${mode === 'ANNEE' ? `${annee}T4` : `${annee}T${trimestre}`}`;
   const recentCotisations = (stats?.dernieresCotisations ?? []).filter((row) => {
     const date = String(row.date ?? '');
     if (!date.startsWith(String(annee))) return false;
@@ -147,7 +154,7 @@ export default function DashboardV2({ currentUser }: DashboardV2Props) {
         <Kpi icon={<CalendarRange />} label="Cotisations attendues" value={formatFCFA(attendu)} detail={periodeLabel} tone="slate" />
         <Kpi icon={<CircleDollarSign />} label="Cotisations encaissées" value={formatFCFA(encaisse)} detail={`${selectedRows.reduce((sum, row) => sum + row.nombreMouvements, 0)} mouvement(s)`} tone="green" />
         <Kpi icon={<TrendingUp />} label="Taux de recouvrement" value={`${taux}%`} detail={`Écart : ${formatFCFA(ecart)}`} tone={taux >= 90 ? 'green' : 'amber'} />
-        <Kpi icon={<CheckCircle2 />} label="Provision mathématique" value={formatFCFA(stats?.provisionTotale)} detail="Dernier calcul disponible" tone="violet" />
+        <Kpi icon={<CheckCircle2 />} label="Provision mathématique" value={provisionValue} detail={provisionDetail} tone="violet" />
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-5">

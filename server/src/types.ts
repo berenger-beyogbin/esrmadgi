@@ -36,6 +36,8 @@ export interface AuthenticatedUser {
   matricule: string;
   email: string;
   role: UserProfile;
+  profil_code: string;
+  permissions: string[];
   id_adherent: string | null;
   must_change_password?: boolean;
 }

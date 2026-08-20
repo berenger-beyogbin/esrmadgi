@@ -123,6 +123,11 @@ function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+function roundUpToGridStep(value: number, step = 100): number {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.ceil((value - Number.EPSILON) / step) * step;
+}
+
 export function calculerCotisationTrimestrielleApresSpontanee(
   input: CotisationApresSpontaneeInput,
 ): CotisationApresSpontaneeResult {
@@ -149,7 +154,9 @@ export function calculerCotisationTrimestrielleApresSpontanee(
     const survivants = lx.get(age);
     if (survivants != null && survivants >= 0) somme += survivants * Math.pow(v, age - input.ageRetraite);
   }
-  const capitalConstitutif = input.renteAnnuelle * (1 + input.fraisRentePourcent / 100) * (somme / ly);
+  const capitalConstitutif = roundUpToGridStep(
+    input.renteAnnuelle * (1 + input.fraisRentePourcent / 100) * (somme / ly),
+  );
   const capitalRestant = Math.max(0, capitalConstitutif - input.capitalAcquis);
   if (input.nombreTrimestresRestants === 0) {
     return { statut: 'OK', cotisationTrimestrielle: Math.round(capitalRestant), capitalConstitutif, capitalRestant };
@@ -217,10 +224,12 @@ export function calculerCotisationUnique(input: CotisationUniqueInput): Cotisati
   }
 
   const facteurRente = somme / lxRetraite;
-  const capitalConstitutif = input.renteAnnuelle
-    * input.tauxCouverturePourcent / 100
-    * (1 + input.fraisRentePourcent / 100)
-    * facteurRente;
+  const capitalConstitutif = roundUpToGridStep(
+    input.renteAnnuelle
+      * input.tauxCouverturePourcent / 100
+      * (1 + input.fraisRentePourcent / 100)
+      * facteurRente,
+  );
   const tauxTrimestriel = Math.pow(1 + tauxAnnuel, 1 / 4) - 1;
   const valeurActuelle = capitalConstitutif
     / Math.pow(1 + tauxTrimestriel, input.nombreTrimestresAvantRetraite);
@@ -228,7 +237,7 @@ export function calculerCotisationUnique(input: CotisationUniqueInput): Cotisati
   return {
     statut: 'OK',
     facteurRente,
-    capitalConstitutif: roundMoney(capitalConstitutif),
+    capitalConstitutif,
     cotisationUnique: roundMoney(valeurActuelle),
     formule,
   };

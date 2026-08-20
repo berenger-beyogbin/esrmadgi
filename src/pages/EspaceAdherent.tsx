@@ -5,6 +5,7 @@ import {
   Download,
   FileText,
   Loader2,
+  Landmark,
   LogOut,
   Percent,
   ShieldCheck,
@@ -112,7 +113,9 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
     let compteData = initialCompteResult.data;
     if (derniereDateEncaissement && (!compteData?.date_calcul || derniereDateEncaissement > compteData.date_calcul)) {
       const recalculResult = await compteEsrService.recalculerCompte(adherentId, derniereDateEncaissement);
-      if (!recalculResult.error && recalculResult.data) compteData = recalculResult.data;
+      if (!recalculResult.error && recalculResult.data) {
+        compteData = { ...compteData, ...recalculResult.data };
+      }
     }
 
     setAdherent(adherentResult.data);
@@ -309,10 +312,18 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
 
               <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                 <h3 className="font-black text-slate-800">Actions rapides</h3>
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <ActionButton icon={isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />} onClick={handleDownloadReleve}>Télécharger mon relevé</ActionButton>
                   <ActionButton icon={<Users className="w-5 h-5" />} onClick={() => { setActiveTab('BENEFICIAIRES'); document.getElementById('details-adherent')?.scrollIntoView({ behavior: 'smooth' }); }}>Voir mes bénéficiaires</ActionButton>
                   <ActionButton icon={<CircleHelp className="w-5 h-5" />} onClick={() => document.getElementById('historique-cotisations')?.scrollIntoView({ behavior: 'smooth' })}>Vérifier mes cotisations</ActionButton>
+                  <a
+                    href="/documents/Grille_de_cotisation_actuarielle_par_trimestre_MADGI_ESR.pdf"
+                    download="Grille_de_cotisation_actuarielle_par_trimestre_MADGI_ESR.pdf"
+                    className="flex min-h-14 items-center justify-center gap-2 rounded-lg border border-[#2b529f] bg-white px-4 py-3 text-center text-sm font-bold text-[#2b529f] transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:ring-offset-2"
+                  >
+                    <Download className="h-5 w-5 shrink-0" />
+                    Grille des cotisations PDF
+                  </a>
                 </div>
               </section>
 
@@ -321,6 +332,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                   <h3 className="text-xl mb-6">Votre contrat en resume</h3>
                   <div className="space-y-4">
                     <SummaryLine icon={<ShieldCheck className="w-5 h-5" />} label="Cotisation maladie MADGI garantie" value={formatFCFA(adherent?.cotisation_es)} />
+                    <SummaryLine icon={<Landmark className="w-5 h-5" />} label="Capital constitutif" value={compte?.capital_constitutif == null ? 'Non disponible' : formatFCFA(compte.capital_constitutif)} />
                     <SummaryLine icon={<CalendarDays className="w-5 h-5" />} label="Duree residuelle d'activite" value={`${adherent?.nb_trimestre ?? 0} Trimestre(s)`} />
                     <SummaryLine icon={<Percent className="w-5 h-5" />} label="Age de retraite" value={`${adherent?.age_retraite ?? '-'} ans`} />
                   </div>

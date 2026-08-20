@@ -80,7 +80,7 @@ const ETATS: EtatDef[] = [
   { id: 'ADHERENTS', label: 'Liste globale des adhérents', categorie: 'Listes', disponible: true },
   { id: 'ADHERENTS_ACTIFS', label: 'Adhérents en activité', categorie: 'Listes', disponible: true },
   { id: 'ADHERENTS_RETRAITES', label: 'Adhérents retraités', categorie: 'Listes', disponible: true },
-  { id: 'AYANTS_DROIT', label: 'Liste globale des ayants-droit', categorie: 'Listes', disponible: true },
+  { id: 'AYANTS_DROIT', label: 'Liste globale des bénéficiaires en cas de décès', categorie: 'Listes', disponible: true },
   { id: 'RACHATS', label: 'Liste des retraits (rachats et résiliations)', categorie: 'Listes', disponible: true },
   { id: 'RETRAITES_A_JOUR', label: 'Retraités à jour', categorie: 'Listes', disponible: true },
   { id: 'RETRAITES_NON_A_JOUR', label: 'Retraités non à jour', categorie: 'Listes', disponible: true },
@@ -90,7 +90,7 @@ const ETATS: EtatDef[] = [
   { id: 'RESILIATIONS_SEULES', label: 'Liste des résiliations', categorie: 'Listes', disponible: true },
   { id: 'AGENTS_DECEDES', label: 'Liste des décédés', categorie: 'Listes', disponible: true },
   { id: 'ADHERENTS_RETRAITES_STATUT', label: 'Adhérents retraités par statut (vue combinée)', categorie: 'Listes', disponible: true },
-  { id: 'AGENTS_DECEDES_CAPITAL', label: "Décès — capital versé aux ayants droit", categorie: 'Listes', disponible: true },
+  { id: 'AGENTS_DECEDES_CAPITAL', label: "Décès — capital versé aux bénéficiaires", categorie: 'Listes', disponible: true },
   { id: 'CIMA_C20', label: 'État CIMA C-20', categorie: 'Montants', disponible: true },
   { id: 'COTISATIONS_PERIODE', label: 'Cotisations encaissées sur une période', categorie: 'Montants', disponible: true },
   { id: 'CAPITAL_RENTE', label: 'Capital constitutif de rente par adhérent', categorie: 'Montants', disponible: true },
@@ -159,7 +159,7 @@ function colonnesPour(id: EtatId): ColonneVue[] {
       return [
         { header: 'Matricule adhérent', key: 'matriculeAdherent', width: 16 },
         { header: 'Adhérent', key: 'nomPrenomsAdherent', width: 26 },
-        { header: 'Ayant droit', key: 'nomPrenomsAyantDroit', width: 26 },
+        { header: 'Bénéficiaire en cas de décès', key: 'nomPrenomsAyantDroit', width: 30 },
         { header: 'Lien', key: 'lien', width: 16 },
         { header: 'Pourcentage', key: 'pourcentage', width: 14 },
       ];
@@ -232,7 +232,7 @@ function colonnesPour(id: EtatId): ColonneVue[] {
         { header: 'Date événement', key: 'dateEvenement', format: 'date', width: 16 },
         { header: 'Date paiement', key: 'datePaiement', format: 'date', width: 16 },
         { header: 'Montant payé', key: 'montantPaye', format: 'money', width: 18 },
-        { header: 'Ayants droit', key: 'ayantsDroit', width: 32 },
+        { header: 'Bénéficiaires en cas de décès', key: 'ayantsDroit', width: 34 },
       ];
     case 'COTISATIONS_PERIODE':
       return [

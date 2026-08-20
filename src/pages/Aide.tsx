@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, HelpCircle, ShieldAlert } from 'lucide-react';
+import { ChevronDown, Download, FileText, HelpCircle, ShieldAlert } from 'lucide-react';
 import { DBUser, UserProfile } from '../types';
 
 interface AideProps {
@@ -85,7 +85,7 @@ const CATEGORIES: FaqCategorie[] = [
       },
       {
         question: 'Quels paramètres métier sont administrables ?',
-        reponse: 'Le taux garanti, les frais de rente et de rachat, le délai minimal de rachat, le taux décès avant retraite, le taux invalidité avant retraite, le taux de couverture retraite, le taux de remboursement des soins et le taux décès pendant rente. Toute modification doit être datée, justifiée et vérifiée par un second gestionnaire avant utilisation opérationnelle.',
+        reponse: 'Le taux garanti, les frais de gestion et de rachat, le délai minimal de rachat, le taux décès avant retraite, le taux invalidité avant retraite, le taux de couverture retraite, le taux de remboursement des soins et le taux décès pendant rente. Toute modification doit être datée, justifiée et vérifiée par un second gestionnaire avant utilisation opérationnelle.',
       },
       {
         question: 'Que dois-je contrôler quotidiennement ?',
@@ -158,6 +158,27 @@ export default function Aide({ currentUser }: AideProps) {
       </div>
       <div className="h-px bg-slate-100" />
 
+      <div className="flex flex-col gap-4 rounded-xl border border-blue-200 bg-blue-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <FileText className="mt-0.5 h-6 w-6 shrink-0 text-[#2b529f]" />
+          <div>
+            <h3 className="font-bold text-slate-800">Grille de cotisation actuarielle</h3>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">
+              Consultez directement les cotisations par trimestre, de 1 à 120 trimestres,
+              pour un départ à la retraite à 60 ou 65 ans.
+            </p>
+          </div>
+        </div>
+        <a
+          href="/documents/Grille_de_cotisation_actuarielle_par_trimestre_MADGI_ESR.pdf"
+          download="Grille_de_cotisation_actuarielle_par_trimestre_MADGI_ESR.pdf"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#2b529f] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#21427f] focus:outline-none focus:ring-2 focus:ring-[#2b529f] focus:ring-offset-2"
+        >
+          <Download className="h-4 w-4" />
+          Télécharger la grille PDF
+        </a>
+      </div>
+
       <div className="space-y-2">
         {categoriesVisibles.map((categorie) => (
           <div key={categorie.id} className="rounded-xl border border-slate-100 overflow-hidden">
@@ -201,7 +222,7 @@ export default function Aide({ currentUser }: AideProps) {
       </div>
 
       <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-medium">
-        💡 Support technique direct par email : <span className="underline select-text">support.mutuelle@dgi.gouv.ci</span> ou par téléphone au 225-20-30-40-50.
+        💡 Support technique direct par email : <span className="underline select-text">epargnesanteretraite@madgi.ci</span> ou par téléphone au 0702323692.
       </div>
     </div>
   );
