@@ -16,6 +16,7 @@ import Adherents from './pages/Adherents';
 import AdhesionsEnLigne from './pages/AdhesionsEnLigne';
 import ComptesEsr from './pages/ComptesEsr';
 import Cotisations from './pages/Cotisations';
+import SimulationCotisationSpontanee from './pages/SimulationCotisationSpontanee';
 import Precomptes from './pages/Precomptes';
 import RegularisationPrecomptes from './pages/RegularisationPrecomptes';
 import CloturePeriode from './pages/CloturePeriode';
@@ -47,6 +48,8 @@ import {
   X,
   Repeat,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   PlusCircle,
   List,
   Lock,
@@ -54,6 +57,7 @@ import {
   CreditCard,
   UserPlus,
   TrendingUp,
+  Calculator,
 } from 'lucide-react';
 
 type ModuleType =
@@ -63,6 +67,7 @@ type ModuleType =
   | 'ADHESIONS_EN_LIGNE'
   | 'ADHERENTS'
   | 'COTISATIONS'
+  | 'SIMULATION_COTISATION_SPONTANEE'
   | 'PRESTATIONS'
   | 'RACHATS'
   | 'COMPTES'
@@ -81,6 +86,7 @@ export default function App() {
   const [publicView, setPublicView] = useState<'LOGIN' | 'ONLINE_ADHESION'>('LOGIN');
   const [activeModule, setActiveModule] = useState<ModuleType>('DASHBOARD');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCotisationsMenuOpen, setIsCotisationsMenuOpen] = useState(false);
   const [openSpontaneeSignal, setOpenSpontaneeSignal] = useState(0);
   const [activeCotisationChildKey, setActiveCotisationChildKey] = useState<string>('COTISATIONS_LISTE');
@@ -246,12 +252,13 @@ export default function App() {
       icon: Coins,
       allowed: ['GESTIONNAIRE', 'ADMINISTRATEUR'],
       children: [
-        { key: 'PRECOMPTES', label: 'Gestion des Précomptes', icon: RefreshCw, moduleId: 'PRECOMPTES' as ModuleType },
-        { key: 'REGULARISATION_PRECOMPTES', label: 'Régularisation de Précompte', icon: Repeat, moduleId: 'REGULARISATION_PRECOMPTES' as ModuleType },
-        { key: 'COTISATION_SPONTANEE', label: 'Cotisation Spontanée', icon: PlusCircle, moduleId: 'COTISATIONS' as ModuleType, action: 'SPONTANEE' as const },
-        { key: 'COTISATIONS_LISTE', label: 'Liste des Cotisations', icon: List, moduleId: 'COTISATIONS' as ModuleType },
-        { key: 'VALIDATION_PAIEMENTS', label: 'Validation des paiements', icon: CreditCard, moduleId: 'PAIEMENTS' as ModuleType },
-        { key: 'CLOTURE_PERIODE', label: 'Clôture de Période', icon: Lock, moduleId: 'CLOTURE_PERIODE' as ModuleType },
+        { key: 'PRECOMPTES', label: 'Précomptes', fullLabel: 'Gestion des Précomptes', icon: RefreshCw, moduleId: 'PRECOMPTES' as ModuleType },
+        { key: 'REGULARISATION_PRECOMPTES', label: 'Régularisations', fullLabel: 'Régularisation de Précompte', icon: Repeat, moduleId: 'REGULARISATION_PRECOMPTES' as ModuleType },
+        { key: 'COTISATION_SPONTANEE', label: 'Versement spontané', fullLabel: 'Cotisation Spontanée', icon: PlusCircle, moduleId: 'COTISATIONS' as ModuleType, action: 'SPONTANEE' as const },
+        { key: 'SIMULATION_COTISATION_SPONTANEE', permission: 'COTISATION_SPONTANEE', label: 'Simulation', fullLabel: 'Simulation de Cotisation Spontanée', icon: Calculator, moduleId: 'SIMULATION_COTISATION_SPONTANEE' as ModuleType },
+        { key: 'COTISATIONS_LISTE', label: 'Historique', fullLabel: 'Liste des Cotisations', icon: List, moduleId: 'COTISATIONS' as ModuleType },
+        { key: 'VALIDATION_PAIEMENTS', label: 'Validation', fullLabel: 'Validation des paiements', icon: CreditCard, moduleId: 'PAIEMENTS' as ModuleType },
+        { key: 'CLOTURE_PERIODE', label: 'Clôture', fullLabel: 'Clôture de Période', icon: Lock, moduleId: 'CLOTURE_PERIODE' as ModuleType },
       ],
     },
     {
@@ -308,7 +315,7 @@ export default function App() {
 
   const visibleMenuItems = menuItems
     .map((item) => item.children
-      ? { ...item, children: item.children.filter((child) => hasPermission(child.key)) }
+      ? { ...item, children: item.children.filter((child) => hasPermission('permission' in child ? child.permission : child.key)) }
       : item)
     .filter((item) =>
       (currentUser.role === 'SUPERADMIN' || item.allowed.includes(currentUser.role)) &&
@@ -320,6 +327,7 @@ export default function App() {
   const selectCotisationChild = (child: { key: string; moduleId: ModuleType; action?: 'SPONTANEE' }) => {
     setActiveModule(child.moduleId);
     setActiveCotisationChildKey(child.key);
+    setIsCotisationsMenuOpen(false);
     if (child.action === 'SPONTANEE') {
       setOpenSpontaneeSignal((n) => n + 1);
     }
@@ -349,6 +357,8 @@ export default function App() {
             activeView={activeCotisationChildKey === 'COTISATION_SPONTANEE' ? 'SPONTANEE' : 'LISTE'}
           />
         );
+      case 'SIMULATION_COTISATION_SPONTANEE':
+        return <SimulationCotisationSpontanee />;
       case 'PRECOMPTES':
         return <Precomptes currentUser={currentUser} />;
       case 'REGULARISATION_PRECOMPTES':
@@ -426,31 +436,39 @@ export default function App() {
                             <span className="flex-1 text-left">{item.label}</span>
                             <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isCotisationsMenuOpen ? 'rotate-180' : ''}`} />
                           </button>
-                          {isCotisationsMenuOpen && (
-                            <div className="ml-4 border-l border-white/10 space-y-0.5 mt-0.5">
-                              {item.children.map((child) => {
-                                const ChildIcon = child.icon;
-                                const isChildActive = activeModule === child.moduleId && activeCotisationChildKey === child.key;
-                                return (
-                                  <button
-                                    key={child.key}
-                                    onClick={() => {
-                                      selectCotisationChild(child);
-                                      setIsMobileMenuOpen(false);
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded text-sm leading-snug transition ${
-                                      isChildActive
-                                        ? 'bg-white/15 text-white font-semibold'
-                                        : 'text-slate-200/80 hover:bg-white/5 hover:text-white'
-                                    }`}
-                                  >
-                                    <ChildIcon className="w-4 h-4 shrink-0 stroke-[2]" />
-                                    <span>{child.label}</span>
-                                  </button>
-                                );
-                              })}
+                          <div
+                            className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                              isCotisationsMenuOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                            }`}
+                          >
+                            <div className="overflow-hidden">
+                              <div className="ml-4 border-l border-white/10 space-y-0.5 mt-0.5">
+                                {item.children.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive = activeModule === child.moduleId && activeCotisationChildKey === child.key;
+                                  return (
+                                    <button
+                                      key={child.key}
+                                      title={child.fullLabel}
+                                      aria-current={isChildActive ? 'page' : undefined}
+                                      onClick={() => {
+                                        selectCotisationChild(child);
+                                        setIsMobileMenuOpen(false);
+                                      }}
+                                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded text-sm leading-snug transition ${
+                                        isChildActive
+                                          ? 'bg-white/15 text-white font-semibold'
+                                          : 'text-slate-200/80 hover:bg-white/5 hover:text-white'
+                                      }`}
+                                    >
+                                      <ChildIcon className="w-4 h-4 shrink-0 stroke-[2]" />
+                                      <span>{child.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          )}
+                          </div>
                         </div>
                       );
                     }
@@ -461,6 +479,7 @@ export default function App() {
                         key={item.id}
                         onClick={() => {
                           setActiveModule(item.id);
+                          setIsCotisationsMenuOpen(false);
                           setIsMobileMenuOpen(false);
                         }}
                         className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded text-sm font-semibold leading-snug transition ${
@@ -490,7 +509,20 @@ export default function App() {
         )}
 
         {/* 3. DESKTOP PERMANENT SIDEBAR (DEEP BLUE bg-[#2b529f]) */}
-        <aside className="hidden md:flex w-64 bg-[#2b529f] text-white flex-col justify-between shrink-0 select-none z-25 py-5">
+        <aside
+          className={`hidden md:flex relative ${
+            isSidebarCollapsed ? 'w-20' : 'w-64'
+          } bg-[#2b529f] text-white flex-col justify-between shrink-0 select-none z-25 py-5 transition-all duration-300`}
+        >
+          <button
+            id="desktop-nav-sidebar-toggle"
+            onClick={() => setIsSidebarCollapsed((o) => !o)}
+            title={isSidebarCollapsed ? 'Déployer le menu' : 'Réduire le menu'}
+            className="absolute -right-3 top-8 z-30 w-6 h-6 rounded-full bg-white text-[#2b529f] shadow-md flex items-center justify-center hover:bg-slate-100 transition-colors"
+          >
+            {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+
           <nav className="space-y-0.5 px-3">
             {visibleMenuItems.map((item) => {
               const IconComponent = item.icon;
@@ -501,40 +533,62 @@ export default function App() {
                   <div key={item.id}>
                     <button
                       id="desktop-nav-COTISATIONS_GROUP"
-                      onClick={() => setIsCotisationsMenuOpen((o) => !o)}
+                      title={item.label}
+                      onClick={() => {
+                        if (isSidebarCollapsed) {
+                          setIsSidebarCollapsed(false);
+                          setIsCotisationsMenuOpen(true);
+                        } else {
+                          setIsCotisationsMenuOpen((o) => !o);
+                        }
+                      }}
                       className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-lg text-sm leading-snug font-medium transition-all ${
+                        isSidebarCollapsed ? 'justify-center' : ''
+                      } ${
                         isGroupActive
                           ? 'bg-[#1c3e7b] text-white font-bold border-l-[3px] border-[#df9f28] shadow-inner'
                           : 'text-slate-100/90 hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       <IconComponent className="w-[18px] h-[18px] shrink-0 stroke-[1.8]" />
-                      <span className="flex-1 text-left truncate">{item.label}</span>
-                      <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isCotisationsMenuOpen ? 'rotate-180' : ''}`} />
+                      {!isSidebarCollapsed && (
+                        <>
+                          <span className="flex-1 text-left truncate">{item.label}</span>
+                          <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isCotisationsMenuOpen ? 'rotate-180' : ''}`} />
+                        </>
+                      )}
                     </button>
-                    {isCotisationsMenuOpen && (
-                      <div className="ml-4 border-l border-white/10 space-y-0.5 mt-0.5 mb-1">
-                        {item.children.map((child) => {
-                          const ChildIcon = child.icon;
-                          const isChildActive = activeModule === child.moduleId && activeCotisationChildKey === child.key;
-                          return (
-                            <button
-                              key={child.key}
-                              id={`desktop-nav-${child.key}`}
-                              onClick={() => selectCotisationChild(child)}
-                              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm leading-snug font-medium transition-all ${
-                                isChildActive
-                                  ? 'bg-[#1c3e7b] text-white font-bold'
-                                  : 'text-slate-100/80 hover:bg-white/10 hover:text-white'
-                              }`}
-                            >
-                              <ChildIcon className="w-4 h-4 shrink-0 stroke-[1.8]" />
-                              <span className="truncate">{child.label}</span>
-                            </button>
-                          );
-                        })}
+                    <div
+                      className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                        isCotisationsMenuOpen && !isSidebarCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="ml-4 border-l border-white/10 space-y-0.5 mt-0.5 mb-1">
+                          {item.children.map((child) => {
+                            const ChildIcon = child.icon;
+                            const isChildActive = activeModule === child.moduleId && activeCotisationChildKey === child.key;
+                            return (
+                              <button
+                                key={child.key}
+                                id={`desktop-nav-${child.key}`}
+                                title={child.fullLabel}
+                                aria-current={isChildActive ? 'page' : undefined}
+                                onClick={() => selectCotisationChild(child)}
+                                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm leading-snug font-medium transition-all ${
+                                  isChildActive
+                                    ? 'bg-[#1c3e7b] text-white font-bold border-r-[3px] border-[#df9f28] shadow-sm'
+                                    : 'text-slate-100/80 hover:bg-white/10 hover:text-white'
+                                }`}
+                              >
+                                <ChildIcon className="w-4 h-4 shrink-0 stroke-[1.8]" />
+                                <span className="truncate">{child.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               }
@@ -544,15 +598,21 @@ export default function App() {
                 <button
                   key={item.id}
                   id={`desktop-nav-${item.id}`}
-                  onClick={() => setActiveModule(item.id)}
+                  title={item.label}
+                  onClick={() => {
+                    setActiveModule(item.id);
+                    setIsCotisationsMenuOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-lg text-sm leading-snug font-medium transition-all ${
+                    isSidebarCollapsed ? 'justify-center' : ''
+                  } ${
                     isActive
                       ? 'bg-[#1c3e7b] text-white font-bold border-l-[3px] border-[#df9f28] shadow-inner'
                       : 'text-slate-100/90 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   <IconComponent className="w-[18px] h-[18px] shrink-0 stroke-[1.8]" />
-                  <span className="truncate">{item.label}</span>
+                  {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
                 </button>
               );
             })}
@@ -560,23 +620,31 @@ export default function App() {
 
           <div className="px-3 pt-4 border-t border-[#1c3e7b]/50 space-y-3">
             {/* Indicateur utilisateur */}
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5">
-              <div className="w-8 h-8 rounded-full bg-[#df9f28] text-white flex items-center justify-center text-sm font-bold shrink-0">
+            <div className={`flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+              <div
+                title={currentUser.nom}
+                className="w-8 h-8 rounded-full bg-[#df9f28] text-white flex items-center justify-center text-sm font-bold shrink-0"
+              >
                 {currentUser.nom.charAt(0)}
               </div>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-sm font-bold text-white truncate">{currentUser.nom}</p>
-                <p className="text-xs text-slate-300/80 uppercase tracking-wider truncate">{currentUser.profil_code || currentUser.profil || currentUser.role}</p>
-              </div>
+              {!isSidebarCollapsed && (
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-sm font-bold text-white truncate">{currentUser.nom}</p>
+                  <p className="text-xs text-slate-300/80 uppercase tracking-wider truncate">{currentUser.profil_code || currentUser.profil || currentUser.role}</p>
+                </div>
+              )}
             </div>
 
             <button
               id="desktop-nav-logout"
+              title="Se déconnecter"
               onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white hover:text-orange-200 hover:bg-white/5 rounded-lg transition-colors duration-150"
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white hover:text-orange-200 hover:bg-white/5 rounded-lg transition-colors duration-150 ${
+                isSidebarCollapsed ? 'justify-center' : ''
+              }`}
             >
               <Power className="w-4 h-4 shrink-0 stroke-[2]" />
-              <span>Se déconnecter</span>
+              {!isSidebarCollapsed && <span>Se déconnecter</span>}
             </button>
           </div>
         </aside>
