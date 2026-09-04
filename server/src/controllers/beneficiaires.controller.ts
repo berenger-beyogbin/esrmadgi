@@ -9,6 +9,7 @@ const createSchema = z.object({
   id_adherent: z.coerce.number().int().positive(),
   nom_benef: z.string().trim().min(1, 'Le nom est requis').max(120),
   prenoms_benef: z.string().trim().min(1, 'Les prenoms sont requis').max(160),
+  contact: z.string().trim().max(80).nullable().optional(),
   lien: z.string().trim().min(1, 'Le lien est requis').max(80),
   pourcentage: z.coerce.number().min(0).max(100),
 });

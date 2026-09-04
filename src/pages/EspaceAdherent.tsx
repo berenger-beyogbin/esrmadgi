@@ -331,6 +331,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                 <div className="bg-white p-5 shadow-md">
                   <h3 className="text-xl mb-6">Votre contrat en resume</h3>
                   <div className="space-y-4">
+                    <SummaryLine icon={<ShieldCheck className="w-5 h-5" />} label="Numero de police" value={adherent?.numero_police || 'Non attribue'} />
                     <SummaryLine icon={<ShieldCheck className="w-5 h-5" />} label="Cotisation maladie MADGI garantie" value={formatFCFA(adherent?.cotisation_es)} />
                     <SummaryLine icon={<Landmark className="w-5 h-5" />} label="Capital constitutif" value={compte?.capital_constitutif == null ? 'Non disponible' : formatFCFA(compte.capital_constitutif)} />
                     <SummaryLine icon={<CalendarDays className="w-5 h-5" />} label="Duree residuelle d'activite" value={`${adherent?.nb_trimestre ?? 0} Trimestre(s)`} />
@@ -439,6 +440,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                             </div>
                             <div className="grid grid-cols-2 gap-4 p-4">
                               <MobileValue label="Lien" value={benef.lien || '-'} />
+                              <MobileValue label="Contact" value={benef.contact || '-'} />
                               <MobileValue label="Part attribuée" value={`${benef.pourcentage}%`} strong />
                             </div>
                           </article>
@@ -450,6 +452,7 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                       <thead className="bg-slate-100">
                         <tr>
                           <th className="p-3 text-left">Nom et prenoms</th>
+                          <th className="p-3 text-left">Contact</th>
                           <th className="p-3 text-left">Lien</th>
                           <th className="p-3 text-left">Part</th>
                           <th className="p-3 text-left">Statut</th>
@@ -458,12 +461,13 @@ export default function EspaceAdherent({ currentUser, onSignOut, adherentIdOverr
                       <tbody className="divide-y divide-slate-100">
                         {beneficiaires.length === 0 ? (
                           <tr>
-                            <td colSpan={4} className="p-6 text-center text-slate-400">Aucun beneficiaire renseigne.</td>
+                            <td colSpan={5} className="p-6 text-center text-slate-400">Aucun beneficiaire renseigne.</td>
                           </tr>
                         ) : (
                           beneficiaires.map((benef) => (
                             <tr key={benef.id_beneficiaire}>
                               <td className="p-3">{benef.nom_benef} {benef.prenoms_benef}</td>
+                              <td className="p-3 font-mono whitespace-nowrap">{benef.contact || '-'}</td>
                               <td className="p-3">{benef.lien}</td>
                               <td className="p-3">{benef.pourcentage}%</td>
                               <td className="p-3">{benef.statut === false ? 'Inactif' : 'Actif'}</td>

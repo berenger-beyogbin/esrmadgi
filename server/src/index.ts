@@ -25,6 +25,7 @@ import { profilsRouter } from './routes/profils.routes';
 import { reportingRouter } from './routes/reporting.routes';
 import { rachatsRouter } from './routes/rachats.routes';
 import { requireAuth, requirePermission, requireRoles } from './middleware/auth';
+import { calculActuarielRouter } from './routes/calcul-actuariel.routes';
 
 validateEnv();
 
@@ -81,6 +82,7 @@ app.use('/api/audit', requireAuth, requireRoles('ADMINISTRATEUR'), requirePermis
 app.use('/api/utilisateurs', requireAuth, requireRoles('ADMINISTRATEUR'), requirePermission('UTILISATEURS'), utilisateursRouter);
 app.use('/api/profils', requireAuth, requireRoles('ADMINISTRATEUR'), requirePermission('UTILISATEURS'), profilsRouter);
 app.use('/api/comptes-esr', requireAuth, requireRoles('ADHERENT', 'GESTIONNAIRE', 'ADMINISTRATEUR'), requirePermission('COMPTES'), comptesEsrRouter);
+app.use('/api/calcul-actuariel', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), requirePermission('INSCRIPTION_ADHERENT|ADHERENTS|PARAMETRES'), calculActuarielRouter);
 app.use('/api/parametres', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), requirePermission('PARAMETRES'), parametresRouter);
 app.use('/api/reporting', requireAuth, requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), requirePermission('REPORTING'), reportingRouter);
 

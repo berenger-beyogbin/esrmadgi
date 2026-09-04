@@ -29,8 +29,9 @@
   body {
     font-size: 1rem;
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: auto;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     color: #1e293b;
   }
 
@@ -48,10 +49,83 @@
     vertical-align: middle;
   }
 
-  /* Inputs et selects : taille de texte lisible */
-  input, select, textarea {
+  /* Contrôles : lisibilité et contraste uniformes dans toute l'application. */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  select,
+  textarea {
     font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    background-color: #ffffff;
+    border-color: #cbd5e1;
+    caret-color: #1e3a8a;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
   }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color'])::placeholder,
+  textarea::placeholder {
+    color: #64748b;
+    opacity: 0.9;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):hover:not(:disabled),
+  select:hover:not(:disabled),
+  textarea:hover:not(:disabled) {
+    border-color: #94a3b8;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):focus,
+  select:focus,
+  textarea:focus {
+    color: #1e293b;
+    background-color: #ffffff;
+    border-color: #2b529f;
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(43 82 159 / 16%);
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):disabled,
+  select:disabled,
+  textarea:disabled,
+  input[readonly],
+  textarea[readonly] {
+    color: #475569;
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    opacity: 1;
+    -webkit-text-fill-color: #475569;
+  }
+
+  /* Les libellés sans couleur explicite restent suffisamment contrastés. */
+  label {
+    font-weight: 600;
+  }
+
+  /* Renforce la lecture des tableaux denses et des listes métier. */
+  table th {
+    color: #475569;
+  }
+
+  table td {
+    color: #334155;
+  }
+}
+
+/*
+ * Les utilitaires Tailwind de fond clair utilisés historiquement sur les
+ * champs sont volontairement renforcés ici. Les sélecteurs ciblent seulement
+ * les contrôles et ne modifient pas les cartes ou les panneaux de l'interface.
+ */
+input.bg-slate-50:not([type='checkbox']):not([type='radio']),
+select.bg-slate-50,
+textarea.bg-slate-50 {
+  background-color: #ffffff;
+}
+
+input.border-slate-200:not([type='checkbox']):not([type='radio']),
+select.border-slate-200,
+textarea.border-slate-200 {
+  border-color: #cbd5e1;
 }
 
 /*

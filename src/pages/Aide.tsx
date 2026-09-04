@@ -164,7 +164,7 @@ export default function Aide({ currentUser }: AideProps) {
           <div>
             <h3 className="font-bold text-slate-800">Grille de cotisation actuarielle</h3>
             <p className="mt-1 text-sm leading-relaxed text-slate-600">
-              Consultez directement les cotisations par trimestre, de 1 à 120 trimestres,
+              Consultez directement les cotisations par trimestre, de 1 à 160 trimestres,
               pour un départ à la retraite à 60 ou 65 ans.
             </p>
           </div>

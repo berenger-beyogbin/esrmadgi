@@ -28,6 +28,9 @@ export interface OnlineAdhesionPayload {
   date_precompte?: string | null;
   nb_trimestre: number;
   cotisation_es: number;
+  cotisation_es_avant_abattement?: number | null;
+  taux_abattement_promo?: number | null;
+  palier_abattement_promo?: number | null;
   taux_gar?: number | null;
   frais_rente?: number | null;
   taux_rachat?: number | null;
@@ -46,7 +49,7 @@ const ADHERENT_SELECT =
   'id_adherent, matricule, nom, prenoms, civilite, sexe, date_naissance, lieu_naissance, emploi, direction, situation_matrimoniale, email, telephone, adresse_geographique, adresse_postale, date_souscription, statut, etat, decede, adhesion_en_ligne, retraite, commercial_id, source_adhesion, created_at, updated_at';
 
 const INFO_SELECT =
-  'id_info_cotisation, id_adherent, grade, id_grade, date_naissance, date_retraite, age_retraite, cotisation_annuelle, date_precompte, date_effet, nb_trimestre, cotisation_es, info_actif, taux_gar, frais_rente, taux_rachat, created_at, updated_at';
+  'id_info_cotisation, id_adherent, grade, id_grade, date_naissance, date_retraite, age_retraite, cotisation_annuelle, date_precompte, date_effet, nb_trimestre, cotisation_es, cotisation_es_avant_abattement, taux_abattement_promo, palier_abattement_promo, info_actif, taux_gar, frais_rente, taux_rachat, created_at, updated_at';
 
 function demandeStatus(row: AdherentRow): OnlineAdhesionStatus {
   if (String(row.etat ?? '').toUpperCase() === 'REJETE') return 'REJETE';
@@ -54,12 +57,17 @@ function demandeStatus(row: AdherentRow): OnlineAdhesionStatus {
   return 'EN_ATTENTE';
 }
 
-function normalizeOnlineAdhesion(row: AdherentRow, info?: InfoCotisationRow | null): Record<string, unknown> {
+function normalizeOnlineAdhesion(
+  row: AdherentRow,
+  info?: InfoCotisationRow | null,
+  commercialMatricule?: string | null,
+): Record<string, unknown> {
   const idAdherent = row.id_adherent;
   return {
     id: String(idAdherent ?? ''),
     id_adherent: idAdherent,
     ...row,
+    commercial_matricule: commercialMatricule ?? null,
     statut_demande: demandeStatus(row),
     grade_id: info?.id_grade == null ? '' : String(info.id_grade),
     grade: info?.grade ?? '',
@@ -73,10 +81,36 @@ function normalizeOnlineAdhesion(row: AdherentRow, info?: InfoCotisationRow | nu
     nb_trimestre: Number(info?.nb_trimestre ?? 0),
     cotisation_annuelle: Number(info?.cotisation_annuelle ?? 0),
     cotisation_es: Number(info?.cotisation_es ?? 0),
+    cotisation_es_avant_abattement: info?.cotisation_es_avant_abattement ?? null,
+    taux_abattement_promo: info?.taux_abattement_promo ?? null,
+    palier_abattement_promo: info?.palier_abattement_promo ?? null,
     taux_gar: info?.taux_gar ?? null,
     frais_rente: info?.frais_rente ?? null,
     taux_rachat: info?.taux_rachat ?? null,
   };
+}
+
+async function findCommercialMatricules(rows: AdherentRow[]): Promise<Map<number, string>> {
+  const commercialIds = [...new Set(
+    rows
+      .map((row) => Number(row.commercial_id))
+      .filter((id) => Number.isInteger(id) && id > 0),
+  )];
+  const matricules = new Map<number, string>();
+  if (commercialIds.length === 0) return matricules;
+
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from('utilisateurs')
+    .select('id_utilisateur, matricule')
+    .in('id_utilisateur', commercialIds);
+
+  if (error) throw new Error(error.message);
+  for (const user of data ?? []) {
+    const id = Number(user.id_utilisateur);
+    if (Number.isInteger(id) && user.matricule) matricules.set(id, String(user.matricule));
+  }
+  return matricules;
 }
 
 function toAdherentPayload(payload: OnlineAdhesionPayload, status: OnlineAdhesionStatus): Record<string, unknown> {
@@ -118,6 +152,9 @@ function toInfoPayload(idAdherent: number, payload: OnlineAdhesionPayload, activ
     date_effet: payload.date_effet,
     nb_trimestre: Number(payload.nb_trimestre) || 0,
     cotisation_es: Number(payload.cotisation_es) || 0,
+    cotisation_es_avant_abattement: payload.cotisation_es_avant_abattement ?? null,
+    taux_abattement_promo: payload.taux_abattement_promo ?? null,
+    palier_abattement_promo: payload.palier_abattement_promo ?? null,
     info_actif: active,
     taux_gar: payload.taux_gar ?? null,
     frais_rente: payload.frais_rente ?? null,
@@ -272,8 +309,15 @@ export const adhesionsEnLigneRepository = {
     if (error) throw new Error(error.message);
 
     const rows = (data ?? []) as AdherentRow[];
-    const infoById = await findInfoByAdherentIds(rows.map((row) => Number(row.id_adherent)).filter(Boolean));
-    return rows.map((row) => normalizeOnlineAdhesion(row, infoById.get(Number(row.id_adherent))));
+    const [infoById, commercialMatricules] = await Promise.all([
+      findInfoByAdherentIds(rows.map((row) => Number(row.id_adherent)).filter(Boolean)),
+      findCommercialMatricules(rows),
+    ]);
+    return rows.map((row) => normalizeOnlineAdhesion(
+      row,
+      infoById.get(Number(row.id_adherent)),
+      commercialMatricules.get(Number(row.commercial_id)),
+    ));
   },
 
   async findById(id: string): Promise<unknown | null> {

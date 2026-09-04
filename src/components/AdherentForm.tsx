@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { adherentService } from '../services/adherentService';
 import { adherentCalculationService, MortalitePoint, CalculCotisationTrimestrielleResult } from '../services/adherentCalculationService';
+import { promotionDepartRetraiteService, AbattementPromoResult } from '../services/promotionDepartRetraiteService';
 import { parametreService } from '../services/parametreService';
-import { parametresGenerauxService } from '../services/parametresGenerauxService';
+import { calculActuarielService } from '../services/calculActuarielService';
 import { Civilite, SituationMatrimoniale, Grade, VAdherentComplet } from '../types';
 import { Save, ArrowLeft, Loader2, User, FileText, AlertTriangle, Calculator, CheckCircle2, XCircle, Search, Printer } from 'lucide-react';
 import FicheSimulationAdhesion from './FicheSimulationAdhesion';
@@ -32,14 +33,14 @@ function formatPercent(n: number): string {
 }
 
 function PreCalcRow({
-  label, value, mono = false, highlight = false,
+  label, value, mono = false, highlight = false, wrap = false,
 }: {
-  label: string; value: string; mono?: boolean; highlight?: boolean;
+  label: string; value: string; mono?: boolean; highlight?: boolean; wrap?: boolean;
 }) {
   return (
     <div className="flex justify-between items-baseline gap-2">
       <span className="text-xs text-slate-500 shrink-0">{label}</span>
-      <span className={`text-xs font-semibold text-right truncate${mono ? ' font-mono' : ''}${highlight ? ' text-emerald-700' : ' text-slate-700'}`}>
+      <span className={`text-xs font-semibold text-right${wrap ? '' : ' truncate'}${mono ? ' font-mono' : ''}${highlight ? ' text-emerald-700' : ' text-slate-700'}`}>
         {value}
       </span>
     </div>
@@ -92,6 +93,9 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     fraisRente: number;
     ageMax: number;
   } | null>(null);
+  const [promoAbattementRetraite, setPromoAbattementRetraite] = useState<
+    { actif: boolean; dateDebut: string | null; dateFin: string | null } | null
+  >(null);
   const [calculParamsError, setCalculParamsError] = useState<string | null>(null);
   const [calculDetails, setCalculDetails] = useState<CalculCotisationTrimestrielleResult | null>(null);
   const [showSimulationFiche, setShowSimulationFiche] = useState(false);
@@ -129,6 +133,9 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       date_precompte: '',
       nb_trimestre: 0,
       cotisation_es: 0,
+      cotisation_es_avant_abattement: null as number | null,
+      taux_abattement_promo: null as number | null,
+      palier_abattement_promo: null as number | null,
     };
   });
 
@@ -197,6 +204,9 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           date_precompte: adherent.date_precompte || '',
           nb_trimestre: adherent.nb_trimestre || 0,
           cotisation_es: adherent.cotisation_es || 0,
+          cotisation_es_avant_abattement: adherent.cotisation_es_avant_abattement ?? null,
+          taux_abattement_promo: adherent.taux_abattement_promo ?? null,
+          palier_abattement_promo: adherent.palier_abattement_promo ?? null,
         });
       } else {
         setFormData(prev => ({
@@ -216,20 +226,13 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     async function loadCalculParams() {
       setCalculParamsError(null);
       try {
-        const [mortRes, paramsRes] = await Promise.all([
-          parametreService.getMortalite(),
-          parametresGenerauxService.getParametresGeneraux(),
-        ]);
-
-        const errs: string[] = [];
-        if (mortRes.error) errs.push(`Mortalité : ${mortRes.error.message}`);
-        if (paramsRes.error) errs.push(`Paramètres généraux : ${paramsRes.error.message}`);
-        if (errs.length > 0) {
-          setCalculParamsError(errs.join(' | '));
+        const referencesRes = await calculActuarielService.getReferences();
+        if (referencesRes.error || !referencesRes.data) {
+          setCalculParamsError(referencesRes.error?.message ?? 'Références actuarielles indisponibles.');
           return;
         }
 
-        const paramList = paramsRes.data;
+        const paramList = referencesRes.data.parametres;
         const findVal = (code: string) => paramList.find(p => p.code === code)?.valeur ?? null;
 
         const tauxGarStr = findVal('TAUX_GAR');
@@ -254,8 +257,9 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           return;
         }
 
-        setMortaliteData(mortRes.data);
+        setMortaliteData(referencesRes.data.mortalite);
         setParametresCalcul({ tauxAnnuel, fraisRente, ageMax });
+        setPromoAbattementRetraite(referencesRes.data.promoAbattementRetraite ?? null);
       } catch (e: any) {
         setCalculParamsError(`Erreur chargement paramètres actuariels : ${e.message}`);
       }
@@ -284,9 +288,21 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         console.info('[COTISATION_ESR] recalc on params load — result', result);
       }
       if (result.status !== 'OK') return prev;
-      return { ...prev, cotisation_es: result.cotisationTrimestrielle };
+      const abattement = promotionDepartRetraiteService.calculerAbattementPromo({
+        libelleGrade: prev.grade,
+        nbTrimestreRestant: prev.nb_trimestre,
+        cotisationTrimestrielleStandard: result.cotisationTrimestrielle,
+        fenetre: promoAbattementRetraite,
+      });
+      return {
+        ...prev,
+        cotisation_es: abattement.applique ? abattement.cotisationApresAbattement : result.cotisationTrimestrielle,
+        cotisation_es_avant_abattement: abattement.applique ? result.cotisationTrimestrielle : null,
+        taux_abattement_promo: abattement.applique ? abattement.tauxPourcent : null,
+        palier_abattement_promo: abattement.applique ? abattement.palier : null,
+      };
     });
-  }, [adherent, parametresCalcul, mortaliteData]);
+  }, [adherent, parametresCalcul, mortaliteData, promoAbattementRetraite]);
 
   // C1-E : Calcul complet pour le résumé pré-calcul — stocke tous les détails actuariels
   useEffect(() => {
@@ -337,14 +353,27 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     return { date_precompte, date_effet, date_retraite, nb_trimestre };
   };
 
+  interface CotisationEsResult {
+    cotisation_es: number;
+    cotisation_es_avant_abattement: number | null;
+    taux_abattement_promo: number | null;
+    palier_abattement_promo: number | null;
+  }
+
   // C1-D : Calcul actuariel pur — WebDev CalculCotisationTrimestrielle_Simple
   // Aucune valeur inventée : toutes les données viennent de Supabase.
   const computeCotisationEs = (
-    data: { cotisation_annuelle: number; age_retraite: number; nb_trimestre: number },
+    data: { cotisation_annuelle: number; age_retraite: number; nb_trimestre: number; grade?: string },
     params: { tauxAnnuel: number; fraisRente: number; ageMax: number } | null,
     mort: MortalitePoint[]
-  ): number => {
-    if (!params || mort.length === 0 || data.cotisation_annuelle <= 0 || data.nb_trimestre <= 0) return 0;
+  ): CotisationEsResult => {
+    const vide: CotisationEsResult = {
+      cotisation_es: 0,
+      cotisation_es_avant_abattement: null,
+      taux_abattement_promo: null,
+      palier_abattement_promo: null,
+    };
+    if (!params || mort.length === 0 || data.cotisation_annuelle <= 0 || data.nb_trimestre <= 0) return vide;
     const result = adherentCalculationService.calculateCotisationTrimestrielleSimple({
       cotisationAnnuelle: data.cotisation_annuelle,
       pctPriseEnCharge: 1,
@@ -360,25 +389,38 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       console.info('[COTISATION_ESR] params', { ...data, ...params, mortaliteRows: mort.length });
       console.info('[COTISATION_ESR] result', result);
     }
-    return result.status === 'OK' ? result.cotisationTrimestrielle : 0;
+    if (result.status !== 'OK') return vide;
+    const abattement = promotionDepartRetraiteService.calculerAbattementPromo({
+      libelleGrade: data.grade,
+      nbTrimestreRestant: data.nb_trimestre,
+      cotisationTrimestrielleStandard: result.cotisationTrimestrielle,
+      fenetre: promoAbattementRetraite,
+    });
+    return {
+      cotisation_es: abattement.applique ? abattement.cotisationApresAbattement : result.cotisationTrimestrielle,
+      cotisation_es_avant_abattement: abattement.applique ? result.cotisationTrimestrielle : null,
+      taux_abattement_promo: abattement.applique ? abattement.tauxPourcent : null,
+      palier_abattement_promo: abattement.applique ? abattement.palier : null,
+    };
   };
 
   const handleGradeChange = (gradeId: string) => {
     const selectedGrade = grades.find(g => String(g.id_grade) === gradeId);
     if (!selectedGrade) return;
 
-    const newAgeRetraite = selectedGrade.age_retraite || 60;
+    const ageRetraiteGrade = selectedGrade.age_retraite || 60;
     const newCotisationAnnuelle = selectedGrade.cotisation_annuelle || 0;
 
     setFormData(prev => {
+      const newAgeRetraite = adherentCalculationService.resolveAgeRetraite(prev.matricule, ageRetraiteGrade);
       const dates = recalculateDates({
         date_souscription: prev.date_souscription,
         date_naissance: prev.date_naissance,
         age_retraite: newAgeRetraite,
         date_precompte: prev.date_precompte,
       });
-      const cotisation_es = computeCotisationEs(
-        { cotisation_annuelle: newCotisationAnnuelle, age_retraite: newAgeRetraite, nb_trimestre: dates.nb_trimestre },
+      const cotisationEsResult = computeCotisationEs(
+        { cotisation_annuelle: newCotisationAnnuelle, age_retraite: newAgeRetraite, nb_trimestre: dates.nb_trimestre, grade: selectedGrade.libelle_grade },
         parametresCalcul,
         mortaliteData
       );
@@ -388,7 +430,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         grade: selectedGrade.libelle_grade,
         age_retraite: newAgeRetraite,
         cotisation_annuelle: newCotisationAnnuelle,
-        cotisation_es,
+        ...cotisationEsResult,
         ...dates,
       };
     });
@@ -398,6 +440,29 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     const { name, value } = e.target;
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
+      if (name === 'matricule') {
+        const selectedGrade = grades.find((grade) => String(grade.id_grade) === prev.grade_id);
+        const ageRetraite = adherentCalculationService.resolveAgeRetraite(
+          String(value),
+          selectedGrade?.age_retraite || prev.age_retraite || 60,
+        );
+        const withRetirementRule = { ...updated, age_retraite: ageRetraite };
+        const dates = recalculateDates({
+          date_souscription: withRetirementRule.date_souscription,
+          date_naissance: withRetirementRule.date_naissance,
+          age_retraite: ageRetraite,
+          date_precompte: withRetirementRule.date_precompte,
+        });
+        return {
+          ...withRetirementRule,
+          ...dates,
+          ...computeCotisationEs(
+            { cotisation_annuelle: withRetirementRule.cotisation_annuelle, age_retraite: ageRetraite, nb_trimestre: dates.nb_trimestre, grade: withRetirementRule.grade },
+            parametresCalcul,
+            mortaliteData,
+          ),
+        };
+      }
       if (name === 'date_souscription' || name === 'date_naissance' || name === 'date_precompte') {
         const dates = recalculateDates({
           date_souscription: updated.date_souscription,
@@ -408,8 +473,8 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         const merged = { ...updated, ...dates };
         return {
           ...merged,
-          cotisation_es: computeCotisationEs(
-            { cotisation_annuelle: merged.cotisation_annuelle, age_retraite: merged.age_retraite, nb_trimestre: dates.nb_trimestre },
+          ...computeCotisationEs(
+            { cotisation_annuelle: merged.cotisation_annuelle, age_retraite: merged.age_retraite, nb_trimestre: dates.nb_trimestre, grade: merged.grade },
             parametresCalcul,
             mortaliteData
           ),
@@ -432,8 +497,8 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         const merged = { ...updated, ...dates };
         return {
           ...merged,
-          cotisation_es: computeCotisationEs(
-            { cotisation_annuelle: merged.cotisation_annuelle, age_retraite: val, nb_trimestre: dates.nb_trimestre },
+          ...computeCotisationEs(
+            { cotisation_annuelle: merged.cotisation_annuelle, age_retraite: val, nb_trimestre: dates.nb_trimestre, grade: merged.grade },
             parametresCalcul,
             mortaliteData
           ),
@@ -442,8 +507,8 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
       if (name === 'cotisation_annuelle') {
         return {
           ...updated,
-          cotisation_es: computeCotisationEs(
-            { cotisation_annuelle: val, age_retraite: updated.age_retraite, nb_trimestre: updated.nb_trimestre },
+          ...computeCotisationEs(
+            { cotisation_annuelle: val, age_retraite: updated.age_retraite, nb_trimestre: updated.nb_trimestre, grade: updated.grade },
             parametresCalcul,
             mortaliteData
           ),
@@ -505,7 +570,11 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
     };
 
     setFormData(prev => {
-      const ageRetraite = prev.age_retraite;
+      const selectedGrade = grades.find((grade) => String(grade.id_grade) === prev.grade_id);
+      const ageRetraite = adherentCalculationService.resolveAgeRetraite(
+        agentData.matricule,
+        selectedGrade?.age_retraite || prev.age_retraite || 60,
+      );
       const cotisationAnnuelle = prev.cotisation_annuelle;
       const newDateNaissance = agentData.date_naissance ?? prev.date_naissance;
       const dates = recalculateDates({
@@ -514,8 +583,8 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         age_retraite: ageRetraite,
         date_precompte: prev.date_precompte,
       });
-      const cotisation_es = computeCotisationEs(
-        { cotisation_annuelle: cotisationAnnuelle, age_retraite: ageRetraite, nb_trimestre: dates.nb_trimestre },
+      const cotisationEsResult = computeCotisationEs(
+        { cotisation_annuelle: cotisationAnnuelle, age_retraite: ageRetraite, nb_trimestre: dates.nb_trimestre, grade: prev.grade },
         parametresCalcul,
         mortaliteData,
       );
@@ -540,7 +609,7 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
         age_retraite: ageRetraite,
         cotisation_annuelle: cotisationAnnuelle,
         ...dates,
-        cotisation_es,
+        ...cotisationEsResult,
       };
     });
 
@@ -1141,6 +1210,14 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
               <div className={`rounded-xl border p-4 space-y-2 ${calculDetails?.status === 'OK' ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-100'}`}>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Résultat calculé</p>
                 <PreCalcRow label="Cotisation ESR / trim." value={formData.cotisation_es > 0 ? formatFCFA(formData.cotisation_es) : '—'} highlight />
+                {formData.taux_abattement_promo != null && (
+                  <PreCalcRow
+                    label="Promo"
+                    value={`-${formData.taux_abattement_promo}% (standard ${formatFCFA(formData.cotisation_es_avant_abattement || 0)})`}
+                    highlight
+                    wrap
+                  />
+                )}
                 <PreCalcRow label="Capital constitutif K" value={calculDetails ? formatFCFA(calculDetails.capitalConstitutif) : '—'} />
                 <PreCalcRow label="Facteur de rente a_y" value={calculDetails ? calculDetails.facteurRente.toFixed(6) : '—'} mono />
                 <PreCalcRow label="Taux trimestriel ip" value={calculDetails ? formatPercent(calculDetails.tauxTrimestriel * 100) : '—'} />
@@ -1216,6 +1293,8 @@ export default function AdherentForm({ adherent, onCancel, onSaveSuccess }: Adhe
           nb_trimestre: formData.nb_trimestre,
           cotisation_annuelle: formData.cotisation_annuelle,
           cotisation_es: formData.cotisation_es,
+          cotisation_es_avant_abattement: formData.cotisation_es_avant_abattement,
+          taux_abattement_promo: formData.taux_abattement_promo,
         }}
       />
     </div>

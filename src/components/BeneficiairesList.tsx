@@ -22,6 +22,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
   const [formState, setFormState] = useState({
     nom: '',
     prenoms: '',
+    contact: '',
     lien: '',
     pourcentage: 0,
   });
@@ -65,6 +66,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
     setFormState({
       nom: '',
       prenoms: '',
+      contact: '',
       lien: liens[0]?.libelle_lien ?? '',
       pourcentage: 100 - totalPercentage > 0 ? 100 - totalPercentage : 10,
     });
@@ -76,6 +78,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
     setFormState({
       nom: b.nom_benef,
       prenoms: b.prenoms_benef,
+      contact: b.contact ?? '',
       lien: b.lien,
       pourcentage: b.pourcentage,
     });
@@ -116,6 +119,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
         const { error } = await beneficiaireService.updateBeneficiaire(editingId, {
           nom_benef: formState.nom,
           prenoms_benef: formState.prenoms,
+          contact: formState.contact.trim() || null,
           lien: formState.lien,
           pourcentage: pct,
         });
@@ -125,6 +129,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
           id_adherent: resolvedAdherentId,
           nom_benef: formState.nom,
           prenoms_benef: formState.prenoms,
+          contact: formState.contact.trim() || null,
           lien: formState.lien,
           pourcentage: pct,
         });
@@ -224,7 +229,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
               ? 'Modifier un bénéficiaire en cas de décès'
               : 'Déclarer un bénéficiaire en cas de décès'}
           </h4>
-          <form onSubmit={handleSave} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          <form onSubmit={handleSave} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
             <div>
               <label className="block text-xs font-semibold text-slate-600 uppercase">Nom</label>
               <input
@@ -245,6 +250,19 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
                 value={formState.prenoms}
                 onChange={(e) => setFormState({ ...formState, prenoms: e.target.value })}
                 placeholder="Ex: Aminata"
+                className="mt-1 block w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 uppercase">Contact</label>
+              <input
+                type="tel"
+                value={formState.contact}
+                onChange={(e) => setFormState({ ...formState, contact: e.target.value })}
+                placeholder="Ex: 07 00 00 00 00"
+                maxLength={80}
+                autoComplete="tel"
                 className="mt-1 block w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
@@ -321,6 +339,7 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
             <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold">
               <tr>
                 <th className="py-3 px-4">Bénéficiaire</th>
+                <th className="py-3 px-4">Contact</th>
                 <th className="py-3 px-4">Lien de parenté</th>
                 <th className="py-3 px-4 text-center">Part attribuée</th>
                 <th className="py-3 px-4 text-right">Actions</th>
@@ -331,6 +350,9 @@ export default function BeneficiairesList({ adherent, onBack }: BeneficiairesLis
                 <tr key={b.id_beneficiaire} className="hover:bg-slate-50 text-slate-700">
                   <td data-label="Bénéficiaire" className="py-3 px-4 font-semibold uppercase">
                     {b.prenoms_benef} {b.nom_benef}
+                  </td>
+                  <td data-label="Contact" className="py-3 px-4 font-mono whitespace-nowrap">
+                    {b.contact || '-'}
                   </td>
                   <td data-label="Lien de parenté" className="py-3 px-4">
                     <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium text-xs">

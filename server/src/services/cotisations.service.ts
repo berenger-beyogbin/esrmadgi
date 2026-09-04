@@ -20,6 +20,20 @@ export interface GeneratePrecomptesResult {
   errors: string[];
 }
 
+export interface SimulationCotisationSpontaneeResult {
+  idAdherent: number;
+  matricule: string;
+  montantSpontane: number;
+  cotisationTrimestrielleActuelle: number;
+  nouvelleCotisationTrimestrielle: number;
+  reductionTrimestrielle: number;
+  capitalAcquisAvant: number;
+  capitalAcquisApres: number;
+  capitalConstitutif: number;
+  capitalRestant: number;
+  nombreTrimestres: number;
+}
+
 function parsePeriodeTrimestre(periode: string): ParsedTrimestre | null {
   const match = periode.trim().match(/^(\d{4})T([1-4])$/i);
   if (!match) return null;
@@ -120,6 +134,58 @@ export const cotisationsService = {
   async getInfoCotisationActive(user: AuthenticatedUser, idAdherent: string): Promise<unknown | null> {
     assertOwnAdherent(user, idAdherent);
     return cotisationsRepository.findActiveInfoCotisation(idAdherent);
+  },
+
+  async simulateCotisationSpontanee(payload: {
+    id_adherent: number;
+    montant: number;
+    date: string;
+  }): Promise<SimulationCotisationSpontaneeResult> {
+    const adherent = normalizeActiveAdherent(
+      await cotisationsRepository.findActiveAdherentById(payload.id_adherent),
+    );
+    const [info, compte, mortalite, regles] = await Promise.all([
+      cotisationsRepository.findActiveInfoCotisation(String(payload.id_adherent)) as Promise<Record<string, unknown> | null>,
+      cotisationsRepository.findCompteEsr(payload.id_adherent),
+      parametresRepository.findMortalite() as Promise<Array<Record<string, unknown>>>,
+      reglesActuariellesService.getRegles(payload.date),
+    ]);
+    if (!info) throw new AppError(409, 'Informations de cotisation actives introuvables.');
+    if (!compte) throw new AppError(409, 'Compte ESR introuvable.');
+
+    const capitalAcquisAvant = Number(compte.capital_acquis ?? 0);
+    const capitalAcquisApres = capitalAcquisAvant + payload.montant;
+    // Règle métier : le nombre de trimestres contractuel ne diminue jamais
+    // dans une simulation de cotisation spontanée.
+    const nombreTrimestres = Math.trunc(Number(info.nb_trimestre));
+    const calcul = calculerCotisationTrimestrielleApresSpontanee({
+      renteAnnuelle: Number(info.cotisation_annuelle),
+      ageRetraite: Math.trunc(Number(info.age_retraite)),
+      ageMaximum: Math.trunc(regles.ageMaximum),
+      nombreTrimestresRestants: nombreTrimestres,
+      tauxAnnuelPourcent: regles.tauxGaranti,
+      fraisRentePourcent: regles.fraisRente,
+      capitalAcquis: capitalAcquisApres,
+      mortalite: mortalite.map((row) => ({ age: Number(row.age_mort), lx: Number(row.lx) })),
+    });
+    if (calcul.statut !== 'OK') {
+      throw new AppError(409, 'Simulation actuarielle impossible pour cet adherent.');
+    }
+
+    const cotisationActuelle = Number(info.cotisation_es ?? 0);
+    return {
+      idAdherent: payload.id_adherent,
+      matricule: adherent.matricule,
+      montantSpontane: payload.montant,
+      cotisationTrimestrielleActuelle: cotisationActuelle,
+      nouvelleCotisationTrimestrielle: calcul.cotisationTrimestrielle,
+      reductionTrimestrielle: Math.max(0, cotisationActuelle - calcul.cotisationTrimestrielle),
+      capitalAcquisAvant,
+      capitalAcquisApres,
+      capitalConstitutif: calcul.capitalConstitutif,
+      capitalRestant: calcul.capitalRestant,
+      nombreTrimestres,
+    };
   },
 
   async createCotisationSpontanee(payload: CotisationSpontaneePayload): Promise<unknown> {

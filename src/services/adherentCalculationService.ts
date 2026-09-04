@@ -85,6 +85,16 @@ export function roundToStep(
 
 export const adherentCalculationService = {
 
+  /** Un privé MADGI possède un matricule composé de cinq chiffres suivis de P. */
+  isMatriculePriveMadgi(matricule?: string | null): boolean {
+    return /^\d{5}P$/.test(String(matricule ?? '').trim().toUpperCase());
+  },
+
+  /** La règle des privés (60 ans) est prioritaire sur l'âge porté par le grade. */
+  resolveAgeRetraite(matricule: string | null | undefined, ageRetraiteGrade: number): number {
+    return this.isMatriculePriveMadgi(matricule) ? 60 : ageRetraiteGrade;
+  },
+
   /**
    * Retourne les derniers jours de trimestre disponibles pour l'annee d'adhesion
    * et l'annee suivante.

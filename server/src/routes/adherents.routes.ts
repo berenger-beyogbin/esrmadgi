@@ -26,6 +26,18 @@ adherentsRouter.get('/referentiels/grades', canManageAdherents, (req, res, next)
   adherentsController.grades(req, res, next);
 });
 
+adherentsRouter.get('/filters/options', (req, res, next) => {
+  adherentsController.filterOptions(req, res, next);
+});
+
+adherentsRouter.get('/promo-retraite/eligibles', canManageAdherents, (req, res, next) => {
+  adherentsController.promoRetraiteEligibles(req, res, next);
+});
+
+adherentsRouter.post('/promo-retraite/appliquer', canManageAdherents, (req, res, next) => {
+  adherentsController.promoRetraiteAppliquer(req, res, next);
+});
+
 adherentsRouter.post('/', canManageAdherents, (req, res, next) => {
   adherentsController.create(req, res, next);
 });

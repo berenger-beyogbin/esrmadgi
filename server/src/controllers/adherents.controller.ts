@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { AppError } from '../middleware/errorHandler';
 import { adherentsService } from '../services/adherents.service';
+import { promotionRetraiteExistantsService } from '../services/promotion-retraite-existants.service';
 import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide. Format attendu : YYYY-MM-DD');
@@ -55,10 +56,26 @@ const lifecyclePayloadSchema = z.object({
   motif: z.string().trim().max(500).optional(),
 });
 
+const promoRetraiteAppliquerPayloadSchema = z.object({
+  ids_adherent: z.array(z.coerce.number().int().positive()).optional(),
+});
+
 const createAccessPayloadSchema = z.object({
   email: z.string().trim().email('Email invalide').max(160).optional(),
   telephone: z.string().trim().max(80).nullable().optional(),
   password: passwordSchema,
+});
+
+const adherentListQuerySchema = z.object({
+  search: z.string().trim().max(160).optional(),
+  statut: z.enum(['TOUS', 'ACTIF', 'INACTIF', 'RETRAITE', 'DECEDE']).optional(),
+  dateInscription: dateSchema.optional(),
+  direction: z.string().trim().max(160).optional(),
+  categorie: z.string().trim().max(80).optional(),
+  trimestrePremierPrecompte: z
+    .string()
+    .regex(/^\d{4}-T[1-4]$/, 'Trimestre de premier precompte invalide')
+    .optional(),
 });
 
 function requireUser(req: Request) {
@@ -79,15 +96,30 @@ function parseId(raw: unknown): string {
 export const adherentsController = {
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const search = typeof req.query.search === 'string' ? req.query.search : undefined;
-      const statut = typeof req.query.statut === 'string' ? req.query.statut : undefined;
+      const parsed = adherentListQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        throw new AppError(400, parsed.error.errors[0]?.message ?? 'Filtres invalides');
+      }
       const idAdherent =
         req.user?.role === 'ADHERENT'
           ? (req.user.id_adherent ?? '__NO_ADHERENT_PROFILE__')
           : undefined;
 
-      const { data, error } = await adherentsService.getAll({ search, statut, idAdherent });
+      const { data, error } = await adherentsService.getAll({ ...parsed.data, idAdherent });
       res.json({ data, error });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async filterOptions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const idAdherent =
+        req.user?.role === 'ADHERENT'
+          ? (req.user.id_adherent ?? '__NO_ADHERENT_PROFILE__')
+          : undefined;
+      const data = await adherentsService.getFilterOptions(idAdherent);
+      res.json({ data, error: null });
     } catch (err) {
       next(err);
     }
@@ -204,6 +236,28 @@ export const adherentsController = {
   async grades(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await adherentsService.getActiveGrades();
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async promoRetraiteEligibles(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await promotionRetraiteExistantsService.previsualiser();
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async promoRetraiteAppliquer(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsed = promoRetraiteAppliquerPayloadSchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw new AppError(400, parsed.error.errors[0]?.message ?? 'Donnees invalides');
+      }
+      const data = await promotionRetraiteExistantsService.appliquer(requireUser(req), parsed.data.ids_adherent);
       res.json({ data, error: null });
     } catch (err) {
       next(err);

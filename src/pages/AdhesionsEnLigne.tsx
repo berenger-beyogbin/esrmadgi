@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Edit2, Eye, Loader2, RefreshCw, Search, XCircle } from 'lucide-react';
 import { adherentCalculationService, MortalitePoint } from '../services/adherentCalculationService';
+import { promotionDepartRetraiteService } from '../services/promotionDepartRetraiteService';
 import { onlineAdhesionService } from '../services/onlineAdhesionService';
 import { DBUser, Grade, OnlineAdhesion, OnlineAdhesionPayload, OnlineAdhesionReferentiels, OnlineAdhesionStatus } from '../types';
 import { formatDateFr, formatFCFA, toIsoDate } from '../utils/formatters';
@@ -52,6 +53,9 @@ function payloadFromAdhesion(item: OnlineAdhesion): OnlineAdhesionPayload {
     date_precompte: datePrecompte,
     nb_trimestre: Number(item.nb_trimestre || 0),
     cotisation_es: Number(item.cotisation_es || 0),
+    cotisation_es_avant_abattement: item.cotisation_es_avant_abattement ?? null,
+    taux_abattement_promo: item.taux_abattement_promo ?? null,
+    palier_abattement_promo: item.palier_abattement_promo ?? null,
     taux_gar: item.taux_gar ?? null,
     frais_rente: item.frais_rente ?? null,
     taux_rachat: item.taux_rachat ?? null,
@@ -110,7 +114,8 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
 
   const recalculateFrom = (data: OnlineAdhesionPayload, grade?: Grade | null): OnlineAdhesionPayload => {
     const selectedGrade = grade ?? gradeOptions.find((g) => String(g.id_grade) === data.grade_id) ?? null;
-    const ageRetraite = selectedGrade?.age_retraite ?? data.age_retraite;
+    const ageRetraiteGrade = selectedGrade?.age_retraite ?? data.age_retraite;
+    const ageRetraite = adherentCalculationService.resolveAgeRetraite(data.matricule, ageRetraiteGrade);
     const cotisationAnnuelle = selectedGrade?.cotisation_annuelle ?? data.cotisation_annuelle;
     const datePrecompte = adherentCalculationService.resolveDatePremierPrecompteChoisie(
       data.date_souscription,
@@ -150,6 +155,13 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
       cotisationEs = result.status === 'OK' ? result.cotisationTrimestrielle : 0;
     }
 
+    const abattement = promotionDepartRetraiteService.calculerAbattementPromo({
+      libelleGrade: selectedGrade?.libelle_grade ?? data.grade,
+      nbTrimestreRestant: nbTrimestre,
+      cotisationTrimestrielleStandard: cotisationEs,
+      fenetre: refs?.promo_abattement_retraite ?? null,
+    });
+
     return {
       ...data,
       grade_id: selectedGrade ? String(selectedGrade.id_grade) : data.grade_id,
@@ -160,7 +172,10 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
       date_effet: dateEffet,
       date_retraite: dateRetraite,
       nb_trimestre: nbTrimestre,
-      cotisation_es: cotisationEs,
+      cotisation_es: abattement.applique ? abattement.cotisationApresAbattement : cotisationEs,
+      cotisation_es_avant_abattement: abattement.applique ? cotisationEs : null,
+      taux_abattement_promo: abattement.applique ? abattement.tauxPourcent : null,
+      palier_abattement_promo: abattement.applique ? abattement.palier : null,
     };
   };
 
@@ -254,7 +269,9 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
     setViewState('LIST');
     const firstLogin = data.first_login;
     setActionMsg(
-      firstLogin
+      firstLogin?.access_preserved
+        ? `Adhesion validee. Le profil ${firstLogin.profil || 'professionnel'} et l identifiant ${firstLogin.login} ont ete conserves.`
+        : firstLogin
         ? `Adhesion validee. Acces adherent cree : identifiant ${firstLogin.login}. L adherent definira son mot de passe a la premiere connexion.`
         : 'Adhesion validee. L adherent est maintenant actif dans la liste globale.',
     );
@@ -330,11 +347,23 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
             </div>
           ) : (
             <ScrollableTableWrapper>
-              <table className="rtable min-w-full divide-y divide-slate-100 text-xs text-left">
+              <table className="rtable w-full table-fixed divide-y divide-slate-100 text-xs text-left">
+                <colgroup>
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[5%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[9%]" />
+                </colgroup>
                 <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 uppercase tracking-wide font-bold text-[11px]">
                   <tr>
                     <th className="py-2.5 px-3">Date</th>
                     <th className="py-2.5 px-3">Matricule</th>
+                    <th className="py-2.5 px-2">Commercial</th>
                     <th className="py-2.5 px-3">Nom et prénoms</th>
                     <th className="py-2.5 px-3">Téléphone</th>
                     <th className="py-2.5 px-3">Grade</th>
@@ -346,20 +375,23 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {items.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-slate-400">Aucune demande trouvee.</td>
+                      <td colSpan={9} className="py-12 text-center text-slate-400">Aucune demande trouvee.</td>
                     </tr>
                   ) : (
                     items.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50">
                         <td data-label="Date" className="py-2.5 px-3 font-mono whitespace-nowrap">{formatDateFr(item.date_souscription)}</td>
                         <td data-label="Matricule" className="py-2.5 px-3 font-bold font-mono whitespace-nowrap">{item.matricule}</td>
-                        <td data-label="Nom et prénoms" className="py-2.5 px-3 whitespace-nowrap">
+                        <td data-label="Commercial" className="py-2.5 px-2 font-bold font-mono truncate" title={item.commercial_matricule || undefined}>
+                          {item.commercial_matricule || '—'}
+                        </td>
+                        <td data-label="Nom et prénoms" className="py-2.5 px-3 truncate" title={`${item.nom} ${item.prenoms}`}>
                           <span className="font-semibold text-slate-800">{item.nom}</span>
                           <span className="ml-1 text-[11px] text-slate-500">{item.prenoms}</span>
                         </td>
                         <td data-label="Téléphone" className="py-2.5 px-3 font-mono whitespace-nowrap">{item.telephone}</td>
                         <td data-label="Grade" className="py-2.5 px-3 font-bold">{item.grade || '-'}</td>
-                        <td data-label="Emploi / Fonction" className="py-2.5 px-3 max-w-xs truncate" title={item.emploi}>{item.emploi}</td>
+                        <td data-label="Emploi / Fonction" className="py-2.5 px-3 truncate" title={item.emploi}>{item.emploi}</td>
                         <td data-label="Statut" className="py-2.5 px-3 whitespace-nowrap">
                           <StatusBadge status={item.statut_demande} />
                         </td>
@@ -490,6 +522,14 @@ export default function AdhesionsEnLigne({ currentUser }: AdhesionsEnLigneProps)
             <Summary label="Trimestres" value={String(formData.nb_trimestre)} />
             <Summary label="Cotisation ESR" value={formatFCFA(formData.cotisation_es)} strong />
           </div>
+
+          {formData.taux_abattement_promo != null && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 font-semibold">
+              Offre promotionnelle departs a la retraite : abattement de {formData.taux_abattement_promo}% applique
+              (cotisation standard {formatFCFA(formData.cotisation_es_avant_abattement || 0)} - reduite a{' '}
+              {formatFCFA(formData.cotisation_es)} / trimestre).
+            </div>
+          )}
 
           {isRetirementBeforeFirstPrecompte(formData.date_retraite, formData.date_precompte) && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-semibold">

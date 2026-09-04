@@ -4,6 +4,7 @@ export interface BeneficiairePayload {
   id_adherent: number;
   nom_benef: string;
   prenoms_benef: string;
+  contact?: string | null;
   lien: string;
   pourcentage: number;
 }
@@ -11,6 +12,7 @@ export interface BeneficiairePayload {
 export interface BeneficiaireUpdatePayload {
   nom_benef: string;
   prenoms_benef: string;
+  contact?: string | null;
   lien: string;
   pourcentage: number;
 }

@@ -126,6 +126,7 @@ export const reportingService = {
         matriculeAdherent: adherent?.matricule ?? '',
         nomPrenomsAdherent: adherent ? `${adherent.nom ?? ''} ${adherent.prenoms ?? ''}`.trim() : '',
         nomPrenomsAyantDroit: `${row.nom_benef ?? ''} ${row.prenoms_benef ?? ''}`.trim(),
+        contact: row.contact ?? '',
         lien: row.lien ?? '',
         pourcentage: Number(row.pourcentage ?? 0),
         statut: row.statut ?? '',

@@ -6,6 +6,12 @@ import { paiementsService } from '../services/paiements.service';
 
 const idSchema = z.coerce.number().int().positive();
 
+const simulationSpontaneeSchema = z.object({
+  id_adherent: z.coerce.number().int().positive(),
+  montant: z.coerce.number().positive('Le montant doit etre superieur a 0'),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide. Format attendu : YYYY-MM-DD'),
+});
+
 const cotisationSpontaneeSchema = z.object({
   id_adherent: z.coerce.number().int().positive(),
   mode: z.enum(['VIREMENT', 'CHEQUE', 'ESPECES']),
@@ -96,6 +102,19 @@ export const cotisationsController = {
       const user = requireUser(req);
       const idAdherent = parsePositiveId(req.params.idAdherent, 'ID adherent');
       const data = await cotisationsService.getInfoCotisationActive(user, idAdherent);
+      res.json({ data, error: null });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async simulateSpontanee(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsed = simulationSpontaneeSchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw new AppError(400, parsed.error.errors[0]?.message ?? 'Donnees invalides');
+      }
+      const data = await cotisationsService.simulateCotisationSpontanee(parsed.data);
       res.json({ data, error: null });
     } catch (err) {
       next(err);

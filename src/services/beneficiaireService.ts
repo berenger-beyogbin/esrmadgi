@@ -22,7 +22,7 @@ export const beneficiaireService = {
   },
 
   async createBeneficiaire(
-    beneficiaire: Pick<Beneficiaire, 'id_adherent' | 'nom_benef' | 'prenoms_benef' | 'lien' | 'pourcentage'>,
+    beneficiaire: Pick<Beneficiaire, 'id_adherent' | 'nom_benef' | 'prenoms_benef' | 'contact' | 'lien' | 'pourcentage'>,
   ): Promise<{ data: Beneficiaire | null; error: Error | null }> {
     const { data, error } = await apiPost<ApiResponse<Beneficiaire>>('/api/beneficiaires', beneficiaire);
 
@@ -32,7 +32,7 @@ export const beneficiaireService = {
 
   async updateBeneficiaire(
     id: number,
-    beneficiaire: Pick<Beneficiaire, 'nom_benef' | 'prenoms_benef' | 'lien' | 'pourcentage'>,
+    beneficiaire: Pick<Beneficiaire, 'nom_benef' | 'prenoms_benef' | 'contact' | 'lien' | 'pourcentage'>,
   ): Promise<{ data: Beneficiaire | null; error: Error | null }> {
     const { data, error } = await apiPut<ApiResponse<Beneficiaire>>(
       `/api/beneficiaires/${encodeURIComponent(String(id))}`,

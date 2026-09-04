@@ -25,6 +25,9 @@ export interface CreateAdherentPayload {
   age_retraite: number;
   cotisation_annuelle: number;
   cotisation_es: number;
+  cotisation_es_avant_abattement?: number | null;
+  taux_abattement_promo?: number | null;
+  palier_abattement_promo?: number | null;
   nb_trimestre: number;
 }
 
@@ -52,6 +55,9 @@ export interface UpdateAdherentPayload {
   age_retraite: number;
   cotisation_annuelle: number;
   cotisation_es: number;
+  cotisation_es_avant_abattement?: number | null;
+  taux_abattement_promo?: number | null;
+  palier_abattement_promo?: number | null;
   nb_trimestre: number;
 }
 
@@ -60,6 +66,51 @@ export interface LifecyclePayload {
   etat: 'ACTIF' | 'INACTIF' | 'RETRAITE' | 'DECEDE';
   decede: boolean;
   retraite: boolean;
+}
+
+export interface AdherentListFilters {
+  search?: string;
+  statut?: string;
+  dateInscription?: string;
+  direction?: string;
+  categorie?: string;
+  trimestrePremierPrecompte?: string;
+  idAdherent?: string;
+}
+
+export interface AdherentFilterOptions {
+  directions: string[];
+  categories: string[];
+  trimestresPremierPrecompte: string[];
+}
+
+function premierPrecompteDateRange(trimestre: string): { debut: string; fin: string } | null {
+  const match = /^(\d{4})-T([1-4])$/.exec(trimestre);
+  if (!match) return null;
+
+  const annee = match[1];
+  const bornes: Record<string, [string, string]> = {
+    '1': ['01-01', '03-31'],
+    '2': ['04-01', '06-30'],
+    '3': ['07-01', '09-30'],
+    '4': ['10-01', '12-31'],
+  };
+  const [debut, fin] = bornes[match[2]];
+  return { debut: `${annee}-${debut}`, fin: `${annee}-${fin}` };
+}
+
+function trimestreFromDate(value: unknown): string | null {
+  const match = /^(\d{4})-(\d{2})-\d{2}/.exec(String(value ?? ''));
+  if (!match) return null;
+  const mois = Number(match[2]);
+  if (mois < 1 || mois > 12) return null;
+  return `${match[1]}-T${Math.ceil(mois / 3)}`;
+}
+
+function uniqueSorted(values: unknown[]): string[] {
+  return Array.from(
+    new Set(values.map((value) => String(value ?? '').trim()).filter(Boolean)),
+  ).sort((left, right) => left.localeCompare(right, 'fr', { sensitivity: 'base' }));
 }
 
 function sexeFromCivilite(civilite: string): string | null {
@@ -112,6 +163,9 @@ function infoCotisationPayload(idAdherent: number | string, payload: CreateAdher
     date_effet: payload.date_effet,
     nb_trimestre: payload.nb_trimestre,
     cotisation_es: payload.cotisation_es,
+    cotisation_es_avant_abattement: payload.cotisation_es_avant_abattement ?? null,
+    taux_abattement_promo: payload.taux_abattement_promo ?? null,
+    palier_abattement_promo: payload.palier_abattement_promo ?? null,
     updated_at: new Date().toISOString(),
   };
 }
@@ -162,11 +216,7 @@ async function ensureCompteEsr(idAdherent: number): Promise<void> {
 }
 
 export const adherentsRepository = {
-  async findAll(filters?: {
-    search?: string;
-    statut?: string;
-    idAdherent?: string;
-  }): Promise<{ data: unknown[]; error: string | null }> {
+  async findAll(filters?: AdherentListFilters): Promise<{ data: unknown[]; error: string | null }> {
     try {
       const supabase = getSupabaseServer();
 
@@ -202,7 +252,28 @@ export const adherentsRepository = {
         if (orFilter) query = query.or(orFilter);
       }
 
-      const { data, error } = await query.order('nom', { ascending: true });
+      if (filters?.dateInscription) {
+        query = query.eq('date_souscription', filters.dateInscription);
+      }
+
+      if (filters?.direction) {
+        query = query.eq('direction', filters.direction);
+      }
+
+      if (filters?.categorie) {
+        query = query.eq('grade', filters.categorie);
+      }
+
+      if (filters?.trimestrePremierPrecompte) {
+        const range = premierPrecompteDateRange(filters.trimestrePremierPrecompte);
+        if (range) {
+          query = query.gte('date_precompte', range.debut).lte('date_precompte', range.fin);
+        }
+      }
+
+      const { data, error } = await query
+        .order('date_souscription', { ascending: false })
+        .order('id_adherent', { ascending: false });
 
       if (error) {
         return { data: [], error: (error as { message: string }).message };
@@ -212,6 +283,36 @@ export const adherentsRepository = {
       const msg = e instanceof Error ? e.message : 'Erreur dépôt adhérents';
       return { data: [], error: msg };
     }
+  },
+
+  async findFilterOptions(idAdherent?: string): Promise<AdherentFilterOptions> {
+    const supabase = getSupabaseServer();
+    let query = supabase
+      .from('v_adherents_complets')
+      .select('direction, grade, date_precompte')
+      .not('etat', 'in', '("EN_ATTENTE","REJETE")');
+
+    if (idAdherent) {
+      query = query.eq('id_adherent', idAdherent);
+    }
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const rows = (data ?? []) as Array<{
+      direction?: unknown;
+      grade?: unknown;
+      date_precompte?: unknown;
+    }>;
+    const trimestres = uniqueSorted(
+      rows.map((row) => trimestreFromDate(row.date_precompte)).filter(Boolean),
+    ).reverse();
+
+    return {
+      directions: uniqueSorted(rows.map((row) => row.direction)),
+      categories: uniqueSorted(rows.map((row) => row.grade)),
+      trimestresPremierPrecompte: trimestres,
+    };
   },
 
   async findById(id: string): Promise<unknown | null> {
@@ -262,6 +363,7 @@ export const adherentsRepository = {
           ...adherentBasePayload(payload),
           sexe: sexeFromCivilite(payload.civilite),
           adhesion_en_ligne: false,
+          source_adhesion: 'BACKOFFICE',
           created_at: new Date().toISOString(),
         })
         .select('id_adherent')

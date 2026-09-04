@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { adherentService } from '../services/adherentService';
-import { VAdherentComplet, DBUser, AuditLog } from '../types';
+import { VAdherentComplet, DBUser, AuditLog, AdherentFilterOptions } from '../types';
 import AdherentForm from '../components/AdherentForm';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import BeneficiairesList from '../components/BeneficiairesList';
-import { Search, Plus, Edit2, Eye, UserPlus, Milestone, Filter, RefreshCw, Calendar, Mail, Phone, Users, ShieldAlert, KeyRound, Power, ChevronLeft, ChevronRight } from 'lucide-react';
+import PromoRetraiteExistantsModal from '../components/PromoRetraiteExistantsModal';
+import { Search, Plus, Edit2, Eye, UserPlus, Milestone, Filter, RefreshCw, Calendar, Mail, Phone, Users, ShieldAlert, KeyRound, Power, ChevronLeft, ChevronRight, RotateCcw, Gift } from 'lucide-react';
 import { formatFCFA, formatDateFr } from '../utils/formatters';
 import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
 
@@ -13,8 +14,27 @@ interface AdherentsProps {
 }
 
 type ViewState = 'LIST' | 'FORM' | 'DETAILS';
+type StatutFilter = 'TOUS' | 'ACTIF' | 'RETRAITE' | 'DECEDE' | 'INACTIF';
+interface AdherentListFilterState {
+  search: string;
+  statut: StatutFilter;
+  dateInscription: string;
+  direction: string;
+  categorie: string;
+  trimestrePremierPrecompte: string;
+}
 const DEFAULT_ADHERENTS_PER_PAGE = 6;
 const ADHERENTS_PER_PAGE_OPTIONS = [6, 10, 20, 50];
+const EMPTY_FILTER_OPTIONS: AdherentFilterOptions = {
+  directions: [],
+  categories: [],
+  trimestresPremierPrecompte: [],
+};
+
+function formatTrimestrePremierPrecompte(value: string): string {
+  const [annee, trimestre] = value.split('-');
+  return trimestre && annee ? `${trimestre} ${annee}` : value;
+}
 
 export default function Adherents({ currentUser }: AdherentsProps) {
   const [adherents, setAdherents] = useState<VAdherentComplet[]>([]);
@@ -23,7 +43,13 @@ export default function Adherents({ currentUser }: AdherentsProps) {
 
   // Filter States
   const [search, setSearch] = useState('');
-  const [statutFilter, setStatutFilter] = useState<'TOUS' | 'ACTIF' | 'RETRAITE' | 'DECEDE' | 'INACTIF'>('TOUS');
+  const [statutFilter, setStatutFilter] = useState<StatutFilter>('TOUS');
+  const [dateInscriptionFilter, setDateInscriptionFilter] = useState('');
+  const [directionFilter, setDirectionFilter] = useState('');
+  const [categorieFilter, setCategorieFilter] = useState('');
+  const [trimestrePrecompteFilter, setTrimestrePrecompteFilter] = useState('');
+  const [filterOptions, setFilterOptions] = useState<AdherentFilterOptions>(EMPTY_FILTER_OPTIONS);
+  const fetchRequestId = useRef(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ADHERENTS_PER_PAGE);
 
@@ -36,40 +62,95 @@ export default function Adherents({ currentUser }: AdherentsProps) {
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [isLifecycleLoading, setIsLifecycleLoading] = useState(false);
 
+  const [showPromoRetraiteModal, setShowPromoRetraiteModal] = useState(false);
   const [showAccessForm, setShowAccessForm] = useState(false);
   const [accessPassword, setAccessPassword] = useState('');
   const [accessEmail, setAccessEmail] = useState('');
   const [accessPhone, setAccessPhone] = useState('');
   const [isAccessSubmitting, setIsAccessSubmitting] = useState(false);
 
-  const fetchAdherents = async () => {
+  const fetchAdherents = async (override?: AdherentListFilterState) => {
+    const requestId = ++fetchRequestId.current;
+    const activeFilters = override ?? {
+      search,
+      statut: statutFilter,
+      dateInscription: dateInscriptionFilter,
+      direction: directionFilter,
+      categorie: categorieFilter,
+      trimestrePremierPrecompte: trimestrePrecompteFilter,
+    };
     setIsLoading(true);
     setErrorMsg(null);
     try {
       const { data, error } = await adherentService.getAdherents({
-        search: search.trim() || undefined,
-        statut: statutFilter !== 'TOUS' ? statutFilter : undefined,
+        search: activeFilters.search.trim() || undefined,
+        statut: activeFilters.statut !== 'TOUS' ? activeFilters.statut : undefined,
+        dateInscription: activeFilters.dateInscription || undefined,
+        direction: activeFilters.direction || undefined,
+        categorie: activeFilters.categorie || undefined,
+        trimestrePremierPrecompte: activeFilters.trimestrePremierPrecompte || undefined,
       });
 
       if (error) throw error;
+      if (requestId !== fetchRequestId.current) return;
       setAdherents(data || []);
       setCurrentPage(1);
     } catch (e: any) {
+      if (requestId !== fetchRequestId.current) return;
       console.error(e);
       setErrorMsg(typeof e === 'string' ? e : (e?.message ?? 'Erreur de récupération des adhérents de la MADGI.'));
     } finally {
-      setIsLoading(false);
+      if (requestId === fetchRequestId.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAdherents();
-  }, [statutFilter]);
+  }, [statutFilter, dateInscriptionFilter, directionFilter, categorieFilter, trimestrePrecompteFilter]);
+
+  useEffect(() => {
+    let isActive = true;
+    adherentService.getFilterOptions().then(({ data, error }) => {
+      if (!isActive) return;
+      if (error) {
+        console.error(error);
+        return;
+      }
+      if (data) setFilterOptions({ ...EMPTY_FILTER_OPTIONS, ...data });
+    });
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   // Handle Search submit
   const handleSearchKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       fetchAdherents();
+    }
+  };
+
+  const handleResetFilters = () => {
+    const hasStructuredFilters = statutFilter !== 'TOUS'
+      || Boolean(dateInscriptionFilter)
+      || Boolean(directionFilter)
+      || Boolean(categorieFilter)
+      || Boolean(trimestrePrecompteFilter);
+    setSearch('');
+    setStatutFilter('TOUS');
+    setDateInscriptionFilter('');
+    setDirectionFilter('');
+    setCategorieFilter('');
+    setTrimestrePrecompteFilter('');
+    if (!hasStructuredFilters) {
+      fetchAdherents({
+        search: '',
+        statut: 'TOUS',
+        dateInscription: '',
+        direction: '',
+        categorie: '',
+        trimestrePremierPrecompte: '',
+      });
     }
   };
 
@@ -199,61 +280,141 @@ export default function Adherents({ currentUser }: AdherentsProps) {
               </p>
             </div>
             {currentUser.role !== 'ADHERENT' && (
-              <button
-                id="btn-adherents-nouveau"
-                onClick={handleCreateNew}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition"
-              >
-                <Plus className="w-4 h-4" />
-                Inscrire un Adhérent
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  id="btn-adherents-promo-retraite"
+                  onClick={() => setShowPromoRetraiteModal(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-700 rounded-xl text-sm font-semibold transition"
+                >
+                  <Gift className="w-4 h-4" />
+                  Offre promo retraite
+                </button>
+                <button
+                  id="btn-adherents-nouveau"
+                  onClick={handleCreateNew}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  Inscrire un Adhérent
+                </button>
+              </div>
             )}
           </div>
 
+          <PromoRetraiteExistantsModal
+            open={showPromoRetraiteModal}
+            onClose={() => setShowPromoRetraiteModal(false)}
+            onApplied={() => fetchAdherents()}
+          />
+
           {/* Search bar & filter controls */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-            {/* Search Input */}
-            <div className="relative w-full md:max-w-md">
-              <input
-                id="input-adherent-search"
-                type="text"
-                placeholder="Rechercher par matricule, nom, prénom (Entrée)..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={handleSearchKeyPress}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm transition-all"
-              />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+            <div className="flex flex-col lg:flex-row gap-4 items-center">
+              {/* Search Input */}
+              <div className="relative w-full lg:flex-1 lg:min-w-0">
+                <input
+                  id="input-adherent-search"
+                  type="text"
+                  placeholder="Rechercher par matricule, nom, prénom (Entrée)..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={handleSearchKeyPress}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm transition-all"
+                />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              </div>
+
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto lg:flex-none justify-end">
+                <label
+                  htmlFor="select-filter-statut"
+                  className="shrink-0 text-slate-500 text-sm font-semibold mr-1 flex items-center gap-1"
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  Statut
+                </label>
+                <select
+                  id="select-filter-statut"
+                  value={statutFilter}
+                  onChange={(event) => setStatutFilter(event.target.value as StatutFilter)}
+                  className="shrink-0 min-w-40 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                >
+                  <option value="TOUS">Tous les statuts</option>
+                  <option value="ACTIF">ACTIF</option>
+                  <option value="RETRAITE">RETRAITE</option>
+                  <option value="INACTIF">INACTIF</option>
+                  <option value="DECEDE">DECEDE</option>
+                </select>
+                <button
+                  id="btn-adherent-reset-filters"
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-sm font-semibold text-slate-600 transition"
+                  title="Réinitialiser tous les filtres"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Réinitialiser
+                </button>
+              </div>
             </div>
 
-            {/* Quick action controls */}
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
-              <span className="text-slate-500 text-sm font-semibold mr-1 flex items-center gap-1">
-                <Filter className="w-3.5 h-3.5" />
-                Filtrer par statut :
-              </span>
-              {(['TOUS', 'ACTIF', 'RETRAITE', 'INACTIF', 'DECEDE'] as const).map((st) => (
-                <button
-                  key={st}
-                  id={`btn-filter-${st.toLowerCase()}`}
-                  onClick={() => setStatutFilter(st)}
-                  className={`px-3 py-1.5 text-sm font-semibold rounded-lg border transition ${
-                    statutFilter === st
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                      : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                  }`}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
+              <div className="space-y-1.5 text-sm font-semibold text-slate-600">
+                <label htmlFor="input-filter-date-inscription">Date d'inscription</label>
+                <input
+                  id="input-filter-date-inscription"
+                  type="date"
+                  value={dateInscriptionFilter}
+                  onChange={(event) => setDateInscriptionFilter(event.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+
+              <label className="space-y-1.5 text-sm font-semibold text-slate-600">
+                <span>Direction / Ville</span>
+                <select
+                  id="select-filter-direction"
+                  value={directionFilter}
+                  onChange={(event) => setDirectionFilter(event.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 >
-                  {st === 'TOUS' ? 'Tous' : st}
-                </button>
-              ))}
-              <button
-                id="btn-adherent-load"
-                onClick={fetchAdherents}
-                className="p-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-slate-500 transition ml-2"
-                title="Actualiser la liste"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
+                  <option value="">Toutes les directions / villes</option>
+                  {filterOptions.directions.map((direction) => (
+                    <option key={direction} value={direction}>{direction}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="space-y-1.5 text-sm font-semibold text-slate-600">
+                <span>Catégorie</span>
+                <select
+                  id="select-filter-categorie"
+                  value={categorieFilter}
+                  onChange={(event) => setCategorieFilter(event.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="">Toutes les catégories</option>
+                  {filterOptions.categories.map((categorie) => (
+                    <option key={categorie} value={categorie}>{categorie}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="space-y-1.5 text-sm font-semibold text-slate-600">
+                <span>Trimestre du 1er précompte</span>
+                <select
+                  id="select-filter-trimestre-precompte"
+                  value={trimestrePrecompteFilter}
+                  onChange={(event) => setTrimestrePrecompteFilter(event.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="">Tous les trimestres</option>
+                  {filterOptions.trimestresPremierPrecompte.map((trimestre) => (
+                    <option key={trimestre} value={trimestre}>
+                      {formatTrimestrePremierPrecompte(trimestre)}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
 
@@ -672,6 +833,10 @@ export default function Adherents({ currentUser }: AdherentsProps) {
               </h3>
 
               <div className="space-y-3.5 text-xs">
+                <div className="flex justify-between pb-1.5 border-b border-slate-800 font-mono gap-4">
+                  <span className="text-slate-400">N° de police</span>
+                  <span className="font-bold text-emerald-400 text-right">{selectedAdherent.numero_police || '—'}</span>
+                </div>
                 <div className="flex justify-between pb-1.5 border-b border-slate-800">
                   <span className="text-slate-400">Classe / Grade</span>
                   <span className="font-bold text-slate-100">{selectedAdherent.grade_code}</span>

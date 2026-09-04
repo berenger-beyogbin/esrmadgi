@@ -160,6 +160,7 @@ function colonnesPour(id: EtatId): ColonneVue[] {
         { header: 'Matricule adhérent', key: 'matriculeAdherent', width: 16 },
         { header: 'Adhérent', key: 'nomPrenomsAdherent', width: 26 },
         { header: 'Bénéficiaire en cas de décès', key: 'nomPrenomsAyantDroit', width: 30 },
+        { header: 'Contact', key: 'contact', width: 18 },
         { header: 'Lien', key: 'lien', width: 16 },
         { header: 'Pourcentage', key: 'pourcentage', width: 14 },
       ];

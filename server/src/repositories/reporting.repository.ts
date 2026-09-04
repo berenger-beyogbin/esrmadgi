@@ -190,7 +190,7 @@ export const reportingRepository = {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from('beneficiaires')
-      .select('id_beneficiaire,id_adherent,nom_benef,prenoms_benef,lien,pourcentage,statut,date_enreg')
+      .select('id_beneficiaire,id_adherent,nom_benef,prenoms_benef,contact,lien,pourcentage,statut,date_enreg')
       .order('date_enreg', { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];

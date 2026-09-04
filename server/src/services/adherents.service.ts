@@ -4,12 +4,14 @@ import {
   LifecyclePayload,
   CreateAdherentPayload,
   UpdateAdherentPayload,
+  AdherentListFilters,
   adherentsRepository,
 } from '../repositories/adherents.repository';
 import { utilisateursRepository } from '../repositories/utilisateurs.repository';
 import { auditService } from './audit.service';
-import { utilisateursService } from './utilisateurs.service';
+import { hasProfessionalAccess, utilisateursService } from './utilisateurs.service';
 import { isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
+import { appliquerRegleRetraite } from './regle-retraite.service';
 
 export interface AdherentFormPayload {
   date_souscription: string;
@@ -36,6 +38,9 @@ export interface AdherentFormPayload {
   date_precompte?: string | null;
   nb_trimestre: number;
   cotisation_es: number;
+  cotisation_es_avant_abattement?: number | null;
+  taux_abattement_promo?: number | null;
+  palier_abattement_promo?: number | null;
 }
 
 export interface AdherentLifecyclePayload {
@@ -120,6 +125,9 @@ function toCreatePayload(payload: AdherentFormPayload): CreateAdherentPayload {
     age_retraite: Number(payload.age_retraite) || 60,
     cotisation_annuelle: Number(payload.cotisation_annuelle) || 0,
     cotisation_es: Number(payload.cotisation_es) || 0,
+    cotisation_es_avant_abattement: payload.cotisation_es_avant_abattement ?? null,
+    taux_abattement_promo: payload.taux_abattement_promo ?? null,
+    palier_abattement_promo: payload.palier_abattement_promo ?? null,
     nb_trimestre: Number(payload.nb_trimestre) || 0,
   };
 }
@@ -149,6 +157,9 @@ function toUpdatePayload(payload: AdherentFormPayload): UpdateAdherentPayload {
     age_retraite: Number(payload.age_retraite),
     cotisation_annuelle: Number(payload.cotisation_annuelle),
     cotisation_es: Number(payload.cotisation_es),
+    cotisation_es_avant_abattement: payload.cotisation_es_avant_abattement ?? null,
+    taux_abattement_promo: payload.taux_abattement_promo ?? null,
+    palier_abattement_promo: payload.palier_abattement_promo ?? null,
     nb_trimestre: Number(payload.nb_trimestre),
   };
 }
@@ -179,13 +190,32 @@ function lifecycleLabel(action: AdherentLifecyclePayload['action']): string {
   }
 }
 
+async function ensureAdherentAccessWithRetry(
+  user: AuthenticatedUser,
+  input: { matricule: string; idAdherent: number; telephone?: string | null },
+) {
+  try {
+    return await utilisateursService.ensureAdherentAccess(user, input);
+  } catch (firstError) {
+    console.warn(
+      '[adherents] premiere tentative de creation acces echouee, nouvelle tentative:',
+      firstError instanceof Error ? firstError.message : firstError,
+    );
+    return utilisateursService.ensureAdherentAccess(user, input);
+  }
+}
+
 export const adherentsService = {
-  async getAll(filters?: { search?: string; statut?: string; idAdherent?: string }) {
+  async getAll(filters?: AdherentListFilters) {
     const result = await adherentsRepository.findAll(filters);
     return {
       data: result.data.map(normalizeAdherent),
       error: result.error,
     };
+  },
+
+  async getFilterOptions(idAdherent?: string) {
+    return adherentsRepository.findFilterOptions(idAdherent);
   },
 
   async getById(user: AuthenticatedUser, id: string): Promise<unknown | null> {
@@ -198,7 +228,7 @@ export const adherentsService = {
   },
 
   async create(user: AuthenticatedUser, payload: AdherentFormPayload): Promise<unknown> {
-    const normalized = normalizeFormPayload(payload);
+    const normalized = await appliquerRegleRetraite(normalizeFormPayload(payload));
     if (!normalized.grade_id) {
       throw new AppError(400, 'Le grade professionnel est obligatoire');
     }
@@ -214,6 +244,14 @@ export const adherentsService = {
     }
 
     const data = await adherentsRepository.createComplete(toCreatePayload(normalized));
+    const created = normalizeAdherent(data) as AdherentViewRow;
+    const firstLogin = normalized.statut === 'ACTIF' && created.id_adherent
+      ? await ensureAdherentAccessWithRetry(user, {
+          matricule: normalized.matricule,
+          idAdherent: Number(created.id_adherent),
+          telephone: normalized.telephone || null,
+        })
+      : null;
     await auditService
       .logEvent(user, {
         action: 'CREATION_ADHERENT',
@@ -222,7 +260,7 @@ export const adherentsService = {
         details: `Creation de l'adherent ${normalized.matricule} - ${normalized.nom} ${normalized.prenoms}.`,
       })
       .catch(() => undefined);
-    return data;
+    return firstLogin ? { ...created, first_login: firstLogin } : created;
   },
 
   async update(user: AuthenticatedUser, id: string, payload: AdherentFormPayload): Promise<unknown> {
@@ -231,13 +269,14 @@ export const adherentsService = {
       throw new AppError(404, 'Adherent introuvable');
     }
 
-    const updated = await adherentsRepository.update(id, toUpdatePayload(payload));
+    const normalized = await appliquerRegleRetraite(normalizeFormPayload(payload));
+    const updated = await adherentsRepository.update(id, toUpdatePayload(normalized));
     await auditService
       .logEvent(user, {
         action: 'MODIFICATION_ADHERENT',
         objetAudit: 'ADHERENT',
         idObjet: id,
-        details: `Modification de la fiche adherent ${payload.matricule} par ${actor(user)}.`,
+        details: `Modification de la fiche adherent ${normalized.matricule} par ${actor(user)}.`,
       })
       .catch(() => undefined);
     return normalizeAdherent(updated ?? { id });
@@ -257,14 +296,17 @@ export const adherentsService = {
       (existing.id_adherent ? await utilisateursRepository.findByAdherentId(Number(existing.id_adherent)) : null) ||
       (existing.matricule ? await utilisateursRepository.findByMatricule(String(existing.matricule)) : null);
 
-    if (linkedUser && ['ACTIVER', 'DESACTIVER', 'DECES'].includes(payload.action)) {
+    if (
+      linkedUser &&
+      !hasProfessionalAccess(linkedUser.profil) &&
+      ['ACTIVER', 'DESACTIVER', 'DECES'].includes(payload.action)
+    ) {
       await utilisateursRepository.update(linkedUser.id_utilisateur, {
         user_actif: payload.action === 'ACTIVER',
         auditUserId: Number.isInteger(Number(user.id_utilisateur)) ? Number(user.id_utilisateur) : null,
       });
     } else if (!linkedUser && payload.action === 'ACTIVER' && existing.matricule && existing.id_adherent) {
-      await utilisateursService
-        .ensureAdherentAccess(user, {
+      await ensureAdherentAccessWithRetry(user, {
           matricule: String(existing.matricule),
           idAdherent: Number(existing.id_adherent),
           telephone: existing.telephone ?? null,
@@ -293,6 +335,15 @@ export const adherentsService = {
     }
     if (!payload.password || !isStrongPassword(payload.password)) {
       throw new AppError(400, PASSWORD_POLICY_MESSAGE);
+    }
+
+    const existingUser = await utilisateursRepository.findByMatricule(String(adherent.matricule));
+    if (existingUser && hasProfessionalAccess(existingUser.profil)) {
+      return utilisateursService.ensureAdherentAccess(user, {
+        matricule: String(adherent.matricule),
+        idAdherent: Number(adherent.id_adherent),
+        telephone: payload.telephone !== undefined ? payload.telephone : adherent.telephone ?? null,
+      });
     }
 
     const data = await utilisateursService.create(user, {

@@ -1,4 +1,4 @@
-import { VAdherentComplet, Civilite, SituationMatrimoniale, Emploi, Fonction, Grade, ExternalAgentInfo, AuditLog } from '../types';
+import { VAdherentComplet, Civilite, SituationMatrimoniale, Emploi, Fonction, Grade, ExternalAgentInfo, AuditLog, AdherentFilterOptions, AdherentEligiblePromo } from '../types';
 import { apiGet, apiPost, apiPut } from '../lib/apiClient';
 
 type ApiResponse<T> = { data: T; error: string | null };
@@ -23,13 +23,27 @@ export const adherentService = {
   async getAdherents(filters?: {
     search?: string;
     statut?: string;
+    dateInscription?: string;
+    direction?: string;
+    categorie?: string;
+    trimestrePremierPrecompte?: string;
   }): Promise<{ data: VAdherentComplet[]; error: Error | null }> {
     const params = new URLSearchParams();
     if (filters?.search?.trim()) params.set('search', filters.search.trim());
     if (filters?.statut && filters.statut !== 'TOUS') params.set('statut', filters.statut);
+    if (filters?.dateInscription) params.set('dateInscription', filters.dateInscription);
+    if (filters?.direction) params.set('direction', filters.direction);
+    if (filters?.categorie) params.set('categorie', filters.categorie);
+    if (filters?.trimestrePremierPrecompte) {
+      params.set('trimestrePremierPrecompte', filters.trimestrePremierPrecompte);
+    }
     const qs = params.toString() ? `?${params.toString()}` : '';
 
     return getList<VAdherentComplet>(`/api/adherents${qs}`);
+  },
+
+  async getFilterOptions(): Promise<{ data: AdherentFilterOptions | null; error: Error | null }> {
+    return getSingle<AdherentFilterOptions>('/api/adherents/filters/options');
   },
 
   async getAdherentById(id: string): Promise<{ data: VAdherentComplet | null; error: Error | null }> {
@@ -102,6 +116,21 @@ export const adherentService = {
       return [];
     }
     return data;
+  },
+
+  async getPromoRetraiteEligibles(): Promise<{ data: AdherentEligiblePromo[]; error: Error | null }> {
+    return getList<AdherentEligiblePromo>('/api/adherents/promo-retraite/eligibles');
+  },
+
+  async appliquerPromoRetraite(
+    idsAdherent?: number[],
+  ): Promise<{ data: { appliques: AdherentEligiblePromo[] } | null; error: Error | null }> {
+    const { data, error } = await apiPost<ApiResponse<{ appliques: AdherentEligiblePromo[] }>>(
+      '/api/adherents/promo-retraite/appliquer',
+      { ids_adherent: idsAdherent },
+    );
+    if (error) return { data: null, error: new Error(error) };
+    return { data: data?.data ?? null, error: toError(data?.error) };
   },
 
   async searchAgentByMatricule(matricule: string): Promise<{

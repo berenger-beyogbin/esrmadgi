@@ -11,6 +11,7 @@ import {
   OnlineAdhesionStatus,
   adhesionsEnLigneRepository,
 } from '../repositories/adhesions-en-ligne.repository';
+import { appliquerRegleRetraite } from './regle-retraite.service';
 
 type AnyRow = Record<string, any>;
 
@@ -185,6 +186,12 @@ async function enrichWithCurrentActuarialParams(payload: OnlineAdhesionPayload):
   };
 }
 
+async function normalizeAndRecalculatePayload(payload: OnlineAdhesionPayload): Promise<OnlineAdhesionPayload> {
+  return appliquerRegleRetraite(
+    await enrichWithCurrentActuarialParams(normalizePayload(payload)),
+  );
+}
+
 const PUBLIC_REFERENTIELS_CACHE_TTL_MS = 5 * 60 * 1000;
 let publicReferentielsCache: { data: unknown; expiresAt: number } | null = null;
 let publicReferentielsRequest: Promise<unknown> | null = null;
@@ -208,6 +215,16 @@ export const adhesionsEnLigneService = {
         rejetes,
         taux_conversion: own.length ? Math.round((valides / own.length) * 100) : 0,
         derniere_activite: own[0]?.created_at ?? null,
+        dossiers: own.map((item: AnyRow) => ({
+          id: String(item.id_adherent),
+          matricule: item.matricule,
+          nom: item.nom,
+          prenoms: item.prenoms,
+          statut_demande: item.statut === true || String(item.etat).toUpperCase() === 'ACTIF'
+            ? 'VALIDE'
+            : String(item.etat).toUpperCase() === 'REJETE' ? 'REJETE' : 'EN_ATTENTE',
+          created_at: item.created_at ?? null,
+        })),
       };
     });
     const total = rows.reduce((sum, row) => sum + row.total, 0);
@@ -303,6 +320,7 @@ export const adhesionsEnLigneService = {
       const fraisRente = parsePercent(findParamValue(paramRows, 'FRAIS_RENTE'));
       const ageMaxRaw = findParamValue(paramRows, 'AGE_MAX');
       const ageMax = ageMaxRaw ? Number(ageMaxRaw) : null;
+      const promoRow = paramRows.find((row) => row.code === 'PROMO_ABATTEMENT_RETRAITE');
       const data = {
         civilites,
         situations_matrimoniales: situations,
@@ -314,6 +332,13 @@ export const adhesionsEnLigneService = {
           fraisRente: fraisRente == null ? null : fraisRente / 100,
           ageMax: Number.isFinite(ageMax) ? ageMax : null,
         },
+        promo_abattement_retraite: promoRow
+          ? {
+              actif: Boolean(promoRow.actif),
+              dateDebut: promoRow.date_debut == null ? null : String(promoRow.date_debut),
+              dateFin: promoRow.date_fin == null ? null : String(promoRow.date_fin),
+            }
+          : null,
       };
       publicReferentielsCache = { data, expiresAt: Date.now() + PUBLIC_REFERENTIELS_CACHE_TTL_MS };
       return data;
@@ -327,7 +352,7 @@ export const adhesionsEnLigneService = {
   },
 
   async submitPublic(payload: OnlineAdhesionPayload): Promise<unknown> {
-    const normalized = await enrichWithCurrentActuarialParams(normalizePayload(payload));
+    const normalized = await normalizeAndRecalculatePayload(payload);
     ensureSubmittable(normalized);
 
     const existing = (await adhesionsEnLigneRepository.findByMatricule(normalized.matricule)) as AnyRow | null;
@@ -345,7 +370,7 @@ export const adhesionsEnLigneService = {
   },
 
   async submitCommercial(user: AuthenticatedUser, payload: OnlineAdhesionPayload): Promise<unknown> {
-    const normalized = await enrichWithCurrentActuarialParams(normalizePayload(payload));
+    const normalized = await normalizeAndRecalculatePayload(payload);
     ensureSubmittable(normalized);
     const existing = (await adhesionsEnLigneRepository.findByMatricule(normalized.matricule)) as AnyRow | null;
     if (existing && existing.adhesion_en_ligne !== true) {
@@ -389,7 +414,7 @@ export const adhesionsEnLigneService = {
 
   async update(user: AuthenticatedUser, id: string, payload: OnlineAdhesionPayload): Promise<unknown> {
     await this.getById(id);
-    const normalized = await enrichWithCurrentActuarialParams(normalizePayload(payload));
+    const normalized = await normalizeAndRecalculatePayload(payload);
     ensureSubmittable(normalized);
     const data = await adhesionsEnLigneRepository.update(id, normalized, 'EN_ATTENTE');
 
@@ -411,7 +436,7 @@ export const adhesionsEnLigneService = {
       throw new AppError(400, 'Cette adhesion est deja validee.');
     }
 
-    const normalized = await enrichWithCurrentActuarialParams(normalizePayload(payload));
+    const normalized = await normalizeAndRecalculatePayload(payload);
     ensureSubmittable(normalized);
     const data = await adhesionsEnLigneRepository.update(id, normalized, 'VALIDE');
     const firstLogin = await ensureFirstLoginAccess(user, data as AnyRow);

@@ -28,6 +28,20 @@ export interface CotisationSpontaneeResult {
   en_attente_validation?: boolean;
 }
 
+export interface SimulationCotisationSpontaneeResult {
+  idAdherent: number;
+  matricule: string;
+  montantSpontane: number;
+  cotisationTrimestrielleActuelle: number;
+  nouvelleCotisationTrimestrielle: number;
+  reductionTrimestrielle: number;
+  capitalAcquisAvant: number;
+  capitalAcquisApres: number;
+  capitalConstitutif: number;
+  capitalRestant: number;
+  nombreTrimestres: number;
+}
+
 function toError(error: string | null | undefined): Error | null {
   return error ? new Error(error) : null;
 }
@@ -109,6 +123,19 @@ export const cotisationService = {
   async createCotisationSpontanee(payload: CotisationSpontaneePayload): Promise<{ data: CotisationSpontaneeResult | null; error: Error | null }> {
     const { data, error } = await apiPost<ApiResponse<CotisationSpontaneeResult>>('/api/cotisations/spontanee', payload);
 
+    if (error) return { data: null, error: new Error(error) };
+    return { data: data?.data ?? null, error: toError(data?.error) };
+  },
+
+  async simulateCotisationSpontanee(payload: {
+    id_adherent: number;
+    montant: number;
+    date: string;
+  }): Promise<{ data: SimulationCotisationSpontaneeResult | null; error: Error | null }> {
+    const { data, error } = await apiPost<ApiResponse<SimulationCotisationSpontaneeResult>>(
+      '/api/cotisations/spontanee/simulation',
+      payload,
+    );
     if (error) return { data: null, error: new Error(error) };
     return { data: data?.data ?? null, error: toError(data?.error) };
   },

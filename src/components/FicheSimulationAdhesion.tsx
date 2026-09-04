@@ -25,6 +25,8 @@ export interface FicheSimulationData {
   nb_trimestre: number;
   cotisation_annuelle: number;
   cotisation_es: number;
+  cotisation_es_avant_abattement?: number | null;
+  taux_abattement_promo?: number | null;
 }
 
 interface FicheSimulationAdhesionProps {
@@ -120,6 +122,12 @@ function FicheContent({ data }: { data: FicheSimulationData }) {
         <p><span className="font-semibold">Date du premier précompte :</span> {formatDateOrBlank(data.date_precompte)}</p>
         <p><span className="font-semibold">Date du dernier précompte :</span> {formatDateOrBlank(data.date_retraite)}</p>
         <p><span className="font-semibold">Date Effet :</span> {formatDateOrBlank(data.date_effet)}</p>
+        {data.taux_abattement_promo != null && (
+          <p>
+            <span className="font-semibold">Cotisation standard avant abattement :</span> {formatMontant(data.cotisation_es_avant_abattement ?? 0)} / trimestre{' '}
+            <span className="font-semibold ml-4">Offre promotionnelle départ retraite :</span> -{data.taux_abattement_promo}%
+          </p>
+        )}
         <p><span className="font-semibold">Cotisation Épargne Santé Retraite :</span> <span className="text-base font-bold text-red-600">{formatMontant(data.cotisation_es)} / trimestre</span></p>
         </div>
       </section>
@@ -129,7 +137,8 @@ function FicheContent({ data }: { data: FicheSimulationData }) {
           Cette fiche présente une <span className="font-semibold">simulation</span> de mon intention de souscrire à l'Épargne Santé Retraite MADGI.
           Ma souscription ne sera effective qu'après la signature du bulletin d'Adhésion et du contrat.
           Les cotisations d'un montant simulé de <span className="font-semibold">{formatMontant(data.cotisation_es)}</span> / trimestre,
-          seraient perçues du /______/______/_________/ au /______/______/__________/ sur mes émoluments.
+          seraient perçues du <span className="font-semibold">{formatDateOrBlank(data.date_precompte)}</span> au{' '}
+          <span className="font-semibold">{formatDateOrBlank(data.date_retraite)}</span> sur mes émoluments.
         </p>
 
         <p className="mt-1.5 text-justify">

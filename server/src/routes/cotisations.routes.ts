@@ -20,6 +20,10 @@ cotisationsRouter.get('/matricule/:matricule', (req, res, next) => {
   cotisationsController.byMatricule(req, res, next);
 });
 
+cotisationsRouter.post('/spontanee/simulation', requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), (req, res, next) => {
+  cotisationsController.simulateSpontanee(req, res, next);
+});
+
 cotisationsRouter.post('/spontanee', requireRoles('GESTIONNAIRE', 'ADMINISTRATEUR'), (req, res, next) => {
   cotisationsController.createSpontanee(req, res, next);
 });

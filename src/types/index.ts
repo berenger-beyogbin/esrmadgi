@@ -71,6 +71,7 @@ export interface LienBeneficiaire {
 
 export interface Adherent {
   id: string;
+  numero_police?: string;
   date_souscription: string;
   matricule: string;
   civilite: string; // From civilites
@@ -100,6 +101,7 @@ export interface Adherent {
 export interface VAdherentComplet {
   id: string;
   id_adherent?: number; // champ bigint réel utilisé comme FK dans beneficiaires
+  numero_police: string;
   date_souscription: string;
   matricule: string;
   civilite: string;
@@ -127,6 +129,30 @@ export interface VAdherentComplet {
   date_precompte: string | null;
   nb_trimestre: number;
   cotisation_es: number;
+  cotisation_es_avant_abattement?: number | null;
+  taux_abattement_promo?: number | null;
+  palier_abattement_promo?: number | null;
+}
+
+export interface AdherentEligiblePromo {
+  id_adherent: number;
+  id_info_cotisation: number;
+  matricule: string;
+  nom: string;
+  prenoms: string;
+  grade: string;
+  date_retraite: string;
+  nb_trimestre_restant: number;
+  palier_abattement_promo: number;
+  taux_abattement_promo: number;
+  cotisation_es_avant_abattement: number;
+  cotisation_es_apres_abattement: number;
+}
+
+export interface AdherentFilterOptions {
+  directions: string[];
+  categories: string[];
+  trimestresPremierPrecompte: string[];
 }
 
 export interface Beneficiaire {
@@ -134,6 +160,7 @@ export interface Beneficiaire {
   id_adherent: number;
   nom_benef: string;
   prenoms_benef: string;
+  contact?: string | null;
   lien: string;
   pourcentage: number;
   statut?: boolean | null;
@@ -505,6 +532,9 @@ export interface OnlineAdhesionPayload {
   date_precompte?: string | null;
   nb_trimestre: number;
   cotisation_es: number;
+  cotisation_es_avant_abattement?: number | null;
+  taux_abattement_promo?: number | null;
+  palier_abattement_promo?: number | null;
   taux_gar?: number | null;
   frais_rente?: number | null;
   taux_rachat?: number | null;
@@ -518,6 +548,7 @@ export interface OnlineAdhesion extends OnlineAdhesionPayload {
   statut_demande: OnlineAdhesionStatus;
   adhesion_en_ligne: boolean;
   commercial_id?: number | null;
+  commercial_matricule?: string | null;
   source_adhesion?: 'EN_LIGNE' | 'COMMERCIAL' | 'BACKOFFICE';
   grade_code?: string;
   grade_libelle?: string | null;
@@ -531,6 +562,8 @@ export interface FirstLoginCredentials {
   email: string;
   temporary_password?: string;
   must_change_password: boolean;
+  access_preserved?: boolean;
+  profil?: string;
 }
 
 export interface OnlineAdhesionValidationResult extends OnlineAdhesion {
@@ -548,6 +581,16 @@ export interface CommercialActivityRow {
   rejetes: number;
   taux_conversion: number;
   derniere_activite: string | null;
+  dossiers: CommercialAdhesionSummary[];
+}
+
+export interface CommercialAdhesionSummary {
+  id: string;
+  matricule: string;
+  nom: string;
+  prenoms: string;
+  statut_demande: OnlineAdhesionStatus;
+  created_at: string | null;
 }
 
 export interface CommercialActivity {
@@ -574,4 +617,9 @@ export interface OnlineAdhesionReferentiels {
     fraisRente: number | null;
     ageMax: number | null;
   };
+  promo_abattement_retraite: {
+    actif: boolean;
+    dateDebut: string | null;
+    dateFin: string | null;
+  } | null;
 }

@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, ClipboardList, Loader2, Search, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ClipboardList, Loader2, Printer, Search, ShieldCheck } from 'lucide-react';
 import HeaderBanner from '../components/HeaderBanner';
+import FicheSimulationAdhesion from '../components/FicheSimulationAdhesion';
 import { adherentCalculationService, MortalitePoint } from '../services/adherentCalculationService';
+import { promotionDepartRetraiteService } from '../services/promotionDepartRetraiteService';
 import { onlineAdhesionService } from '../services/onlineAdhesionService';
 import { ExternalAgentInfo, Grade, OnlineAdhesionPayload, OnlineAdhesionReferentiels } from '../types';
 import { formatDateFr, formatFCFA, toIsoDate } from '../utils/formatters';
@@ -75,6 +77,9 @@ function initialPayload(): OnlineAdhesionPayload {
     date_precompte: datePrecompte,
     nb_trimestre: 0,
     cotisation_es: 0,
+    cotisation_es_avant_abattement: null,
+    taux_abattement_promo: null,
+    palier_abattement_promo: null,
   };
 }
 
@@ -90,6 +95,7 @@ export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMatricule, setSuccessMatricule] = useState('');
   const [pendingAgent, setPendingAgent] = useState<ExternalAgentInfo | null>(null);
+  const [showSimulationFiche, setShowSimulationFiche] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -125,7 +131,8 @@ export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }
 
   const recalculateFrom = (data: OnlineAdhesionPayload, grade?: Grade | null): OnlineAdhesionPayload => {
     const selectedGrade = grade ?? gradeOptions.find((g) => String(g.id_grade) === data.grade_id) ?? null;
-    const ageRetraite = selectedGrade?.age_retraite ?? data.age_retraite;
+    const ageRetraiteGrade = selectedGrade?.age_retraite ?? data.age_retraite;
+    const ageRetraite = adherentCalculationService.resolveAgeRetraite(data.matricule, ageRetraiteGrade);
     const cotisationAnnuelle = selectedGrade?.cotisation_annuelle ?? data.cotisation_annuelle;
     const datePrecompte = adherentCalculationService.resolveDatePremierPrecompteChoisie(
       data.date_souscription,
@@ -165,6 +172,13 @@ export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }
       cotisationEs = result.status === 'OK' ? result.cotisationTrimestrielle : 0;
     }
 
+    const abattement = promotionDepartRetraiteService.calculerAbattementPromo({
+      libelleGrade: selectedGrade?.libelle_grade ?? data.grade,
+      nbTrimestreRestant: nbTrimestre,
+      cotisationTrimestrielleStandard: cotisationEs,
+      fenetre: refs?.promo_abattement_retraite ?? null,
+    });
+
     return {
       ...data,
       grade_id: selectedGrade ? String(selectedGrade.id_grade) : data.grade_id,
@@ -175,7 +189,10 @@ export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }
       date_effet: dateEffet,
       date_retraite: dateRetraite,
       nb_trimestre: nbTrimestre,
-      cotisation_es: cotisationEs,
+      cotisation_es: abattement.applique ? abattement.cotisationApresAbattement : cotisationEs,
+      cotisation_es_avant_abattement: abattement.applique ? cotisationEs : null,
+      taux_abattement_promo: abattement.applique ? abattement.tauxPourcent : null,
+      palier_abattement_promo: abattement.applique ? abattement.palier : null,
     };
   };
 
@@ -541,6 +558,14 @@ export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }
                   <Summary label="Cotisation ESR" value={formatFCFA(formData.cotisation_es)} strong />
                 </div>
 
+                {formData.taux_abattement_promo != null && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 font-semibold">
+                    Offre promotionnelle departs a la retraite : abattement de {formData.taux_abattement_promo}% applique
+                    (cotisation standard {formatFCFA(formData.cotisation_es_avant_abattement || 0)} - reduite a{' '}
+                    {formatFCFA(formData.cotisation_es)} / trimestre).
+                  </div>
+                )}
+
                 {isRetirementBeforeFirstPrecompte(formData.date_retraite, formData.date_precompte) && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-semibold">
                     La date de retraite est anterieure au premier precompte. Verifiez la date de naissance et le grade avant de soumettre.
@@ -548,6 +573,14 @@ export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }
                 )}
 
                 <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSimulationFiche(true)}
+                    className="px-6 py-3 border border-[#2b529f]/30 bg-blue-50 text-[#2b529f] rounded-xl font-bold hover:bg-blue-100 inline-flex items-center justify-center gap-2 sm:mr-auto"
+                  >
+                    <Printer className="w-5 h-5" />
+                    Imprimer la simulation
+                  </button>
                   <button type="button" onClick={onBackToLogin} className="px-6 py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50">
                     Annuler
                   </button>
@@ -578,6 +611,36 @@ export default function OnlineAdhesion({ onBackToLogin, commercialMode = false }
           </div>
         </section>
       </main>
+
+      <FicheSimulationAdhesion
+        open={showSimulationFiche}
+        onClose={() => setShowSimulationFiche(false)}
+        data={{
+          matricule: formData.matricule,
+          civilite: formData.civilite,
+          nom: formData.nom,
+          prenoms: formData.prenoms,
+          date_naissance: formData.date_naissance,
+          lieu_naissance: formData.lieu_naissance,
+          situation_matrimoniale: formData.situation_matrimoniale,
+          telephone: formData.telephone,
+          email: formData.email || '',
+          adresse_geographique: formData.adresse_geographique,
+          adresse_postale: formData.adresse_postale,
+          direction: formData.direction,
+          emploi: formData.emploi,
+          grade: formData.grade,
+          age_retraite: formData.age_retraite,
+          date_retraite: formData.date_retraite,
+          date_precompte: formData.date_precompte || '',
+          date_effet: formData.date_effet,
+          nb_trimestre: formData.nb_trimestre,
+          cotisation_annuelle: formData.cotisation_annuelle,
+          cotisation_es: formData.cotisation_es,
+          cotisation_es_avant_abattement: formData.cotisation_es_avant_abattement,
+          taux_abattement_promo: formData.taux_abattement_promo,
+        }}
+      />
     </div>
   );
 }

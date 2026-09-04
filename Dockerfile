@@ -6,6 +6,7 @@ RUN npm ci
 COPY index.html tsconfig.json vite.config.ts ./
 COPY src ./src
 COPY assets ./assets
+COPY public ./public
 
 ARG VITE_API_BASE_URL
 ARG VITE_SUPABASE_URL

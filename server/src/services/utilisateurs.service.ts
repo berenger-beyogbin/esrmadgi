@@ -10,6 +10,7 @@ import {
 import { normalizeRole } from '../utils/roles';
 import { generateTemporaryPassword, isStrongPassword, PASSWORD_POLICY_MESSAGE } from '../utils/passwordPolicy';
 import { profilsRepository } from '../repositories/profils.repository';
+import { isHiddenUserMatricule } from '../utils/hiddenUsers';
 
 export interface UtilisateurDto {
   id: string;
@@ -47,7 +48,9 @@ export interface EnsureAdherentAccessInput {
 export interface EnsureAdherentAccessResult {
   login: string;
   email: string;
-  must_change_password: true;
+  must_change_password: boolean;
+  access_preserved?: boolean;
+  profil?: string;
 }
 
 export interface UpdateUtilisateurPayload {
@@ -74,6 +77,11 @@ function normalizeEmail(email: string): string {
 
 function normalizeMatricule(matricule: string): string {
   return matricule.trim().toUpperCase();
+}
+
+export function hasProfessionalAccess(profil: unknown): boolean {
+  const code = String(profil ?? '').trim().toUpperCase();
+  return code !== '' && code !== 'ADHERENT';
 }
 
 function authUsersByKey(users: User[]): { byId: Map<string, User>; byEmail: Map<string, User> } {
@@ -147,10 +155,51 @@ export const utilisateursService = {
     input: EnsureAdherentAccessInput,
   ): Promise<EnsureAdherentAccessResult> {
     const matricule = normalizeMatricule(input.matricule);
-    const email = `${matricule.toLowerCase()}@madgi.ci`;
-    const temporaryPassword = generateTemporaryPassword(matricule);
     const auditUserId = actorId(user);
     const existingRow = await utilisateursRepository.findByMatricule(matricule);
+
+    // Un gestionnaire, administrateur ou profil personnalise peut aussi devenir adherent.
+    // Dans ce cas, son acces professionnel reste l'identite principale : on ne touche ni
+    // a son email Auth, ni a son mot de passe, ni a son profil. On ajoute seulement le lien
+    // vers sa fiche adherent afin qu'une meme personne ne perde jamais ses droits metier.
+    if (existingRow && hasProfessionalAccess(existingRow.profil)) {
+      const authUser = existingRow.auth_user_id
+        ? await utilisateursRepository.getAuthUserById(existingRow.auth_user_id)
+        : existingRow.email
+          ? await findAuthUserByEmail(existingRow.email)
+          : null;
+
+      if (!authUser?.email) {
+        throw new AppError(409, 'Le compte professionnel existe mais son acces de connexion est incomplet. Contactez un administrateur.');
+      }
+
+      await utilisateursRepository.update(existingRow.id_utilisateur, {
+        auth_user_id: authUser.id,
+        telephone: existingRow.telephone ?? input.telephone ?? null,
+        id_adherent: input.idAdherent,
+        auditUserId,
+      });
+
+      await auditService
+        .logEvent(user, {
+          action: 'LIAISON_ACCES_PROFESSIONNEL_ADHERENT',
+          objetAudit: 'utilisateurs',
+          idObjet: input.idAdherent,
+          details: `Fiche adherent ${matricule} liee au compte professionnel ${existingRow.profil} sans modifier ses acces.`,
+        })
+        .catch(() => undefined);
+
+      return {
+        login: authUser.email,
+        email: authUser.email,
+        must_change_password: Boolean(authUser.user_metadata?.must_change_password),
+        access_preserved: true,
+        profil: String(existingRow.profil),
+      };
+    }
+
+    const email = `${matricule.toLowerCase()}@madgi.ci`;
+    const temporaryPassword = generateTemporaryPassword(matricule);
 
     let authUser = existingRow?.auth_user_id
       ? await utilisateursRepository
@@ -227,7 +276,7 @@ export const utilisateursService = {
     const users = await utilisateursRepository.listAuthUsers();
     const maps = authUsersByKey(users);
 
-    return rows.map((row) => {
+    return rows.filter((row) => !isHiddenUserMatricule(row.matricule)).map((row) => {
       const authUser =
         (row.auth_user_id ? maps.byId.get(row.auth_user_id) : undefined) ||
         (row.email ? maps.byEmail.get(row.email.toLowerCase()) : undefined);
@@ -318,6 +367,9 @@ export const utilisateursService = {
 
     const existing = await utilisateursRepository.findById(id);
     if (!existing) {
+      throw new AppError(404, 'Utilisateur introuvable');
+    }
+    if (isHiddenUserMatricule(existing.matricule)) {
       throw new AppError(404, 'Utilisateur introuvable');
     }
 
